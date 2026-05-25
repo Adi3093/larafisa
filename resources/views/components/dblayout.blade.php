@@ -61,10 +61,20 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="#"
-                                        class="w-full rounded-lg px-4 py-2 [text-align:_inherit] text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700">
-                                        Logout
+                                    <a href="/"
+                                        class="block rounded-lg px-4 py-2 text-sm font-medium {{ request()->is('landing_page') ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700' }}">
+                                        Lihat Landing Page
                                     </a>
+                                </li>
+                                <li>
+                                    <form action="{{ route('logout') }}" method="POST"
+                                        onsubmit="return confirm('Apakah Anda yakin ingin keluar dari sistem? Semua pekerjaan yang belum disimpan mungkin hilang.');">
+                                        @csrf
+                                        <button type="submit"
+                                            class="w-full text-left rounded-lg px-4 py-2 text-sm font-medium {{ request()->is('logout') ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700' }}">
+                                            Logout
+                                        </button>
+                                    </form>
                                 </li>
                             </ul>
                         </details>

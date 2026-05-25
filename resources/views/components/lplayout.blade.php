@@ -36,8 +36,17 @@
                 <a href="#" class="text-sm/6 font-semibold text-gray-900">Reservasi</a>
             </el-popover-group>
             <div class="hidden lg:flex lg:flex-1 lg:justify-end">
-                <a href="#" class="text-sm/6 font-semibold text-gray-900">Log in <span
-                        aria-hidden="true">&rarr;</span></a>
+                @auth
+                    <a href="{{ route('dashboard') }}"
+                        class="text-sm font-semibold bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                        Dashboard Utama &rarr;
+                    </a>
+                @else
+                    <a href="{{ route('login') }}"
+                        class="text-sm font-semibold bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
+                        Log in &rarr;
+                    </a>
+                @endauth
             </div>
         </nav>
         <el-dialog>
