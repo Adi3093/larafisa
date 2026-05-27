@@ -49,13 +49,13 @@
                             </summary>
                             <ul class="mt-2 space-y-1 px-4">
                                 <li>
-                                    <a href="#"
+                                    <a href="/settings"
                                         class="block rounded-lg px-4 py-2 text-sm font-medium {{ request()->is('pengaturan') ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700' }}">
                                         Pengaturan
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="#"
+                                    <a href="/akun"
                                         class="block rounded-lg px-4 py-2 text-sm font-medium {{ request()->is('akun') ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700' }}">
                                         Kelola Akun
                                     </a>
@@ -82,16 +82,26 @@
                 </ul>
             </div>
             <div class="sticky inset-x-0 bottom-0 border-t border-gray-100">
-                <a href="#" class="flex items-center gap-2 bg-white p-4 hover:bg-gray-50">
-                    <img alt=""
-                        src="https://images.unsplash.com/photo-1600486913747-55e5470d6f40?auto=format&amp;fit=crop&amp;q=80&amp;w=1160"
-                        class="size-10 rounded-full object-cover">
-                    <div>
-                        <p class="text-xs">
-                            <strong class="block font-medium">Eric Frusciante</strong>
-                            <span> eric@frusciante.com </span>
+                <a href="{{ route('settings.profil') }}"
+                    class="flex items-center gap-2 bg-white p-4 hover:bg-gray-50 transition">
+
+                    @if (Auth::user()->avatar)
+                        <img alt="Foto Profil" src="{{ asset('storage/' . Auth::user()->avatar) }}"
+                            class="size-10 rounded-full object-cover border border-gray-200">
+                    @else
+                        <div
+                            class="size-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 text-indigo-600 font-bold text-sm">
+                            {{ substr(Auth::user()->name, 0, 1) }}
+                        </div>
+                    @endif
+
+                    <div class="overflow-hidden">
+                        <p class="text-xs truncate">
+                            <strong class="block font-medium text-gray-900">{{ Auth::user()->name }}</strong>
+                            <span class="text-gray-500">{{ Auth::user()->email }}</span>
                         </p>
                     </div>
+
                 </a>
             </div>
         </div>

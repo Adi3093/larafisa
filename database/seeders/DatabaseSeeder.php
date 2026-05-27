@@ -22,7 +22,8 @@ class DatabaseSeeder extends Seeder
             'name' => 'Admin Fisa Hotel',
             'username' => 'adminfisa',
             'email' => 'fisahotel@email.com',
-            'password' => Hash::make('admin1234'),
+            'role' => 'admin',
+            'password' => \Illuminate\Support\Facades\Hash::make('admin123'),
         ]);
     }
 }
