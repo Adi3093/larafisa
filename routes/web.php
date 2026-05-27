@@ -5,10 +5,14 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AccountController;
 use App\Http\Middleware\UpdateLastSeen;
+use App\Http\Controllers\KamarController;
 
 //Landing page public
 Route::get('/', function () {
-    return view('landing_page.home');
+    // Menarik semua data kamar dan langsung mengelompokkannya berdasarkan 'kelas_kamar'
+    $kategoriKamar = \App\Models\Kamar::all()->groupBy('kelas_kamar');
+
+    return view('landing_page.home', compact('kategoriKamar'));
 });
 //landing page guest
 Route::middleware('guest')->group(function () {
@@ -24,32 +28,28 @@ Route::middleware(['auth', \App\Http\Middleware\UpdateLastSeen::class])->group(f
     Route::get('/reservasi', function () {
         return view('dashboard.reservasi');
     });
-    Route::get('/kamar', function () {
-        return view('dashboard.kamar');
-    });
+    //kamar
+    Route::get('/kamar', [KamarController::class, 'index'])->name('kamar');
+    Route::post('/kamar', [KamarController::class, 'store'])->name('kamar.store');
+    Route::put('/kamar/{id}', [KamarController::class, 'update'])->name('kamar.update');
+    Route::delete('/kamar/{id}', [KamarController::class, 'destroy'])->name('kamar.destroy');
     // Pengaturan
     Route::get('/settings', function () {
         return view('dashboard.settings');
-    });
-    Route::get('/profile', function () {
-        return view('dashboard.profile');
-    });
-    Route::get('/logs', function () {
-        return view('dashboard.logs');
-    });
-    Route::get('/settings/profil', [ProfileController::class, 'index'])->name('settings.profil');
-    Route::put('/settings/profil', [ProfileController::class, 'update'])->name('settings.profil.update');
-
-    // Kelola Akun
-    Route::get('/akun', [AccountController::class, 'index'])->name('akun');
-    Route::put('/akun/{id}', [AccountController::class, 'update'])->name('akun.update');
-    Route::post('/akun', [AccountController::class, 'store'])->name('akun.store');
-    //status
-    Route::middleware(['auth', UpdateLastSeen::class])->group(function () {});
-
-    //logout
-    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+    })->name('settings');
 });
+Route::get('/settings/profil', [ProfileController::class, 'index'])->name('settings.profil');
+Route::put('/settings/profil', [ProfileController::class, 'update'])->name('settings.profil.update');
+
+// Kelola Akun
+Route::get('/akun', [AccountController::class, 'index'])->name('akun');
+Route::put('/akun/{id}', [AccountController::class, 'update'])->name('akun.update');
+Route::post('/akun', [AccountController::class, 'store'])->name('akun.store');
+//status
+Route::middleware(['auth', UpdateLastSeen::class])->group(function () {});
+
+//logout
+Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/cek-database', function () {
     $user = \App\Models\User::where('username', 'admin')->first();

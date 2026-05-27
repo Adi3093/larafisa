@@ -34,7 +34,8 @@
                         </a>
                     </li>
                     <li>
-                        <details class="group [&amp;_summary::-webkit-details-marker]:hidden">
+                        <details class="group [&amp;&_summary::-webkit-details-marker]:hidden"
+                            {{ request()->is('settings*') || request()->is('akun*') ? 'open' : '' }}>
                             <summary
                                 class="flex cursor-pointer items-center justify-between rounded-lg px-4 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
                                 <span class="text-sm font-medium"> Pengaturan </span>
@@ -49,14 +50,14 @@
                             </summary>
                             <ul class="mt-2 space-y-1 px-4">
                                 <li>
-                                    <a href="/settings"
-                                        class="block rounded-lg px-4 py-2 text-sm font-medium {{ request()->is('pengaturan') ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700' }}">
+                                    <a href="{{ route('settings') }}"
+                                        class="block rounded-lg px-4 py-2 text-sm font-medium {{ request()->routeIs('settings') ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700' }}">
                                         Pengaturan
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="/akun"
-                                        class="block rounded-lg px-4 py-2 text-sm font-medium {{ request()->is('akun') ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700' }}">
+                                    <a href="{{ route('akun') }}"
+                                        class="block rounded-lg px-4 py-2 text-sm font-medium {{ request()->routeIs('akun') ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700' }}">
                                         Kelola Akun
                                     </a>
                                 </li>
