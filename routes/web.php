@@ -8,11 +8,12 @@ use App\Http\Middleware\UpdateLastSeen;
 use App\Http\Controllers\KamarController;
 
 //Landing page public
+// Landing page public
 Route::get('/', function () {
-    // Menarik semua data kamar dan langsung mengelompokkannya berdasarkan 'kelas_kamar'
-    $kategoriKamar = \App\Models\Kamar::all()->groupBy('kelas_kamar');
+    // Tarik semua data Katalog Kelas Kamar
+    $kelasKamars = \App\Models\KelasKamar::all();
 
-    return view('landing_page.home', compact('kategoriKamar'));
+    return view('landing_page.home', compact('kelasKamars'));
 });
 //landing page guest
 Route::middleware('guest')->group(function () {
@@ -30,9 +31,18 @@ Route::middleware(['auth', \App\Http\Middleware\UpdateLastSeen::class])->group(f
     });
     //kamar
     Route::get('/kamar', [KamarController::class, 'index'])->name('kamar');
-    Route::post('/kamar', [KamarController::class, 'store'])->name('kamar.store');
-    Route::put('/kamar/{id}', [KamarController::class, 'update'])->name('kamar.update');
-    Route::delete('/kamar/{id}', [KamarController::class, 'destroy'])->name('kamar.destroy');
+
+    //Kelas Kamar
+    Route::post('/kelas-kamar', [KamarController::class, 'storeKelas'])->name('kelas.store');
+    Route::put('/kelas-kamar/{id}', [KamarController::class, 'updateKelas'])->name('kelas.update');
+
+    Route::delete('/kelas-kamar/{id}', [KamarController::class, 'destroyKelas'])->name('kelas.destroy');
+    Route::delete('/kelas-kamar/{id}', [KamarController::class, 'destroyKelas'])->name('kelas.destroy');
+
+    //Fisik Kamar
+    Route::post('/kamar', [KamarController::class, 'storeKamar'])->name('kamar.store');
+    Route::put('/kamar/{id}', [KamarController::class, 'updateKamar'])->name('kamar.update');
+    Route::delete('/kamar/{id}', [KamarController::class, 'destroyKamar'])->name('kamar.destroy');
     // Pengaturan
     Route::get('/settings', function () {
         return view('dashboard.settings');

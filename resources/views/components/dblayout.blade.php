@@ -38,7 +38,7 @@
                             {{ request()->is('settings*') || request()->is('akun*') ? 'open' : '' }}>
                             <summary
                                 class="flex cursor-pointer items-center justify-between rounded-lg px-4 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
-                                <span class="text-sm font-medium"> Pengaturan </span>
+                                <span class="text-sm font-medium"> Panel Kontrol </span>
                                 <span class="shrink-0 transition duration-300 group-open:-rotate-180">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="size-5" viewBox="0 0 20 20"
                                         fill="currentColor">
