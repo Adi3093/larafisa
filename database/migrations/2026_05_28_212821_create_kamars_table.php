@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('kelas_kamar_id')->constrained('kelas_kamars')->onDelete('cascade');
             $table->string('nomor_ruangan')->unique();
-            $table->enum('status', ['Tersedia', 'Tepakai', 'Dibooking', 'Maintenance'])->default('Tersedia');
+            $table->enum('status', ['Tersedia', 'Terpakai', 'Dibooking', 'Maintenance'])->default('Tersedia');
             $table->timestamps();
         });
     }

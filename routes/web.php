@@ -26,9 +26,16 @@ Route::middleware(['auth', \App\Http\Middleware\UpdateLastSeen::class])->group(f
     Route::get('/dashboard', function () {
         return view('dashboard.dashboard');
     })->name('dashboard');
+    //Reservasi
     Route::get('/reservasi', function () {
         return view('dashboard.reservasi');
     });
+    //Walk in Reservasi
+    Route::get('/reservasi', [App\Http\Controllers\ReservasiController::class, 'index'])->name('reservasi');
+    Route::post('/reservasi', [App\Http\Controllers\ReservasiController::class, 'store'])->name('reservasi.store');
+    Route::put('/reservasi/{id}', [App\Http\Controllers\ReservasiController::class, 'update'])->name('reservasi.update');
+    Route::delete('/reservasi/{id}', [App\Http\Controllers\ReservasiController::class, 'destroy'])->name('reservasi.destroy');
+    Route::post('/reservasi/{id}/checkout', [App\Http\Controllers\ReservasiController::class, 'checkout'])->name('reservasi.checkout');
     //kamar
     Route::get('/kamar', [KamarController::class, 'index'])->name('kamar');
 

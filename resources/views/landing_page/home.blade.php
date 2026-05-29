@@ -35,13 +35,14 @@
                 <p>Katalog kamar sedang diperbarui. Silakan hubungi resepsionis.</p>
             </div>
         @else
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div
+                class="flex overflow-x-auto gap-6 pb-8 pt-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 @foreach ($kelasKamars as $kelas)
                     <div
-                        class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition duration-300 group flex flex-col">
+                        class="w-[85vw] sm:w-[350px] lg:w-[380px] flex-none snap-start bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition duration-300 flex flex-col">
                         <div class="relative h-56 overflow-hidden bg-gray-200">
                             <img src="{{ asset('storage/' . $kelas->thumbnail) }}" alt="{{ $kelas->nama_kelas }}"
-                                class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                                class="w-full h-full object-cover hover:scale-105 transition duration-500">
                             <div
                                 class="absolute top-3 right-3 bg-indigo-600/90 backdrop-blur-sm px-3 py-1 rounded-lg shadow-sm font-bold text-white text-sm">
                                 Best Seller

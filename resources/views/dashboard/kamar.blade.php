@@ -125,7 +125,7 @@
                 </div>
             </div>
             <div class="mt-4">
-                {{ $kelasKamars->links() }}
+                {{ $kelasKamars->appends(['tab' => 'kelas'])->links() }}
             </div>
         </div>
 
@@ -249,7 +249,7 @@
                 </div>
             </div>
             <div class="mt-4">
-                {{ $kamars->links() }}
+                {{ $kamars->appends(['tab' => 'ruangan'])->links() }}
             </div>
         </div>
     </div>
