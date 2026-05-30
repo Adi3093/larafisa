@@ -36,6 +36,15 @@ Route::middleware(['auth', \App\Http\Middleware\UpdateLastSeen::class])->group(f
     Route::put('/reservasi/{id}', [App\Http\Controllers\ReservasiController::class, 'update'])->name('reservasi.update');
     Route::delete('/reservasi/{id}', [App\Http\Controllers\ReservasiController::class, 'destroy'])->name('reservasi.destroy');
     Route::post('/reservasi/{id}/checkout', [App\Http\Controllers\ReservasiController::class, 'checkout'])->name('reservasi.checkout');
+    //Riwayat Reservasi
+    // hapus rute /reservasilog yang lama, dan gunakan ini saja:
+    Route::get('/reservasilog', [App\Http\Controllers\RiwayatController::class, 'index'])->name('riwayat');
+    Route::get('/riwayat', [App\Http\Controllers\RiwayatController::class, 'index'])->name('riwayat');
+    //Daftar Tamu
+    Route::get('/dtamu', function () {
+        return view('dashboard.dtamu');
+    });
+
     //kamar
     Route::get('/kamar', [KamarController::class, 'index'])->name('kamar');
 
@@ -50,6 +59,11 @@ Route::middleware(['auth', \App\Http\Middleware\UpdateLastSeen::class])->group(f
     Route::post('/kamar', [KamarController::class, 'storeKamar'])->name('kamar.store');
     Route::put('/kamar/{id}', [KamarController::class, 'updateKamar'])->name('kamar.update');
     Route::delete('/kamar/{id}', [KamarController::class, 'destroyKamar'])->name('kamar.destroy');
+
+    //Laporan Pendapatan
+    Route::get('/pendapatan', function () {
+        return view('dashboard.pendapatan');
+    });
     // Pengaturan
     Route::get('/settings', function () {
         return view('dashboard.settings');

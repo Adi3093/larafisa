@@ -1,7 +1,7 @@
 <x-dblayout>
     <div class="max-w-7xl mx-auto">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-            <h1 class="text-2xl font-bold text-gray-900">Reservasi Kamar (Walk-In)</h1>
+            <h1 class="text-2xl font-bold text-gray-900">Reservasi Kamar</h1>
             <button onclick="document.getElementById('modalAddReservasi').classList.remove('hidden')"
                 class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-indigo-700 transition shadow-sm flex items-center gap-2">
                 + Check-In Baru (Walk-In)
@@ -139,6 +139,7 @@
                                 <td class="px-4 py-3 font-mono font-bold text-gray-700">{{ $res->no_reservasi }}</td>
                                 <td class="px-4 py-3">
                                     <div class="font-bold text-gray-900">{{ $res->nama_tamu }}</div>
+                                    <div class="text-gray-500 text-xs">NIK: {{ $res->no_ktp }}</div>
                                     <div class="text-gray-500 text-xs">{{ $res->no_hp }}</div>
                                 </td>
                                 <td class="px-4 py-3">
@@ -200,6 +201,10 @@
                     @csrf
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap Tamu</label><input
                             type="text" name="nama_tamu" required class="w-full border rounded p-2 text-sm"></div>
+
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Nomor KTP (NIK)</label><input
+                            type="number" name="no_ktp" required class="w-full border rounded p-2 text-sm"></div>
+
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Nomor HP/WhatsApp</label><input
                             type="text" name="no_hp" required class="w-full border rounded p-2 text-sm"></div>
 
@@ -291,6 +296,11 @@
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap Tamu</label><input
                             type="text" id="edit_nama_tamu" name="nama_tamu" required
                             class="w-full border rounded p-2 text-sm"></div>
+
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Nomor KTP (NIK)</label><input
+                            type="number" id="edit_no_ktp" name="no_ktp" required
+                            class="w-full border rounded p-2 text-sm"></div>
+
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Nomor HP/WhatsApp</label><input
                             type="text" id="edit_no_hp" name="no_hp" required
                             class="w-full border rounded p-2 text-sm"></div>

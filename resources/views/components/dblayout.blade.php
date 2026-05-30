@@ -28,14 +28,29 @@
                         </a>
                     </li>
                     <li>
-                        <a href="kamar"
-                            class="block rounded-lg px-4 py-2 text-sm font-medium {{ request()->is('kamar') ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700' }}">
-                            Kelola Kamar
+                        <a href="jadwal"
+                            class="block rounded-lg px-4 py-2 text-sm font-medium {{ request()->is('reservasilog') ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700' }}">
+                            Jadwal Reservasi
                         </a>
+                    <li>
+                        <a href="reservasilog"
+                            class="block rounded-lg px-4 py-2 text-sm font-medium {{ request()->is('reservasilog') ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700' }}">
+                            Riwayat Reservasi
+                        </a>
+                    </li>
+                    <li>
                         <a href="dtamu"
                             class="block rounded-lg px-4 py-2 text-sm font-medium {{ request()->is('dtamu') ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700' }}">
                             Daftar Tamu
                         </a>
+                    </li>
+                    <li>
+                        <a href="kamar"
+                            class="block rounded-lg px-4 py-2 text-sm font-medium {{ request()->is('kamar') ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700' }}">
+                            Kelola Kamar
+                        </a>
+                    </li>
+                    <li>
                         <a href="pendapatan"
                             class="block rounded-lg px-4 py-2 text-sm font-medium {{ request()->is('pendapatan') ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700' }}">
                             Laporan Pendapatan

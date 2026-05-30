@@ -19,7 +19,9 @@ class ReservasiController extends Controller
             'Maintenance' => $statusCounts['Maintenance'] ?? 0,
         ];
 
-        $query = Reservasi::with('kamar.kelasKamar')->where('tipe_reservasi', 'Walk-in');
+        $query = Reservasi::with('kamar.kelasKamar')
+            ->where('tipe_reservasi', 'Walk-in')
+            ->where('status_reservasi', 'Aktif');
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -58,6 +60,7 @@ class ReservasiController extends Controller
     {
         $request->validate([
             'nama_tamu' => 'required|string|max:45',
+            'no_ktp' => 'required|string|max:16',
             'no_hp' => 'required|string|max:15',
             'kamar_id' => 'required|exists:kamars,id',
             'check_in' => 'required|date',
@@ -70,6 +73,7 @@ class ReservasiController extends Controller
         Reservasi::create([
             'no_reservasi' => $noReservasi,
             'nama_tamu' => $request->nama_tamu,
+            'no_ktp' => $request->no_ktp,
             'no_hp' => $request->no_hp,
             'kamar_id' => $request->kamar_id,
             'check_in' => $request->check_in,
@@ -88,6 +92,7 @@ class ReservasiController extends Controller
         $reservasi = Reservasi::findOrFail($id);
         $request->validate([
             'nama_tamu' => 'required|string|max:45',
+            'no_ktp' => 'required|string|max:16',
             'no_hp' => 'required|string|max:15',
             'kamar_id' => 'required|exists:kamars,id',
             'check_in' => 'required|date',
@@ -113,20 +118,25 @@ class ReservasiController extends Controller
         $reservasi = Reservasi::findOrFail($id);
 
         // Ubah tanggal check-out menjadi hari ini (saat tombol ditekan)
-        $reservasi->update(['check_out' => now()->toDateString()]);
+        $reservasi->update([
+            'check_out' => now()->toDateString(),
+            'status_reservasi' => 'Selesai'
+        ]);
 
         // Bebaskan kembali ruangan
         Kamar::where('id', $reservasi->kamar_id)->update(['status' => 'Tersedia']);
 
-        return back()->with('success', 'Tamu ' . $reservasi->nama_tamu . ' berhasil Check-Out. Kamar kini tersedia kembali.');
+        return back()->with('success', 'Tamu ' . $reservasi->nama_tamu . ' berhasil Check-Out. Data dipindahkan ke Riwayat.');
     }
 
     public function destroy($id)
     {
         $reservasi = Reservasi::findOrFail($id);
-        Kamar::where('id', $reservasi->kamar_id)->update(['status' => 'Tersedia']);
-        $reservasi->delete();
+        $reservasi->update(['status_reservasi' => 'Batal']);
 
-        return back()->with('success', 'Reservasi berhasil dihapus dan status kamar kembali tersedia.');
+        // Bebaskan ruangan
+        Kamar::where('id', $reservasi->kamar_id)->update(['status' => 'Tersedia']);
+
+        return back()->with('success', 'Reservasi dibatalkan dan dipindahkan ke Riwayat. Status kamar kembali Tersedia.');
     }
 }
