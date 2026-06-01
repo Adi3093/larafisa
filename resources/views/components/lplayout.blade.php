@@ -35,15 +35,29 @@
                 <a href="#" class="text-sm/6 font-semibold text-gray-900">Kamar dan Fasilitas</a>
                 <a href="#" class="text-sm/6 font-semibold text-gray-900">Reservasi</a>
             </el-popover-group>
-            <div class="hidden lg:flex lg:flex-1 lg:justify-end">
+            <div class="hidden lg:flex lg:flex-1 lg:justify-end items-center gap-4">
                 @auth
-                    <a href="{{ route('dashboard') }}"
-                        class="text-sm font-semibold bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
-                        Dashboard Utama &rarr;
-                    </a>
+                    @if (auth()->user()->role === 'admin')
+                        <a href="{{ route('dashboard') }}"
+                            class="text-sm font-semibold leading-6 text-indigo-600 hover:text-indigo-900">
+                            Kembali ke Dashboard &rarr;
+                        </a>
+                    @else
+                        <span class="text-sm font-semibold text-gray-600 border-r border-gray-300 pr-4">
+                            Halo, {{ auth()->user()->name }}
+                        </span>
+
+                        <form method="POST" action="{{ route('logout') }}" class="inline m-0">
+                            @csrf
+                            <button type="submit"
+                                class="text-sm font-semibold bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 hover:text-red-700 transition border border-red-100 shadow-sm">
+                                Logout
+                            </button>
+                        </form>
+                    @endif
                 @else
                     <a href="{{ route('login') }}"
-                        class="text-sm font-semibold bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
+                        class="text-sm font-semibold bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm">
                         Log in &rarr;
                     </a>
                 @endauth

@@ -20,11 +20,14 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'index'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
 });
+//Register
+Route::get('/register', [App\Http\Controllers\AuthController::class, 'register'])->name('register');
+Route::post('/register', [App\Http\Controllers\AuthController::class, 'register_store'])->name('register.store');
 
 //dashboard
-Route::middleware(['auth', \App\Http\Middleware\UpdateLastSeen::class])->group(function () {
+Route::middleware(['auth', 'role:admin', \App\Http\Middleware\UpdateLastSeen::class])->group(function () {
     Route::get('/dashboard', function () {
-        return view('dashboard.dashboard');
+        return view('dashboard');
     })->name('dashboard');
 
     //Reservasi
