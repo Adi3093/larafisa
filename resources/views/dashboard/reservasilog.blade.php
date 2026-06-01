@@ -36,12 +36,12 @@
 
                 <div class="lg:col-span-5 flex flex-wrap justify-between items-center border-t pt-4 mt-2 gap-4">
                     <div class="flex items-center gap-2 text-sm text-gray-600">
-                        <span>Tampilkan Baris:</span>
+                        <span>Baris:</span>
                         <select name="per_page" onchange="this.form.submit()"
                             class="border border-gray-300 rounded p-1 text-xs bg-white">
                             @foreach ([5, 10, 15, 20] as $size)
                                 <option value="{{ $size }}"
-                                    {{ request('per_page') == $size ? 'selected' : '' }}>{{ $size }} Data
+                                    {{ request('per_page') == $size ? 'selected' : '' }}>{{ $size }}
                                 </option>
                             @endforeach
                         </select>
@@ -59,12 +59,12 @@
 
                         <button type="submit" formaction="{{ route('riwayat.csv') }}"
                             class="rounded-lg bg-emerald-600 text-white px-4 py-2 text-sm font-bold hover:bg-emerald-700 transition flex items-center gap-1 shadow-sm">
-                            Unduh CSV (Excel)
+                            Unduh CSV
                         </button>
 
                         <button type="submit" formaction="{{ route('riwayat.pdf') }}"
                             class="rounded-lg bg-red-600 text-white px-4 py-2 text-sm font-bold hover:bg-red-700 transition flex items-center gap-1 shadow-sm">
-                            Cetak Laporan PDF
+                            Cetak PDF
                         </button>
                     </div>
                 </div>
@@ -106,7 +106,8 @@
                                     @if ($log->status_reservasi == 'Selesai')
                                         <span
                                             class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-bold text-green-700 ring-1 ring-inset ring-green-600/20">Selesai
-                                            (Check-Out)</span>
+                                            (Check-Out)
+                                        </span>
                                     @else
                                         <span
                                             class="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-bold text-red-700 ring-1 ring-inset ring-red-600/10">Dibatalkan</span>

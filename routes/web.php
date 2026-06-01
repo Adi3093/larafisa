@@ -39,6 +39,11 @@ Route::middleware(['auth', \App\Http\Middleware\UpdateLastSeen::class])->group(f
     Route::delete('/reservasi/{id}', [App\Http\Controllers\ReservasiController::class, 'destroy'])->name('reservasi.destroy');
     Route::post('/reservasi/{id}/checkout', [App\Http\Controllers\ReservasiController::class, 'checkout'])->name('reservasi.checkout');
 
+    //Jadwal Reservasi
+    Route::get('/ongoing', [App\Http\Controllers\OngoingController::class, 'index'])->name('ongoing');
+    Route::post('/ongoing/{id}/konfirmasi', [App\Http\Controllers\OngoingController::class, 'konfirmasi'])->name('ongoing.konfirmasi');
+    Route::post('/ongoing/{id}/batal', [App\Http\Controllers\OngoingController::class, 'batal'])->name('ongoing.batal');
+
     //Riwayat Reservasi
     Route::get('/reservasilog', [App\Http\Controllers\RiwayatController::class, 'index'])->name('riwayat');
     Route::get('/riwayat', [App\Http\Controllers\RiwayatController::class, 'index'])->name('riwayat');
@@ -54,13 +59,11 @@ Route::middleware(['auth', \App\Http\Middleware\UpdateLastSeen::class])->group(f
 
     //kamar
     Route::get('/kamar', [KamarController::class, 'index'])->name('kamar');
-
     //Kelas Kamar
     Route::post('/kelas-kamar', [KamarController::class, 'storeKelas'])->name('kelas.store');
     Route::put('/kelas-kamar/{id}', [KamarController::class, 'updateKelas'])->name('kelas.update');
     Route::delete('/kelas-kamar/{id}', [KamarController::class, 'destroyKelas'])->name('kelas.destroy');
     Route::delete('/kelas-kamar/{id}', [KamarController::class, 'destroyKelas'])->name('kelas.destroy');
-
     //Fisik Kamar
     Route::post('/kamar', [KamarController::class, 'storeKamar'])->name('kamar.store');
     Route::put('/kamar/{id}', [KamarController::class, 'updateKamar'])->name('kamar.update');

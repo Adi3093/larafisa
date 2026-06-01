@@ -97,7 +97,7 @@
                 </div>
                 <div class="lg:col-span-6 flex justify-between items-center border-t pt-3 mt-1">
                     <div class="flex items-center gap-2 text-sm text-gray-600">
-                        <span>Tampilkan Baris:</span>
+                        <span>Baris:</span>
                         <select name="per_page" onchange="this.form.submit()"
                             class="border border-gray-300 rounded p-1 text-xs bg-white">
                             @foreach ([5, 10, 15, 20] as $size)

@@ -31,7 +31,7 @@
                 </button>
             </div>
             <el-popover-group class="hidden lg:flex lg:gap-x-12">
-                <a href="home" class="text-sm/6 font-semibold text-gray-900">Tentang Kami</a>
+                <a href="/home" class="text-sm/6 font-semibold text-gray-900">Tentang Kami</a>
                 <a href="#" class="text-sm/6 font-semibold text-gray-900">Kamar dan Fasilitas</a>
                 <a href="#" class="text-sm/6 font-semibold text-gray-900">Reservasi</a>
             </el-popover-group>
