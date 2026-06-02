@@ -109,20 +109,20 @@
                 <a href="{{ route('settings.profil') }}"
                     class="flex items-center gap-2 bg-white p-4 hover:bg-gray-50 transition">
 
-                    @if (Auth::user()->avatar)
+                    @if (Auth::user()?->avatar)
                         <img alt="Foto Profil" src="{{ asset('storage/' . Auth::user()->avatar) }}"
                             class="size-10 rounded-full object-cover border border-gray-200">
                     @else
                         <div
                             class="size-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 text-indigo-600 font-bold text-sm">
-                            {{ substr(Auth::user()->name, 0, 1) }}
+                            {{ substr(Auth::user()?->name, 0, 1) }}
                         </div>
                     @endif
 
                     <div class="overflow-hidden">
                         <p class="text-xs truncate">
-                            <strong class="block font-medium text-gray-900">{{ Auth::user()->name }}</strong>
-                            <span class="text-gray-500">{{ Auth::user()->email }}</span>
+                            <strong class="block font-medium text-gray-900">{{ Auth::user()?->name }}</strong>
+                            <span class="text-gray-500">{{ Auth::user()?->email }}</span>
                         </p>
                     </div>
 

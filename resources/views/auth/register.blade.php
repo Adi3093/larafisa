@@ -11,7 +11,7 @@
 <body class="bg-gray-50 font-sans antialiased text-gray-900 flex min-h-screen">
 
     <div class="hidden lg:block lg:w-1/2 bg-indigo-900 relative">
-        <div class="absolute inset-0 bg-indigo-900/60 z-10"></div>
+        <div class="absolute inset-0 bg-indigo-600 z-10"></div>
         <img src="https://images.unsplash.com/photo-1542314831-c6a4d14d8373?q=80&w=2070&auto=format&fit=crop"
             alt="Hotel Lobby" class="absolute inset-0 w-full h-full object-cover z-0">
 

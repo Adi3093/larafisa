@@ -54,7 +54,7 @@
                 {{ session('success') }}</div>
         @endif
 
-        <div class="bg-indigo-900 p-5 rounded-xl shadow-lg mb-6 text-white">
+        <div class="bg-white border border-gray-100 p-5 rounded-xl shadow-lg mb-6 text-white">
             <h2 class="font-bold text-lg mb-3 flex items-center gap-2">
                 <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -90,4 +90,4 @@
     </div>
 
     <div class="hidden lg:block lg:w-1/2 bg-indigo-900 relative">
-        <div class="absolute inset-0 bg-indigo-900/60 z-10">
+        <div class="absolute inset-0 bg-indigo-600 z-10">

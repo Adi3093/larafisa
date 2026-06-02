@@ -101,3 +101,8 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
         return view('dashboard.pendapatan');
     });
 });
+
+//Landing Page Profile
+Route::get('/profil-tamu', function () {
+    return view('landing_page.hprofile');
+})->name('profil.tamu');
