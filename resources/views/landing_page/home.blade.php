@@ -11,11 +11,11 @@
                     dirancang khusus untuk kenyamanan Anda dan keluarga.
                 </p>
                 <div class="mt-4 flex justify-center gap-4 sm:mt-6">
-                    <a class="inline-block rounded border border-indigo-600 bg-indigo-600 px-5 py-3 font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+                    <a class="inline-block rounded-lg border border-indigo-600 bg-indigo-600 px-5 py-3 font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
                         href="#kamar">
                         Cek Kamar
                     </a>
-                    <a class="inline-block rounded border border-gray-200 px-5 py-3 font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 hover:text-gray-900"
+                    <a class="inline-block rounded-lg border border-gray-200 px-5 py-3 font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 hover:text-gray-900"
                         href="#">
                         Pesan Sekarang
                     </a>
@@ -43,10 +43,6 @@
                         <div class="relative h-56 overflow-hidden bg-gray-200">
                             <img src="{{ asset('storage/' . $kelas->thumbnail) }}" alt="{{ $kelas->nama_kelas }}"
                                 class="w-full h-full object-cover hover:scale-105 transition duration-500">
-                            <div
-                                class="absolute top-3 right-3 bg-indigo-600/90 backdrop-blur-sm px-3 py-1 rounded-lg shadow-sm font-bold text-white text-sm">
-                                Best Seller
-                            </div>
                         </div>
 
                         <div class="p-6 flex flex-col flex-grow">

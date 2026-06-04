@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class KelasKamar extends Model
 {
     use HasFactory;
-
     protected $fillable = [
         'nama_kelas',
         'harga',
@@ -22,7 +21,6 @@ class KelasKamar extends Model
     protected $casts = [
         'fasilitas' => 'array'
     ];
-
     public function kamars()
     {
         return $this->hasMany(Kamar::class);

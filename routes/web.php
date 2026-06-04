@@ -26,7 +26,7 @@ Route::get('/cek-database', function () {
     ];
 });
 
-// Gues Area no login
+// Guest Area no login
 Route::middleware('guest')->group(function () {
     // Login
     Route::get('/login', [AuthController::class, 'index'])->name('login');
@@ -58,27 +58,28 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
     Route::put('/kelas-kamar/{id}', [KamarController::class, 'updateKelas'])->name('kelas.update');
     Route::delete('/kelas-kamar/{id}', [KamarController::class, 'destroyKelas'])->name('kelas.destroy');
 
-    // Fisik Kamar
+    // Nomor Kamar
     Route::post('/kamar', [KamarController::class, 'storeKamar'])->name('kamar.store');
     Route::put('/kamar/{id}', [KamarController::class, 'updateKamar'])->name('kamar.update');
     Route::delete('/kamar/{id}', [KamarController::class, 'destroyKamar'])->name('kamar.destroy');
 
-    //Reservasi Walk-in
+    // MODUL RESERVASI TERPADU (Walk-in, Online & Riwayat)
     Route::get('/reservasi', [App\Http\Controllers\ReservasiController::class, 'index'])->name('reservasi');
     Route::post('/reservasi', [App\Http\Controllers\ReservasiController::class, 'store'])->name('reservasi.store');
     Route::put('/reservasi/{id}', [App\Http\Controllers\ReservasiController::class, 'update'])->name('reservasi.update');
-    Route::delete('/reservasi/{id}', [App\Http\Controllers\ReservasiController::class, 'destroy'])->name('reservasi.destroy');
-    Route::post('/reservasi/{id}/checkout', [App\Http\Controllers\ReservasiController::class, 'checkout'])->name('reservasi.checkout');
 
-    //Reservasi Online 
-    Route::get('/ongoing', [App\Http\Controllers\OngoingController::class, 'index'])->name('ongoing');
-    Route::post('/ongoing/{id}/konfirmasi', [App\Http\Controllers\OngoingController::class, 'konfirmasi'])->name('ongoing.konfirmasi');
-    Route::post('/ongoing/{id}/batal', [App\Http\Controllers\OngoingController::class, 'batal'])->name('ongoing.batal');
+    // Aksi Status (Diterima atau Dibatalkan)
+    Route::post('/reservasi/{id}/konfirmasi', [App\Http\Controllers\ReservasiController::class, 'konfirmasi'])->name('reservasi.konfirmasi');
+    Route::post('/reservasi/{id}/batal', [App\Http\Controllers\ReservasiController::class, 'batal'])->name('reservasi.batal');
 
-    //Riwayat Reservasi
-    Route::get('/reservasilog', [App\Http\Controllers\RiwayatController::class, 'index'])->name('riwayat');
-    Route::get('/riwayat/export/csv', [App\Http\Controllers\RiwayatController::class, 'exportCsv'])->name('riwayat.csv');
-    Route::get('/riwayat/export/pdf', [App\Http\Controllers\RiwayatController::class, 'exportPdf'])->name('riwayat.pdf');
+    // Export Riwayat
+    Route::get('/reservasi/export/csv', [App\Http\Controllers\ReservasiController::class, 'exportCsv'])->name('reservasi.csv');
+    Route::get('/reservasi/export/pdf', [App\Http\Controllers\ReservasiController::class, 'exportPdf'])->name('reservasi.pdf');
+
+    // MODUL RESEPSIONIS (Check-In & Check-Out)
+    Route::get('/checkinout', [App\Http\Controllers\CheckInOutController::class, 'index'])->name('checkinout');
+    Route::post('/checkinout/{id}/checkin', [App\Http\Controllers\CheckInOutController::class, 'checkin'])->name('checkinout.checkin');
+    Route::post('/checkinout/{id}/checkout', [App\Http\Controllers\CheckInOutController::class, 'checkout'])->name('checkinout.checkout');
 
     //Kelola Akun
     Route::get('/akun', [AccountController::class, 'index'])->name('akun');

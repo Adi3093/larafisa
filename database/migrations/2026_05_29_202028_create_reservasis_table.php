@@ -22,7 +22,7 @@ return new class extends Migration
             $table->date('check_in');
             $table->date('check_out');
             $table->enum('tipe_reservasi', ['Walk-in', 'Online'])->default('Walk-in');
-            $table->enum('status_reservasi', ['Aktif', 'Selesai', 'Batal'])->default('Aktif');
+            $table->enum('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi', 'Check-In', 'Selesai', 'Dibatalkan'])->default('Terkonfirmasi');
             $table->timestamps();
         });
     }

@@ -11,12 +11,6 @@
                 Profil
             </a>
         </li>
-        <li class="mr-2">
-            <a href=""
-                class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 ">
-                Riwayat
-            </a>
-        </li>
     </ul>
 </div>
 {{ $slot }}

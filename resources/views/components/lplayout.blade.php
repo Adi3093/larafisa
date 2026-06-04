@@ -96,7 +96,7 @@
                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                     </path>
                 </svg>
-                <span class="text-[10px] text-gray-500 group-hover:text-indigo-600">Booking</span>
+                <span class="text-[10px] text-gray-500 group-hover:text-indigo-600">Reservasi</span>
             </a>
 
             <a href="#" class="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 group">

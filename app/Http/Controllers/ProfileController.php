@@ -16,7 +16,6 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         $user = Auth::user();
-        //validasi data masuk
         $request->validate([
             'name' => 'required|string|max:45',
             'username' => 'required|string|max:20|unique:users,username,' . $user->id,
@@ -34,14 +33,10 @@ class ProfileController extends Controller
         $user->name = $request->name;
         $user->username = $request->username;
         $user->email = $request->email;
-
-        // 4. Perbarui sandi HANYA jika form sandi diisi
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
-
         $user->save();
-
         return back()->with('success', 'Profil berhasil diperbarui!');
     }
 }
