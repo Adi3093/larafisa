@@ -11,10 +11,7 @@ class KamarController extends Controller
 {
     public function index(Request $request)
     {
-        // 1. Deteksi Tab Aktif (Default: kelas)
         $activeTab = $request->tab ?? 'kelas';
-
-        // 2. DATA KATALOG (KELAS KAMAR)
         $kelasQuery = KelasKamar::withCount('kamars');
 
         if ($request->filled('kelas_search')) {
@@ -29,11 +26,8 @@ class KamarController extends Controller
         }
 
         $kelasPerPage = $request->kelas_per_page ?? 5;
-        // Gunakan nama pagination 'kelas_page' agar tidak bentrok dengan tabel ruangan
         $kelasKamars = $kelasQuery->paginate($kelasPerPage, ['*'], 'kelas_page')->appends($request->all());
 
-
-        // 3. DATA FISIK (RUANGAN)
         $kamarQuery = Kamar::with('kelasKamar');
 
         if ($request->filled('ruangan_search')) {
@@ -49,28 +43,41 @@ class KamarController extends Controller
         }
 
         $ruanganPerPage = $request->ruangan_per_page ?? 5;
-        // Gunakan nama pagination 'ruangan_page'
         $kamars = $kamarQuery->latest()->paginate($ruanganPerPage, ['*'], 'ruangan_page')->appends($request->all());
 
-        // 4. Data Master Kelas Kamar untuk Dropdown Filter dan Form Modal
         $semuaKelas = KelasKamar::orderBy('nama_kelas', 'asc')->get();
 
         return view('dashboard.kamar', compact('kelasKamars', 'kamars', 'semuaKelas', 'activeTab'));
     }
+
     public function storeKelas(Request $request)
     {
         $request->validate([
             'nama_kelas' => 'required|string|max:255',
             'harga' => 'required|numeric|min:0',
             'fasilitas' => 'required|array',
-            'thumbnail' => 'required|image|max:2048',
+            'foto_1' => 'nullable|image|max:5120',
+            'foto_2' => 'nullable|image|max:5120',
+            'foto_3' => 'nullable|image|max:5120',
         ]);
 
-        $data = $request->all();
-        if ($request->hasFile('thumbnail')) $data['thumbnail'] = $request->file('thumbnail')->store('kamar', 'public');
+        $data = $request->except(['foto_1', 'foto_2', 'foto_3']);
+
         if ($request->hasFile('foto_1')) $data['foto_1'] = $request->file('foto_1')->store('kamar', 'public');
         if ($request->hasFile('foto_2')) $data['foto_2'] = $request->file('foto_2')->store('kamar', 'public');
         if ($request->hasFile('foto_3')) $data['foto_3'] = $request->file('foto_3')->store('kamar', 'public');
+
+        // Pengaman SQL Error 1048 (Tidak boleh NULL). 
+        // Set otomatis foto_1 sebagai thumbnail, atau fallback ke foto lain/default.
+        if (isset($data['foto_1'])) {
+            $data['thumbnail'] = $data['foto_1'];
+        } elseif (isset($data['foto_2'])) {
+            $data['thumbnail'] = $data['foto_2'];
+        } elseif (isset($data['foto_3'])) {
+            $data['thumbnail'] = $data['foto_3'];
+        } else {
+            $data['thumbnail'] = 'default-kamar.jpg';
+        }
 
         KelasKamar::create($data);
         return back()->with('success', 'Kelas kamar baru berhasil dibuat!');
@@ -87,7 +94,6 @@ class KamarController extends Controller
         return back()->with('success', 'Kelas kamar dan semua ruangannya berhasil dihapus!');
     }
 
-    // LOGIKA RUANGAN FISIK (KAMAR)
     public function storeKamar(Request $request)
     {
         $request->validate([
@@ -121,23 +127,36 @@ class KamarController extends Controller
             'nama_kelas' => 'required|string|max:255',
             'harga' => 'required|numeric|min:0',
             'fasilitas' => 'required|array',
-            // Saat edit, foto tidak wajib (nullable) agar admin bisa mempertahankan foto lama
-            'thumbnail' => 'nullable|image|max:2048',
-            'foto_1' => 'nullable|image|max:2048',
-            'foto_2' => 'nullable|image|max:2048',
-            'foto_3' => 'nullable|image|max:2048',
+            'foto_1' => 'nullable|image|max:5120',
+            'foto_2' => 'nullable|image|max:5120',
+            'foto_3' => 'nullable|image|max:5120',
         ]);
 
-        $data = $request->except(['thumbnail', 'foto_1', 'foto_2', 'foto_3']);
+        $data = $request->except(['foto_1', 'foto_2', 'foto_3', 'thumbnail_selection']);
 
-        // Logika hapus foto lama dan simpan foto baru jika ada file yang diunggah
-        $fotos = ['thumbnail', 'foto_1', 'foto_2', 'foto_3'];
+        $fotos = ['foto_1', 'foto_2', 'foto_3'];
+        $currentPhotos = [];
+
+        // Proses unggah foto baru jika ada
         foreach ($fotos as $foto) {
             if ($request->hasFile($foto)) {
                 if ($kelas->$foto) {
                     Storage::disk('public')->delete($kelas->$foto);
                 }
-                $data[$foto] = $request->file($foto)->store('kamar', 'public');
+                $path = $request->file($foto)->store('kamar', 'public');
+                $data[$foto] = $path;
+                $currentPhotos[$foto] = $path;
+            } else {
+                // Simpan jejak foto yang sudah ada di database
+                $currentPhotos[$foto] = $kelas->$foto;
+            }
+        }
+
+        // Tetapkan thumbnail sesuai pilihan Radio Button
+        if ($request->has('thumbnail_selection')) {
+            $selectedField = $request->thumbnail_selection;
+            if (isset($currentPhotos[$selectedField]) && $currentPhotos[$selectedField] != null) {
+                $data['thumbnail'] = $currentPhotos[$selectedField];
             }
         }
 
@@ -147,8 +166,8 @@ class KamarController extends Controller
 
     public function destroyKamar($id)
     {
-        Kamar::findOrFail($id)->delete();
+        $kamar = Kamar::findOrFail($id);
+        $kamar->delete();
         return back()->with('success', 'Ruangan berhasil dihapus!');
     }
-    //
 }

@@ -92,8 +92,10 @@
                         <tbody class="divide-y divide-gray-200">
                             @forelse($kelasKamars as $kelas)
                                 <tr class="hover:bg-gray-50">
-                                    <td class="px-4 py-3"><img src="{{ asset('storage/' . $kelas->thumbnail) }}"
-                                            class="h-12 w-20 object-cover rounded border border-gray-200"></td>
+                                    <td class="px-4 py-3">
+                                        <img src="{{ asset('storage/' . $kelas->thumbnail) }}"
+                                            class="h-12 w-20 object-cover rounded border border-gray-200">
+                                    </td>
                                     <td class="px-4 py-3 font-bold text-indigo-600">{{ $kelas->nama_kelas }}</td>
                                     <td class="px-4 py-3 font-semibold text-gray-700">Rp
                                         {{ number_format($kelas->harga, 0, ',', '.') }}</td>
@@ -102,7 +104,7 @@
                                             Kamar</span></td>
                                     <td class="px-4 py-3 text-center space-x-2">
                                         <button
-                                            onclick="openEditKelas({{ $kelas->id }}, '{{ $kelas->nama_kelas }}', {{ $kelas->harga }}, {{ json_encode($kelas->fasilitas) }})"
+                                            onclick="openEditKelas({{ $kelas->id }}, '{{ $kelas->nama_kelas }}', {{ $kelas->harga }}, {{ json_encode($kelas->fasilitas) }}, '{{ $kelas->thumbnail }}', '{{ $kelas->foto_1 }}', '{{ $kelas->foto_2 }}', '{{ $kelas->foto_3 }}')"
                                             class="rounded bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100">Edit</button>
 
                                         <form action="{{ route('kelas.destroy', $kelas->id) }}" method="POST"
@@ -277,21 +279,21 @@
                             @endforeach
                         </div>
                     </div>
-                    <div class="mb-4 bg-indigo-50 p-3 rounded border border-indigo-100">
-                        <label class="block text-sm font-bold text-indigo-900 mb-1">Foto Utama (Wajib)</label>
-                        <input type="file" name="thumbnail" accept="image/*" required class="text-sm">
+
+                    <div class="mb-4 bg-gray-50 p-3 rounded border">
+                        <label class="block text-sm font-bold text-gray-900 mb-2">Upload 3 Foto Kamar</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div><label class="block text-xs font-medium mb-1">Foto 1</label><input type="file"
+                                    name="foto_1" accept="image/*" class="text-xs w-full"></div>
+                            <div><label class="block text-xs font-medium mb-1">Foto 2</label><input type="file"
+                                    name="foto_2" accept="image/*" class="text-xs w-full"></div>
+                            <div><label class="block text-xs font-medium mb-1">Foto 3</label><input type="file"
+                                    name="foto_3" accept="image/*" class="text-xs w-full"></div>
+                        </div>
+                        <p class="text-[11px] text-gray-500 mt-2">*Foto 1 akan otomatis menjadi foto utama (Thumbnail).
+                        </p>
                     </div>
-                    <div class="grid grid-cols-3 gap-2 mb-4">
-                        <div class="bg-gray-50 p-2 rounded border"><label
-                                class="block text-xs font-medium mb-1">Opsional 1</label><input type="file"
-                                name="foto_1" accept="image/*" class="text-xs w-full"></div>
-                        <div class="bg-gray-50 p-2 rounded border"><label
-                                class="block text-xs font-medium mb-1">Opsional 2</label><input type="file"
-                                name="foto_2" accept="image/*" class="text-xs w-full"></div>
-                        <div class="bg-gray-50 p-2 rounded border"><label
-                                class="block text-xs font-medium mb-1">Opsional 3</label><input type="file"
-                                name="foto_3" accept="image/*" class="text-xs w-full"></div>
-                    </div>
+
                     <div class="flex justify-end gap-2 border-t pt-4">
                         <button type="button" onclick="document.getElementById('modalKelas').classList.add('hidden')"
                             class="px-4 py-2 border rounded bg-white text-gray-700 hover:bg-gray-50">Batal</button>
@@ -378,6 +380,7 @@
             </div>
         </div>
     </div>
+
     <div id="modalKelasEdit" class="fixed inset-0 z-50 hidden bg-gray-900/60 backdrop-blur-sm overflow-y-auto">
         <div class="flex min-h-screen items-center justify-center p-4">
             <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden">
@@ -405,23 +408,32 @@
                         </div>
                     </div>
 
-                    <p class="text-xs text-red-500 mb-2">*Abaikan bagian foto di bawah ini jika Anda tidak ingin
-                        mengganti foto yang sudah ada.</p>
-                    <div class="mb-4 bg-indigo-50 p-3 rounded border border-indigo-100">
-                        <label class="block text-sm font-bold text-indigo-900 mb-1">Ganti Foto Utama</label>
-                        <input type="file" name="thumbnail" accept="image/*" class="text-sm">
+                    <div class="mb-4 bg-gray-50 p-3 rounded border">
+                        <label class="block text-sm font-bold text-gray-900 mb-2">Pilih Foto Utama & Ubah Foto</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            @foreach (['foto_1', 'foto_2', 'foto_3'] as $fotoField)
+                                <label class="block cursor-pointer">
+                                    <div class="border-2 rounded-lg p-2 hover:border-indigo-500 bg-white">
+                                        <img id="prev_{{ $fotoField }}" src=""
+                                            class="h-24 w-full object-cover rounded mb-2 bg-gray-100 hidden">
+
+                                        <div class="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
+                                            <input type="radio" id="radio_{{ $fotoField }}"
+                                                name="thumbnail_selection" value="{{ $fotoField }}"
+                                                class="text-indigo-600 w-4 h-4 cursor-pointer">
+                                            <span class="text-xs font-bold text-gray-700">Jadikan Thumbnail</span>
+                                        </div>
+
+                                        <span class="text-[10px] text-gray-500 mb-1 block">Ganti
+                                            {{ str_replace('_', ' ', $fotoField) }}:</span>
+                                        <input type="file" name="{{ $fotoField }}" accept="image/*"
+                                            class="text-xs w-full">
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
                     </div>
-                    <div class="grid grid-cols-3 gap-2 mb-4">
-                        <div class="bg-gray-50 p-2 rounded border"><label class="block text-xs font-medium mb-1">Ganti
-                                Opsional 1</label><input type="file" name="foto_1" accept="image/*"
-                                class="text-xs w-full"></div>
-                        <div class="bg-gray-50 p-2 rounded border"><label class="block text-xs font-medium mb-1">Ganti
-                                Opsional 2</label><input type="file" name="foto_2" accept="image/*"
-                                class="text-xs w-full"></div>
-                        <div class="bg-gray-50 p-2 rounded border"><label class="block text-xs font-medium mb-1">Ganti
-                                Opsional 3</label><input type="file" name="foto_3" accept="image/*"
-                                class="text-xs w-full"></div>
-                    </div>
+
                     <div class="flex justify-end gap-2 border-t pt-4">
                         <button type="button"
                             onclick="document.getElementById('modalKelasEdit').classList.add('hidden')"
@@ -437,21 +449,50 @@
 
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
-        function openEditKelas(id, nama, harga, fasilitas) {
+        function openEditKelas(id, nama, harga, fasilitas, thumb, foto1, foto2, foto3) {
             document.getElementById('formEditKelas').action = '/kelas-kamar/' + id;
             document.getElementById('edit_nama_kelas').value = nama;
             document.getElementById('edit_harga_kelas').value = harga;
+
+            // Load Preview Gambar
+            const setPreview = (id, val) => {
+                const img = document.getElementById('prev_' + id);
+                if (img) {
+                    if (val) {
+                        img.src = '/storage/' + val;
+                        img.classList.remove('hidden');
+                    } else {
+                        img.src = '';
+                        img.classList.add('hidden'); // Sembunyikan ikon gambar rusak jika kosong
+                    }
+                }
+            };
+
+            setPreview('foto_1', foto1);
+            setPreview('foto_2', foto2);
+            setPreview('foto_3', foto3);
+
+            // Set radio button aktif berdasarkan data thumbnail di database
+            let radios = document.getElementsByName('thumbnail_selection');
+            radios.forEach(r => r.checked = false); // Reset pilihan
+
+            if (thumb === foto1 && foto1) document.getElementById('radio_foto_1').checked = true;
+            else if (thumb === foto2 && foto2) document.getElementById('radio_foto_2').checked = true;
+            else if (thumb === foto3 && foto3) document.getElementById('radio_foto_3').checked = true;
+            else if (radios[0]) radios[0].checked = true; // Fallback jika tidak ada yang cocok, pilih foto 1
 
             // Bersihkan centang fasilitas lama
             let checkboxes = document.querySelectorAll('.edit-fas-cb');
             checkboxes.forEach(cb => cb.checked = false);
 
             // Centang otomatis berdasarkan data array fasilitas di database
-            checkboxes.forEach(cb => {
-                if (fasilitas.includes(cb.value)) {
-                    cb.checked = true;
-                }
-            });
+            if (Array.isArray(fasilitas)) {
+                checkboxes.forEach(cb => {
+                    if (fasilitas.includes(cb.value)) {
+                        cb.checked = true;
+                    }
+                });
+            }
 
             document.getElementById('modalKelasEdit').classList.remove('hidden');
         }
