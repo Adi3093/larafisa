@@ -17,6 +17,48 @@
         @endif
     </div>
 
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div class="bg-emerald-100 p-3 rounded-xl">
+                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Kamar Tersedia</p>
+                <h3 class="text-2xl font-black text-gray-900">{{ $kamarTersedia }}</h3>
+            </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div class="bg-blue-100 p-3 rounded-xl">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                    </path>
+                </svg>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Kamar Terpakai</p>
+                <h3 class="text-2xl font-black text-gray-900">{{ $kamarTerpakai }}</h3>
+            </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div class="bg-rose-100 p-3 rounded-xl">
+                <svg class="w-6 h-6 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                    </path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Dalam Perbaikan</p>
+                <h3 class="text-2xl font-black text-gray-900">{{ $kamarPerbaikan }}</h3>
+            </div>
+        </div>
+    </div>
+
     @if (session('success'))
         <div
             class="mb-6 flex items-center gap-3 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl shadow-sm">
@@ -25,6 +67,16 @@
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             <p class="text-sm font-medium">{{ session('success') }}</p>
+        </div>
+    @endif
+    @if (session('error'))
+        <div
+            class="mb-6 flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-sm">
+            <svg class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p class="text-sm font-medium">{{ session('error') }}</p>
         </div>
     @endif
 
@@ -42,10 +94,11 @@
     </div>
 
     <div class="bg-white p-5 lg:p-6 rounded-2xl border border-gray-100 shadow-sm mb-6">
-        <form method="GET" action="{{ route('reservasi') }}" class="flex flex-col lg:flex-row items-end gap-4 w-full">
+        <form method="GET" action="{{ route('reservasi') }}"
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end w-full">
             <input type="hidden" name="tab" value="{{ $tab }}">
 
-            <div class="flex-1 w-full">
+            <div class="col-span-1 sm:col-span-2 lg:col-span-1">
                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Cari Tamu / No.
                     Tiket</label>
                 <div class="relative">
@@ -56,37 +109,77 @@
                         </svg>
                     </div>
                     <input type="text" name="search" value="{{ request('search') }}"
-                        placeholder="Ketik nama tamu atau nomor reservasi..."
+                        placeholder="Nama / Kode Reservasi..."
                         class="pl-10 w-full border border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-2.5 text-sm transition">
                 </div>
             </div>
 
-            @if ($tab === 'riwayat')
-                <div class="flex gap-2 w-full lg:w-auto">
-                    <a href="{{ route('reservasi.pdf') }}"
-                        class="bg-red-50 text-red-700 border border-red-200 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-red-100 transition flex items-center gap-1.5 shadow-sm">
-                        📄 Export PDF
-                    </a>
-                    <a href="{{ route('reservasi.csv') }}"
-                        class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-100 transition flex items-center gap-1.5 shadow-sm">
-                        📊 Export CSV
-                    </a>
-                </div>
-            @endif
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Filter Kelas
+                    Kamar</label>
+                <select name="filter_kelas"
+                    class="w-full border border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-2.5 text-sm bg-white transition">
+                    <option value="semua">Semua Kelas</option>
+                    @foreach ($kelasKamars as $kelas)
+                        <option value="{{ $kelas->id }}"
+                            {{ request('filter_kelas') == $kelas->id ? 'selected' : '' }}>{{ $kelas->nama_kelas }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
-            <div class="flex gap-3 w-full lg:w-auto">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Urutan
+                    Tampilan</label>
+                <select name="sorting"
+                    class="w-full border border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-2.5 text-sm bg-white transition">
+                    <option value="">Default (Terbaru)</option>
+                    <option value="waktu_terdekat" {{ request('sorting') == 'waktu_terdekat' ? 'selected' : '' }}>
+                        Waktu Reservasi Terdekat</option>
+                    <option value="waktu_terlama" {{ request('sorting') == 'waktu_terlama' ? 'selected' : '' }}>Waktu
+                        Reservasi Terlama</option>
+                    <option value="harga_tertinggi" {{ request('sorting') == 'harga_tertinggi' ? 'selected' : '' }}>
+                        Harga Tertinggi</option>
+                    <option value="harga_terendah" {{ request('sorting') == 'harga_terendah' ? 'selected' : '' }}>
+                        Harga Terendah</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Jadwal
+                    Mendatang</label>
+                <select name="filter_mingguan"
+                    class="w-full border border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-2.5 text-sm bg-white transition">
+                    <option value="">Semua Jadwal</option>
+                    <option value="1" {{ request('filter_mingguan') == '1' ? 'selected' : '' }}>Mulai Menginap
+                        (H-7)</option>
+                </select>
+            </div>
+
+            <div class="flex gap-2 w-full">
                 <button type="submit"
-                    class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition shadow-sm w-full lg:w-auto text-center">
-                    Terapkan Pencarian
+                    class="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition shadow-sm text-center">
+                    Filter
                 </button>
-                @if (request('search'))
-                    <a href="{{ route('reservasi', ['tab' => $tab]) }}"
-                        class="bg-white text-gray-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-50 transition border border-gray-200 text-center shadow-sm">
-                        Reset
-                    </a>
-                @endif
+                <a href="{{ route('reservasi', ['tab' => $tab]) }}"
+                    class="bg-white text-gray-600 px-3 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-50 transition border border-gray-200 text-center shadow-sm">
+                    Reset
+                </a>
             </div>
         </form>
+
+        @if ($tab === 'riwayat')
+            <div class="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-100">
+                <a href="{{ route('reservasi.pdf') }}"
+                    class="bg-red-50 text-red-700 border border-red-200 px-4 py-2 rounded-xl text-sm font-bold hover:bg-red-100 transition flex items-center gap-1.5 shadow-sm">
+                    📄 Export PDF
+                </a>
+                <a href="{{ route('reservasi.csv') }}"
+                    class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-100 transition flex items-center gap-1.5 shadow-sm">
+                    📊 Export CSV
+                </a>
+            </div>
+        @endif
     </div>
 
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
@@ -115,15 +208,18 @@
                             <td class="px-6 py-4">
                                 <div class="font-medium text-gray-900">Kamar {{ $res->kamar?->nomor_ruangan ?? '-' }}
                                 </div>
-                                <div class="text-xs text-gray-500 mt-0.5">{{ $res->kelasKamar?->nama_kelas ?? '-' }}
+                                <div class="text-xs text-gray-500 mt-0.5">
+                                    {{ $res->kamar?->kelasKamar?->nama_kelas ?? '-' }}
                                 </div>
                             </td>
                             <td class="px-6 py-4">
-                                <div class="font-medium text-gray-900">
-                                    {{ \Carbon\Carbon::parse($res->check_in)->translatedFormat('d M Y') }}
+                                <div class="font-bold text-gray-900 text-xs">
+                                    <span class="text-emerald-600 font-extrabold">In:</span>
+                                    {{ \Carbon\Carbon::parse($res->check_in)->translatedFormat('d M Y - H:i') }} WIB
                                 </div>
-                                <div class="text-xs text-gray-400 mt-1">
-                                    s.d {{ \Carbon\Carbon::parse($res->check_out)->translatedFormat('d M Y') }}
+                                <div class="text-xs text-gray-600 font-bold mt-1">
+                                    <span class="text-red-500 font-extrabold">Out:</span>
+                                    {{ \Carbon\Carbon::parse($res->check_out)->translatedFormat('d M Y - H:i') }} WIB
                                 </div>
                             </td>
                             <td class="px-6 py-4">
@@ -199,14 +295,6 @@
         {{ $reservasis->links() }}
     </div>
 
-    <select id="master_kamar_template" class="hidden">
-        @foreach ($kamars as $kmr)
-            <option value="{{ $kmr->id }}" data-kelas="{{ $kmr->kelas_kamar_id }}">
-                Kamar {{ $kmr->nomor_ruangan }}
-            </option>
-        @endforeach
-    </select>
-
     <div id="walkInModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-sm"
         aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
@@ -249,6 +337,22 @@
                             <p class="text-[10px] text-gray-400 mt-1">*Hanya menerima angka, maksimal 16 digit.</p>
                         </div>
 
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Waktu Check-In</label>
+                                <input type="datetime-local" name="check_in" id="check_in"
+                                    value="{{ date('Y-m-d\TH:i') }}" onchange="filterKamarDanHitung()" required
+                                    class="w-full border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 p-2.5 text-sm transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Waktu Check-Out</label>
+                                <input type="datetime-local" name="check_out" id="check_out"
+                                    value="{{ date('Y-m-d\TH:i', strtotime('+1 day')) }}"
+                                    onchange="filterKamarDanHitung()" required
+                                    class="w-full border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 p-2.5 text-sm transition">
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-2 gap-4 mb-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Tipe Kelas</label>
@@ -269,22 +373,6 @@
                                     class="w-full border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 p-2.5 text-sm bg-white transition">
                                     <option value="">-- Pilih Kamar --</option>
                                 </select>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Tgl Check-In</label>
-                                <input type="date" name="check_in" id="check_in" value="{{ date('Y-m-d') }}"
-                                    onchange="filterKamarDanHitung()" required
-                                    class="w-full border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 p-2.5 text-sm transition">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Tgl Check-Out</label>
-                                <input type="date" name="check_out" id="check_out"
-                                    value="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                                    onchange="filterKamarDanHitung()" required
-                                    class="w-full border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 p-2.5 text-sm transition">
                             </div>
                         </div>
 
@@ -373,6 +461,7 @@
             document.getElementById('extra_selimut_qty').value = 0;
             document.getElementById('total_biaya_display').innerText = 'Rp 0';
             document.getElementById('rincian_hari').innerText = '1 Malam';
+            document.getElementById('kamar_id').innerHTML = '<option value="">-- Pilih Kamar --</option>';
         }
 
         function adjustQty(inputId, change) {
@@ -386,33 +475,15 @@
             }
         }
 
-        function filterKamarDanHitung() {
+        async function filterKamarDanHitung() {
             try {
-                // CLONING MENGGUNAKAN NOMOR_RUANGAN YANG ASLI
                 let kelasId = document.getElementById('kelas_kamar_id').value;
-                let masterSelect = document.getElementById('master_kamar_template');
-                let kamarSelect = document.getElementById('kamar_id');
-
-                let selectedKamarValueBefore = kamarSelect.value;
-                kamarSelect.innerHTML = '<option value="">-- Pilih Kamar --</option>';
-
-                if (kelasId !== "") {
-                    let masterOptions = masterSelect.querySelectorAll('option');
-                    masterOptions.forEach(opt => {
-                        if (opt.getAttribute('data-kelas') === kelasId) {
-                            let clonedOption = opt.cloneNode(true);
-                            if (clonedOption.value === selectedKamarValueBefore) {
-                                clonedOption.selected = true;
-                            }
-                            kamarSelect.appendChild(clonedOption);
-                        }
-                    });
-                }
-
                 let checkInInput = document.getElementById('check_in').value;
                 let checkOutInput = document.getElementById('check_out').value;
-                let diffDays = 1;
+                let kamarSelect = document.getElementById('kamar_id');
 
+                // Kalkulasi Durasi Hari
+                let diffDays = 1;
                 if (checkInInput && checkOutInput) {
                     let checkIn = new Date(checkInInput);
                     let checkOut = new Date(checkOutInput);
@@ -420,30 +491,53 @@
                     diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     if (diffDays <= 0 || isNaN(diffDays)) diffDays = 1;
                 }
-
                 document.getElementById('rincian_hari').innerText = diffDays + ' Malam';
 
+                // Kalkulasi Biaya
                 let selectKelas = document.getElementById('kelas_kamar_id');
                 let hargaPerMalam = 0;
-
                 if (selectKelas && selectKelas.selectedIndex > 0) {
-                    hargaPerMalam = parseInt(selectKelas.options[selectKelas.selectedIndex].getAttribute('data-harga')) ||
-                        0;
+                    hargaPerMalam = parseInt(selectKelas.options[selectKelas.selectedIndex].getAttribute(
+                        'data-harga')) || 0;
                 }
-
                 let totalBiayaKamar = hargaPerMalam * diffDays;
-
                 let qtyBed = parseInt(document.getElementById('extra_bed_qty').value) || 0;
                 let qtySelimut = parseInt(document.getElementById('extra_selimut_qty').value) || 0;
-
                 let totalAddOn = (qtyBed * 100000) + (qtySelimut * 25000);
-                let grandTotal = totalBiayaKamar + totalAddOn;
 
                 document.getElementById('total_biaya_display').innerText = new Intl.NumberFormat('id-ID', {
                     style: 'currency',
                     currency: 'IDR',
                     minimumFractionDigits: 0
-                }).format(grandTotal);
+                }).format(totalBiayaKamar + totalAddOn);
+
+                // REQUEST AJAX UNTUK MENDAPATKAN KAMAR YANG BENAR-BENAR KOSONG
+                let selectedKamarValueBefore = kamarSelect.value;
+                kamarSelect.innerHTML = '<option value="">-- Sedang memuat kamar... --</option>';
+
+                if (kelasId && checkInInput && checkOutInput) {
+                    let response = await fetch(
+                        `/api/kamar-tersedia?kelas_id=${kelasId}&check_in=${checkInInput}&check_out=${checkOutInput}`
+                        );
+                    let kamars = await response.json();
+
+                    kamarSelect.innerHTML = '<option value="">-- Pilih Kamar --</option>';
+
+                    if (kamars.length === 0) {
+                        kamarSelect.innerHTML =
+                        '<option value="" disabled>-- Kamar Penuh di Waktu Tersebut --</option>';
+                    } else {
+                        kamars.forEach(kmr => {
+                            let option = document.createElement('option');
+                            option.value = kmr.id;
+                            option.text = 'Kamar ' + kmr.nomor_ruangan;
+                            if (kmr.id == selectedKamarValueBefore) option.selected = true;
+                            kamarSelect.appendChild(option);
+                        });
+                    }
+                } else {
+                    kamarSelect.innerHTML = '<option value="">-- Pilih Kelas & Tanggal Dahulu --</option>';
+                }
 
             } catch (error) {
                 console.error("Kesalahan sistem kalkulator:", error);

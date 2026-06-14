@@ -19,8 +19,8 @@ return new class extends Migration
             $table->string('no_hp');
             $table->foreignId('kamar_id')->constrained('kamars')->onDelete('cascade');
             $table->json('ekstra')->nullable();
-            $table->date('check_in');
-            $table->date('check_out');
+            $table->datetime('check_in');
+            $table->datetime('check_out');
             $table->enum('tipe_reservasi', ['Walk-in', 'Online'])->default('Walk-in');
             $table->enum('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi', 'Check-In', 'Selesai', 'Dibatalkan'])->default('Terkonfirmasi');
             $table->timestamps();

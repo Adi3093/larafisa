@@ -10,6 +10,8 @@ class Reservasi extends Model
     use HasFactory;
     protected $fillable = ['no_reservasi', 'nama_tamu', 'no_ktp', 'no_hp', 'kamar_id', 'ekstra', 'check_in', 'check_out', 'tipe_reservasi', 'status_reservasi'];
     protected $casts = [
+        'check-in' => 'datetime',
+        'check-out' => 'datetime',
         'ekstra' => 'array'
     ];
     public function kamar()

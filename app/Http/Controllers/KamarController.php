@@ -4,11 +4,80 @@ namespace App\Http\Controllers;
 
 use App\Models\Kamar;
 use App\Models\KelasKamar;
+use App\Models\Reservasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class KamarController extends Controller
 {
+    // FUNGSI UTAMA LANDING PAGE (SINKRONISASI WAKTU & KAPASITAS)
+    public function landingPage(Request $request)
+    {
+        // Mengambil input dengan nilai default untuk menghindari error 'undefined'
+        $checkin = $request->input('filter_checkin', date('Y-m-d\TH:i'));
+        $checkout = $request->input('filter_checkout', date('Y-m-d\TH:i', strtotime('+1 day')));
+        $jumlahTamu = (int) $request->input('filter_tamu', 1);
+
+        $checkinDate = Carbon::parse($checkin);
+        $checkoutDate = Carbon::parse($checkout);
+
+        $semuaKelas = KelasKamar::all();
+        $kelasKamars = collect();
+
+        foreach ($semuaKelas as $kelas) {
+            // Filter Fasilitas
+            $fasilitasArray = is_array($kelas->fasilitas) ? $kelas->fasilitas : (json_decode($kelas->fasilitas, true) ?? []);
+
+            // REVISI AKURASI: Gabungkan nama kelas dan string fasilitas agar pencarian tipe bed tidak meleset
+            $teksPencarian = strtolower($kelas->nama_kelas . ' ' . implode(' ', $fasilitasArray));
+
+            $isSingle = preg_match('/single/i', $teksPencarian);
+            $isDouble = preg_match('/(double|twin|queen|king|besar)/i', $teksPencarian);
+
+            // =========================================================================
+            // REVISI LOGIKA KAPASITAS BARU
+            // =========================================================================
+            if ($jumlahTamu == 1) {
+                // Jika 1 orang, HANYA memunculkan tipe kamar yang punya Single Bed
+                if (!$isSingle) {
+                    continue;
+                }
+            } elseif ($jumlahTamu == 2) {
+                // Jika 2 orang, HANYA memunculkan tipe kamar yang punya Double Bed ke atas
+                if (!$isDouble) {
+                    continue;
+                }
+            }
+            // Jika 3 orang atau lebih, tidak ada penyaringan kasur (tampilkan semua kamarnya)
+            // =========================================================================
+
+            // Cek ketersediaan
+            $totalKamar = Kamar::where('kelas_kamar_id', $kelas->id)->where('status', '!=', 'Maintenance')->count();
+            $terpakai = Reservasi::whereIn('status_reservasi', ['Terkonfirmasi', 'Check-In'])
+                ->whereHas('kamar', fn($q) => $q->where('kelas_kamar_id', $kelas->id))
+                ->where('check_in', '<', $checkoutDate)
+                ->where('check_out', '>', $checkinDate)
+                ->distinct('kamar_id')->count('kamar_id');
+
+            $sisa = max(0, $totalKamar - $terpakai);
+
+            if ($sisa > 0) {
+                $kelas->kamars_count = $sisa;
+                $kelasKamars->push($kelas);
+            }
+        }
+
+        // Variabel ini yang dikirim ke view
+        $searchData = [
+            'checkin' => $checkin,
+            'checkout' => $checkout,
+            'tamu' => $jumlahTamu
+        ];
+
+        return view('landing_page.home', compact('kelasKamars', 'searchData'));
+    }
+
     public function index(Request $request)
     {
         $activeTab = $request->tab ?? 'kelas';
@@ -67,8 +136,6 @@ class KamarController extends Controller
         if ($request->hasFile('foto_2')) $data['foto_2'] = $request->file('foto_2')->store('kamar', 'public');
         if ($request->hasFile('foto_3')) $data['foto_3'] = $request->file('foto_3')->store('kamar', 'public');
 
-        // Pengaman SQL Error 1048 (Tidak boleh NULL). 
-        // Set otomatis foto_1 sebagai thumbnail, atau fallback ke foto lain/default.
         if (isset($data['foto_1'])) {
             $data['thumbnail'] = $data['foto_1'];
         } elseif (isset($data['foto_2'])) {
@@ -137,7 +204,6 @@ class KamarController extends Controller
         $fotos = ['foto_1', 'foto_2', 'foto_3'];
         $currentPhotos = [];
 
-        // Proses unggah foto baru jika ada
         foreach ($fotos as $foto) {
             if ($request->hasFile($foto)) {
                 if ($kelas->$foto) {
@@ -147,12 +213,10 @@ class KamarController extends Controller
                 $data[$foto] = $path;
                 $currentPhotos[$foto] = $path;
             } else {
-                // Simpan jejak foto yang sudah ada di database
                 $currentPhotos[$foto] = $kelas->$foto;
             }
         }
 
-        // Tetapkan thumbnail sesuai pilihan Radio Button
         if ($request->has('thumbnail_selection')) {
             $selectedField = $request->thumbnail_selection;
             if (isset($currentPhotos[$selectedField]) && $currentPhotos[$selectedField] != null) {
