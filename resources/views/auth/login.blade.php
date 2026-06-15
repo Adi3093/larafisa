@@ -42,7 +42,7 @@
                         </div>
                         <input id="login" type="text" name="login" value="{{ old('login') }}" required
                             autofocus placeholder="Ketik username atau email..."
-                            class="pl-10 w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm text-sm">
+                            class="pl-10 w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition shadow-sm text-sm">
                     </div>
                 </div>
 
@@ -58,12 +58,12 @@
                             </svg>
                         </div>
                         <input id="password" type="password" name="password" required placeholder="••••••••"
-                            class="pl-10 w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm text-sm">
+                            class="pl-10 w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition shadow-sm text-sm">
                     </div>
                 </div>
 
                 <button type="submit"
-                    class="w-full bg-indigo-600 text-white font-bold rounded-xl py-3.5 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition shadow-lg transform hover:-translate-y-0.5 mt-2">
+                    class="w-full bg-amber-600 text-white font-bold rounded-xl py-3.5 hover:bg-amber-700 focus:ring-4 focus:ring-indigo-200 transition shadow-lg transform hover:-translate-y-0.5 mt-2">
                     Masuk Sekarang
                 </button>
             </form>
@@ -71,7 +71,7 @@
             <div class="mt-8 text-center text-sm text-gray-600">
                 Belum memiliki akun tamu?
                 <a href="{{ route('register') }}"
-                    class="font-bold text-indigo-600 hover:text-indigo-800 hover:underline transition">Daftar di
+                    class="font-bold text-amber-600 hover:text-amber-800 hover:underline transition">Daftar di
                     sini</a>
             </div>
 
@@ -89,5 +89,5 @@
         </div>
     </div>
 
-    <div class="hidden lg:block lg:w-1/2 bg-indigo-900 relative">
-        <div class="absolute inset-0 bg-indigo-600 z-10">
+    <div class="hidden lg:block lg:w-1/2 bg-amber-900 relative">
+        <div class="absolute inset-0 bg-amber-100 z-10">

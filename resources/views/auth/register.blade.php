@@ -11,13 +11,10 @@
 <body class="bg-gray-50 font-sans antialiased text-gray-900 flex min-h-screen">
 
     <div class="hidden lg:block lg:w-1/2 bg-indigo-900 relative">
-        <div class="absolute inset-0 bg-indigo-600 z-10"></div>
-        <img src="https://images.unsplash.com/photo-1542314831-c6a4d14d8373?q=80&w=2070&auto=format&fit=crop"
-            alt="Hotel Lobby" class="absolute inset-0 w-full h-full object-cover z-0">
-
+        <div class="absolute inset-0 bg-amber-100 border-t border-amber200 z-10"></div>
         <div class="absolute inset-0 z-20 flex flex-col justify-center px-16 text-white">
-            <h1 class="text-5xl font-black mb-4">FISA HOTEL</h1>
-            <p class="text-xl font-medium text-indigo-100 max-w-md">Bergabunglah bersama kami dan nikmati kemudahan
+            <h1 class="text-5xl font-black text-amber-950 mb-4">FISA HOTEL</h1>
+            <p class="text-xl font-medium text-amber-950 max-w-md">Bergabunglah bersama kami dan nikmati kemudahan
                 reservasi kamar impian Anda secara online, kapan saja dan di mana saja.</p>
         </div>
     </div>
@@ -54,7 +51,7 @@
                         </div>
                         <input id="name" type="text" name="name" value="{{ old('name') }}" required
                             autofocus placeholder="Contoh: Budi Santoso"
-                            class="pl-10 w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm text-sm">
+                            class="pl-10 w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition shadow-sm text-sm">
                     </div>
                 </div>
 
@@ -69,7 +66,7 @@
                         </div>
                         <input id="email" type="email" name="email" value="{{ old('email') }}" required
                             placeholder="budi@example.com"
-                            class="pl-10 w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm text-sm">
+                            class="pl-10 w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition shadow-sm text-sm">
                     </div>
                 </div>
 
@@ -83,13 +80,13 @@
                             </svg>
                         </div>
                         <input id="password" type="password" name="password" required placeholder="Minimal 8 karakter"
-                            class="pl-10 w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm text-sm">
+                            class="pl-10 w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition shadow-sm text-sm">
                     </div>
                     <p class="text-xs text-gray-500 mt-2">*Gunakan kombinasi huruf dan angka agar lebih aman.</p>
                 </div>
 
                 <button type="submit"
-                    class="w-full bg-indigo-600 text-white font-bold rounded-xl py-3.5 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition shadow-lg transform hover:-translate-y-0.5 mt-4">
+                    class="w-full bg-amber-600 text-white font-bold rounded-xl py-3.5 hover:bg-amber-700 focus:ring-4 focus:ring-indigo-200 transition shadow-lg transform hover:-translate-y-0.5 mt-4">
                     Buat Akun Sekarang
                 </button>
             </form>
@@ -97,7 +94,7 @@
             <div class="mt-8 text-center text-sm text-gray-600">
                 Sudah memiliki akun?
                 <a href="{{ route('login') }}"
-                    class="font-bold text-indigo-600 hover:text-indigo-800 hover:underline transition">Masuk di sini</a>
+                    class="font-bold text-amber-600 hover:text-amber-800 hover:underline transition">Masuk di sini</a>
             </div>
 
             <div class="mt-8 text-center">

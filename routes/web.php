@@ -6,12 +6,11 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AccountController;
 use App\Http\Middleware\UpdateLastSeen;
 use App\Http\Controllers\KamarController;
+use App\Http\Controllers\LandingProfileController; // <-- Jangan lupa tambahkan ini
 
 // Area Public
-Route::get('/', function () {
-    $kelasKamars = \App\Models\KelasKamar::all();
-    return view('landing_page.home', compact('kelasKamars'));
-});
+// REVISI SANGAT PENTING: Diarahkan ke KamarController agar logika Filter Kasur berjalan!
+Route::get('/', [KamarController::class, 'landingPage']);
 
 // Test Database
 Route::get('/cek-database', function () {
@@ -37,12 +36,19 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register_store'])->name('register.store');
 });
 
-//Auth area
+/// Auth area (Untuk SEMUA user yang sudah login: Admin, Resepsionis, & Tamu)
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // KEMBALIKAN KE NAMA ROUTE ASLI (profil.tamu)
+    Route::get('/profil-tamu', [LandingProfileController::class, 'index'])->name('profil.tamu');
+
+    // Tambahan untuk Edit Profil
+    Route::get('/profil-tamu/edit', [LandingProfileController::class, 'edit'])->name('profil.tamu.edit');
+    Route::put('/profil-tamu/update', [LandingProfileController::class, 'update'])->name('profil.tamu.update');
 });
 
-// Admin Area
+// Admin & Resepsionis Area
 Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function () {
 
     // Dashboard Utama
@@ -67,8 +73,10 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
     Route::get('/reservasi', [App\Http\Controllers\ReservasiController::class, 'index'])->name('reservasi');
     Route::post('/reservasi', [App\Http\Controllers\ReservasiController::class, 'store'])->name('reservasi.store');
     Route::put('/reservasi/{id}', [App\Http\Controllers\ReservasiController::class, 'update'])->name('reservasi.update');
+
     // API Javascript Fetch
     Route::get('/api/kamar-tersedia', [App\Http\Controllers\ReservasiController::class, 'getKamarTersedia'])->name('api.kamar.tersedia');
+
     // Aksi Status (Diterima atau Dibatalkan)
     Route::post('/reservasi/{id}/konfirmasi', [App\Http\Controllers\ReservasiController::class, 'konfirmasi'])->name('reservasi.konfirmasi');
     Route::post('/reservasi/{id}/batal', [App\Http\Controllers\ReservasiController::class, 'batal'])->name('reservasi.batal');
@@ -103,8 +111,3 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
         return view('dashboard.pendapatan');
     });
 });
-
-//Landing Page Profile
-Route::get('/profil-tamu', function () {
-    return view('landing_page.hprofile');
-})->name('profil.tamu');

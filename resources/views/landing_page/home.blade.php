@@ -121,10 +121,8 @@
                         class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-amber-500 p-2 sm:p-2.5 text-sm bg-amber-50/50 text-amber-950">
                         <option value="1" {{ request('filter_tamu', 1) == 1 ? 'selected' : '' }}>1 Orang</option>
                         <option value="2" {{ request('filter_tamu') == 2 ? 'selected' : '' }}>2 Orang</option>
-                        <option value="3" {{ request('filter_tamu') == 3 ? 'selected' : '' }}>3 Orang (Butuh Extra
-                            Bed)</option>
-                        <option value="4" {{ request('filter_tamu') >= 4 ? 'selected' : '' }}>4+ Orang (Rombongan)
-                        </option>
+                        <option value="3" {{ request('filter_tamu') == 3 ? 'selected' : '' }}>3 Orang</option>
+                        <option value="4" {{ request('filter_tamu') >= 4 ? 'selected' : '' }}>4+ Orang</option>
                     </select>
                 </div>
                 <div>
@@ -158,25 +156,10 @@
                         Reset Pencarian
                     </button>
                 </div>
-            @else
-                <div id="indikator-pencarian" class="hidden mt-4">
-                    <p
-                        class="text-sm text-amber-700 font-medium bg-amber-50 inline-block px-4 py-1.5 rounded-full border border-amber-200">
-                        Menampilkan kamar yang tersedia pada tanggal pilihan Anda
-                    </p>
-                    <button onclick="resetFilter()"
-                        class="block mx-auto mt-2 text-xs text-amber-600 font-bold hover:underline cursor-pointer">
-                        Reset Pencarian
-                    </button>
-                </div>
             @endif
         </div>
 
         @php
-            // =========================================================================
-            // INJEKSI LOGIKA SUPER FILTER DI LEVEL BLADE
-            // Mem-bypass rute controller yang salah sasaran agar fungsi tetap berjalan.
-            // =========================================================================
             $checkinReq = request('filter_checkin', date('Y-m-d\TH:i'));
             $checkoutReq = request('filter_checkout', date('Y-m-d\TH:i', strtotime('+1 day')));
             $tamuReq = (int) request('filter_tamu', 1);
@@ -196,19 +179,20 @@
                 $isSingle = preg_match('/single/i', $teksPencarian);
                 $isDouble = preg_match('/(double|twin|queen|king|besar)/i', $teksPencarian);
 
-                // REVISI LOGIKA KAPASITAS BARU BERDASARKAN TAMU
-                if ($tamuReq == 1) {
-                    // Jika 1 orang, HANYA memunculkan tipe kamar yang punya Single Bed
-                    if (!$isSingle) {
-                        continue;
-                    }
-                } elseif ($tamuReq == 2) {
-                    // Jika 2 orang, HANYA memunculkan tipe kamar yang punya Double Bed ke atas
-                    if (!$isDouble) {
-                        continue;
+                // REVISI LOGIKA STATE AWAL: Hanya lakukan penyaringan ketat kasur jika user menekan tombol pencarian (terdapat parameter di URL)
+                if (request()->has('filter_checkin')) {
+                    if ($tamuReq == 1) {
+                        // Jika 1 orang, HANYA memunculkan tipe kamar yang punya Single Bed
+                        if (!$isSingle) {
+                            continue;
+                        }
+                    } elseif ($tamuReq == 2) {
+                        // Jika 2 orang, HANYA memunculkan tipe kamar yang punya Double Bed ke atas
+                        if (!$isDouble) {
+                            continue;
+                        }
                     }
                 }
-                // Jika 3 orang atau lebih, lolos tanpa filter kasur (tampilkan semua)
 
                 // ATURAN 2: Filter berdasarkan ketersediaan (Jam/Waktu)
                 $totalKamarFisik = $kelas->kamars()->where('status', '!=', 'Maintenance')->count();
@@ -231,7 +215,7 @@
             }
         @endphp
 
-        @if ($tamuReq >= 3 && !$filteredKelas->isEmpty())
+        @if (request()->has('filter_checkin') && $tamuReq >= 3 && !$filteredKelas->isEmpty())
             <div
                 class="max-w-3xl mx-auto bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-xl mb-6 flex items-start gap-4 shadow-sm mt-6">
                 <svg class="w-8 h-8 text-blue-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
@@ -242,29 +226,11 @@
                 <div class="text-left">
                     <h4 class="font-bold text-blue-900">Rekomendasi Pemesanan ({{ $tamuReq }} Tamu)</h4>
                     <p class="text-sm mt-1 leading-relaxed">Berdasarkan jumlah orang yang Anda pilih, kami menyarankan
-                        Anda untuk menambahkan <strong>Layanan Extra Bed</strong> (dapat dilakukan di meja Resepsionis)
-                        atau memesan <strong>2 kamar terpisah</strong> agar istirahat keluarga Anda tetap nyaman.</p>
+                        Anda untuk menambahkan <strong>Layanan Extra Bed</strong> atau memesan <strong>2 kamar
+                            terpisah</strong> agar istirahat keluarga Anda tetap nyaman.</p>
                 </div>
             </div>
         @endif
-
-        <div id="skeleton-container"
-            class="hidden flex overflow-x-auto gap-4 sm:gap-6 pb-8 pt-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            @for ($i = 0; $i < 3; $i++)
-                <div
-                    class="w-[85vw] sm:w-[320px] lg:w-[360px] flex-none snap-center bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden flex flex-col animate-pulse">
-                    <div class="h-48 sm:h-56 bg-stone-200 w-full"></div>
-                    <div class="p-5 flex flex-col flex-grow">
-                        <div class="h-6 sm:h-7 bg-stone-200 rounded-md w-3/4 mb-4"></div>
-                        <div class="mt-auto pt-3">
-                            <div class="h-3 bg-stone-200 rounded w-1/4 mb-2"></div>
-                            <div class="h-7 sm:h-8 bg-amber-100 rounded-md w-1/2 mb-5"></div>
-                        </div>
-                        <div class="h-10 bg-amber-100/60 rounded-xl w-full"></div>
-                    </div>
-                </div>
-            @endfor
-        </div>
 
         <div id="katalog-asli">
             @if ($filteredKelas->isEmpty())

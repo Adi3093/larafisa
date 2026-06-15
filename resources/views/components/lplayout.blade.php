@@ -11,7 +11,7 @@
 <body class="bg-amber-50/50 antialiased pb-20 lg:pb-0 relative">
 
     @php
-        $isProfile = request()->routeIs('profil.tamu');
+        $isProfile = request()->routeIs('profil.tamu*');
         // Navbar cerah transparan (kaca)
         $navBgClass = $isProfile
             ? 'bg-amber-600 border-none'

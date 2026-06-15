@@ -1,4 +1,14 @@
-<x-dblayout>
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+
+<body>
+
     <div class="flex flex-col items-center justify-center min-h-[75vh] text-center px-4">
 
         <div class="text-indigo-300 mb-6 animate-pulse">
@@ -25,4 +35,4 @@
         </button>
 
     </div>
-</x-dblayout>
+</body>

@@ -22,6 +22,9 @@ class KamarController extends Controller
         $checkinDate = Carbon::parse($checkin);
         $checkoutDate = Carbon::parse($checkout);
 
+        // Cekapakah user sudah menekan tombol submit pencarian secara eksplisit
+        $isSearched = $request->has('filter_checkin');
+
         $semuaKelas = KelasKamar::all();
         $kelasKamars = collect();
 
@@ -35,22 +38,20 @@ class KamarController extends Controller
             $isSingle = preg_match('/single/i', $teksPencarian);
             $isDouble = preg_match('/(double|twin|queen|king|besar)/i', $teksPencarian);
 
-            // =========================================================================
-            // REVISI LOGIKA KAPASITAS BARU
-            // =========================================================================
-            if ($jumlahTamu == 1) {
-                // Jika 1 orang, HANYA memunculkan tipe kamar yang punya Single Bed
-                if (!$isSingle) {
-                    continue;
-                }
-            } elseif ($jumlahTamu == 2) {
-                // Jika 2 orang, HANYA memunculkan tipe kamar yang punya Double Bed ke atas
-                if (!$isDouble) {
-                    continue;
+            // REVISI LOGIKA KAPASITAS BARU: Hanya memfilter jika user sudah menekan tombol cek ketersediaan
+            if ($isSearched) {
+                if ($jumlahTamu == 1) {
+                    // Jika 1 orang, HANYA memunculkan tipe kamar yang punya Single Bed
+                    if (!$isSingle) {
+                        continue;
+                    }
+                } elseif ($jumlahTamu == 2) {
+                    // Jika 2 orang, HANYA memunculkan tipe kamar yang punya Double Bed ke atas
+                    if (!$isDouble) {
+                        continue;
+                    }
                 }
             }
-            // Jika 3 orang atau lebih, tidak ada penyaringan kasur (tampilkan semua kamarnya)
-            // =========================================================================
 
             // Cek ketersediaan
             $totalKamar = Kamar::where('kelas_kamar_id', $kelas->id)->where('status', '!=', 'Maintenance')->count();
