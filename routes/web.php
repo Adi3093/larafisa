@@ -11,6 +11,8 @@ use App\Http\Controllers\LandingProfileController; // <-- Jangan lupa tambahkan 
 // Area Public
 // REVISI SANGAT PENTING: Diarahkan ke KamarController agar logika Filter Kasur berjalan!
 Route::get('/', [KamarController::class, 'landingPage']);
+Route::get('/reservasi-online', [App\Http\Controllers\GuestReservationController::class, 'index'])->name('reservasi.tamu');
+Route::get('/riwayat-tamu', [App\Http\Controllers\GuestReservationController::class, 'riwayat'])->name('riwayat.tamu');
 
 // Test Database
 Route::get('/cek-database', function () {
@@ -46,6 +48,11 @@ Route::middleware('auth')->group(function () {
     // Tambahan untuk Edit Profil
     Route::get('/profil-tamu/edit', [LandingProfileController::class, 'edit'])->name('profil.tamu.edit');
     Route::put('/profil-tamu/update', [LandingProfileController::class, 'update'])->name('profil.tamu.update');
+    // ROUTE RESERVASI ONLINE TAMU
+    Route::get('/reservasi-online', [App\Http\Controllers\GuestReservationController::class, 'index'])->name('reservasi.tamu');
+    Route::post('/reservasi-online', [App\Http\Controllers\GuestReservationController::class, 'store'])->name('reservasi.tamu.store');
+    Route::put('/reservasi-online/{id}/batal', [App\Http\Controllers\GuestReservationController::class, 'batal'])->name('reservasi.tamu.batal');
+    Route::put('/reservasi-online/{id}/batal', [App\Http\Controllers\GuestReservationController::class, 'batal'])->name('reservasi.tamu.batal');
 });
 
 // Admin & Resepsionis Area

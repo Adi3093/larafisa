@@ -565,8 +565,7 @@
                             </ul>
                         </div>
 
-                        <button id="modal_btn_pesan"
-                            onclick="alert('Pemesanan online sedang dalam tahap pengembangan. Silakan hubungi resepsionis kami.')"
+                        <button id="modal_btn_pesan" onclick="lanjutReservasi()"
                             class="w-full bg-amber-600 text-white font-bold text-base sm:text-lg py-3 sm:py-4 rounded-xl shadow-lg shadow-amber-600/30 hover:bg-amber-700 transition transform hover:-translate-y-0.5 border-none">
                             Pesan Tipe Kamar Ini
                         </button>
@@ -625,10 +624,19 @@
             document.getElementById('modalDetail').classList.remove('hidden');
         }
 
+        function lanjutReservasi() {
+            let checkin = document.getElementById('filter_checkin').value;
+            let checkout = document.getElementById('filter_checkout').value;
+            // Pindah ke halaman reservasi dengan membawa parameter lengkap
+            window.location.href =
+                `/reservasi-online?kelas_id=${kelasIdAktif}&filter_checkin=${checkin}&filter_checkout=${checkout}`;
+        }
+
         function tutupDetailKelas() {
             document.body.classList.remove('overflow-hidden');
             document.getElementById('modalDetail').classList.add('hidden');
         }
+
 
         // --- FUNGSI RESET FILTER ---
         function resetFilter() {
