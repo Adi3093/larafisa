@@ -6,15 +6,25 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AccountController;
 use App\Http\Middleware\UpdateLastSeen;
 use App\Http\Controllers\KamarController;
-use App\Http\Controllers\LandingProfileController; // <-- Jangan lupa tambahkan ini
+use App\Http\Controllers\LandingProfileController;
 
-// Area Public
-// REVISI SANGAT PENTING: Diarahkan ke KamarController agar logika Filter Kasur berjalan!
+// ==========================================
+// AREA PUBLIC (Bisa diakses tanpa harus login)
+// ==========================================
 Route::get('/', [KamarController::class, 'landingPage']);
+
+// Akses Halaman Reservasi & Riwayat (Jika belum login, akan ditangani oleh Controller)
 Route::get('/reservasi-online', [App\Http\Controllers\GuestReservationController::class, 'index'])->name('reservasi.tamu');
 Route::get('/riwayat-tamu', [App\Http\Controllers\GuestReservationController::class, 'riwayat'])->name('riwayat.tamu');
 
-// Test Database
+// REVISI SUPER PENTING: API Pencarian Kamar diletakkan di luar middleware Admin
+// agar Tamu di halaman depan juga bisa memanggil/melihat daftar ruangan yang kosong!
+Route::get('/api/kamar-tersedia', [App\Http\Controllers\ReservasiController::class, 'getKamarTersedia'])->name('api.kamar.tersedia');
+
+
+// ==========================================
+// TEST DATABASE
+// ==========================================
 Route::get('/cek-database', function () {
     $user = \App\Models\User::where('username', 'admin')->first();
     if (!$user) return 'GAWAT: Akun admin tidak ditemukan di database! Seeder Anda belum berhasil.';
@@ -27,7 +37,10 @@ Route::get('/cek-database', function () {
     ];
 });
 
-// Guest Area no login
+
+// ==========================================
+// GUEST AREA (Hanya untuk yang belum login)
+// ==========================================
 Route::middleware('guest')->group(function () {
     // Login
     Route::get('/login', [AuthController::class, 'index'])->name('login');
@@ -38,24 +51,28 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register_store'])->name('register.store');
 });
 
-/// Auth area (Untuk SEMUA user yang sudah login: Admin, Resepsionis, & Tamu)
+
+// ==========================================
+// AUTH AREA (Untuk SEMUA user yang sudah login: Admin, Resepsionis, & Tamu)
+// ==========================================
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // KEMBALIKAN KE NAMA ROUTE ASLI (profil.tamu)
+    // Route Profil Tamu
     Route::get('/profil-tamu', [LandingProfileController::class, 'index'])->name('profil.tamu');
-
-    // Tambahan untuk Edit Profil
     Route::get('/profil-tamu/edit', [LandingProfileController::class, 'edit'])->name('profil.tamu.edit');
     Route::put('/profil-tamu/update', [LandingProfileController::class, 'update'])->name('profil.tamu.update');
-    // ROUTE RESERVASI ONLINE TAMU
-    Route::get('/reservasi-online', [App\Http\Controllers\GuestReservationController::class, 'index'])->name('reservasi.tamu');
+
+    // Aksi Form Reservasi Online Tamu (Simpan & Batal)
     Route::post('/reservasi-online', [App\Http\Controllers\GuestReservationController::class, 'store'])->name('reservasi.tamu.store');
-    Route::put('/reservasi-online/{id}/batal', [App\Http\Controllers\GuestReservationController::class, 'batal'])->name('reservasi.tamu.batal');
+    Route::put('/reservasi-online/{id}/update', [App\Http\Controllers\GuestReservationController::class, 'update'])->name('reservasi.tamu.update');
     Route::put('/reservasi-online/{id}/batal', [App\Http\Controllers\GuestReservationController::class, 'batal'])->name('reservasi.tamu.batal');
 });
 
-// Admin & Resepsionis Area
+
+// ==========================================
+// ADMIN & RESEPSIONIS AREA
+// ==========================================
 Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function () {
 
     // Dashboard Utama
@@ -63,15 +80,13 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
         return view('dashboard.dashboard');
     })->name('dashboard');
 
-    //Kelola Kamar
+    // Kelola Kamar & Ruangan
     Route::get('/kamar', [KamarController::class, 'index'])->name('kamar');
 
-    // Kelas Kamar
     Route::post('/kelas-kamar', [KamarController::class, 'storeKelas'])->name('kelas.store');
     Route::put('/kelas-kamar/{id}', [KamarController::class, 'updateKelas'])->name('kelas.update');
     Route::delete('/kelas-kamar/{id}', [KamarController::class, 'destroyKelas'])->name('kelas.destroy');
 
-    // Nomor Kamar
     Route::post('/kamar', [KamarController::class, 'storeKamar'])->name('kamar.store');
     Route::put('/kamar/{id}', [KamarController::class, 'updateKamar'])->name('kamar.update');
     Route::delete('/kamar/{id}', [KamarController::class, 'destroyKamar'])->name('kamar.destroy');
@@ -80,9 +95,6 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
     Route::get('/reservasi', [App\Http\Controllers\ReservasiController::class, 'index'])->name('reservasi');
     Route::post('/reservasi', [App\Http\Controllers\ReservasiController::class, 'store'])->name('reservasi.store');
     Route::put('/reservasi/{id}', [App\Http\Controllers\ReservasiController::class, 'update'])->name('reservasi.update');
-
-    // API Javascript Fetch
-    Route::get('/api/kamar-tersedia', [App\Http\Controllers\ReservasiController::class, 'getKamarTersedia'])->name('api.kamar.tersedia');
 
     // Aksi Status (Diterima atau Dibatalkan)
     Route::post('/reservasi/{id}/konfirmasi', [App\Http\Controllers\ReservasiController::class, 'konfirmasi'])->name('reservasi.konfirmasi');
@@ -97,7 +109,7 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
     Route::post('/checkinout/{id}/checkin', [App\Http\Controllers\CheckInOutController::class, 'checkin'])->name('checkinout.checkin');
     Route::post('/checkinout/{id}/checkout', [App\Http\Controllers\CheckInOutController::class, 'checkout'])->name('checkinout.checkout');
 
-    //Kelola Akun
+    // Kelola Akun
     Route::get('/akun', [AccountController::class, 'index'])->name('akun');
     Route::post('/akun', [AccountController::class, 'store'])->name('akun.store');
     Route::put('/akun/{id}', [AccountController::class, 'update'])->name('akun.update');
@@ -106,7 +118,7 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
         return view('dashboard.dtamu');
     });
 
-    //Pengaturan dan Laporan
+    // Pengaturan dan Laporan
     Route::get('/settings', function () {
         return view('dashboard.settings');
     })->name('settings');

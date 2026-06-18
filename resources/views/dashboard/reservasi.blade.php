@@ -241,23 +241,27 @@
                             <td class="px-6 py-4 text-right">
                                 <div class="flex justify-end gap-2">
                                     @if ($res->status_reservasi === 'Menunggu Konfirmasi')
-                                        <form method="POST" action="{{ route('reservasi.konfirmasi', $res->id) }}"
-                                            class="m-0">
-                                            @csrf
-                                            <button type="submit"
-                                                class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">
-                                                Terima
-                                            </button>
-                                        </form>
-                                        <form method="POST" action="{{ route('reservasi.batal', $res->id) }}"
-                                            class="m-0">
-                                            @csrf
-                                            <button type="submit"
-                                                onclick="return confirm('Batalkan pesanan online ini?')"
-                                                class="bg-white border border-red-200 text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-bold transition">
-                                                Tolak
-                                            </button>
-                                        </form>
+                                        @php
+                                            // Data JSON pembayaran dilempar ke JS
+                                            $metode = $res->ekstra['Metode Pembayaran'] ?? 'Bayar di tempat';
+                                            $detail = $res->ekstra['Detail Pembayaran'] ?? '-';
+                                            $kelasName = $res->kamar?->kelasKamar?->nama_kelas ?? '-';
+                                            $ruangName = $res->kamar?->nomor_ruangan ?? '-';
+                                        @endphp
+
+                                        <button
+                                            onclick="bukaModalKonfirmasi({{ $res->id }}, '{{ $res->no_reservasi }}', '{{ $res->nama_tamu }}', '{{ $kelasName }}', '{{ $ruangName }}', '{{ $metode }}', '{{ $detail }}')"
+                                            class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                </path>
+                                            </svg>
+                                            Buka
+                                        </button>
                                     @elseif($res->status_reservasi === 'Terkonfirmasi' || $res->status_reservasi === 'Check-In')
                                         <a href="{{ route('checkinout') }}"
                                             class="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1">
@@ -280,8 +284,6 @@
                                         </path>
                                     </svg>
                                     <p class="font-medium text-gray-900">Tidak ada data reservasi</p>
-                                    <p class="text-sm mt-1">Belum ada aktivitas reservasi yang tercatat pada kategori
-                                        ini.</p>
                                 </div>
                             </td>
                         </tr>
@@ -362,8 +364,7 @@
                                     <option value="" data-harga="0">-- Pilih Kelas --</option>
                                     @foreach ($kelasKamars as $kelas)
                                         <option value="{{ $kelas->id }}" data-harga="{{ $kelas->harga }}">
-                                            {{ $kelas->nama_kelas }}
-                                        </option>
+                                            {{ $kelas->nama_kelas }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -396,7 +397,6 @@
                                             class="px-3 py-1.5 font-bold text-gray-600 hover:bg-gray-200 transition text-sm">&plus;</button>
                                     </div>
                                 </div>
-
                                 <div
                                     class="flex items-center justify-between p-3 border border-gray-200 rounded-xl bg-white hover:bg-gray-50/50 transition shadow-sm">
                                     <div>
@@ -424,27 +424,161 @@
                                 </p>
                                 <p class="text-xs text-indigo-600 mt-0.5" id="rincian_hari">1 Malam</p>
                             </div>
-                            <div class="text-2xl font-black text-indigo-700" id="total_biaya_display">
-                                Rp 0
-                            </div>
+                            <div class="text-2xl font-black text-indigo-700" id="total_biaya_display">Rp 0</div>
                         </div>
                     </form>
                 </div>
                 <div class="bg-gray-50 px-6 py-4 flex flex-row-reverse border-t border-gray-100">
                     <button type="submit" form="walkInForm"
-                        class="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-indigo-700 ml-3 transition w-full sm:w-auto">
-                        Simpan & Check-In
-                    </button>
+                        class="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-indigo-700 ml-3 transition w-full sm:w-auto">Simpan
+                        & Check-In</button>
                     <button type="button" onclick="closeWalkInModal()"
-                        class="rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 mt-3 sm:mt-0 w-full sm:w-auto transition">
-                        Batal
-                    </button>
+                        class="rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 mt-3 sm:mt-0 w-full sm:w-auto transition">Batal</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <div id="modalKonfirmasi" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-sm"
+        aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
+            <div
+                class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+
+                <div class="bg-indigo-600 px-6 py-4 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-white">Tinjau Bukti Reservasi</h3>
+                    <button onclick="document.getElementById('modalKonfirmasi').classList.add('hidden')"
+                        class="text-indigo-100 hover:text-white transition">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <form id="formTerimaModal" method="POST" action="">
+                    @csrf
+                    <div class="p-6">
+
+                        <div class="grid grid-cols-2 gap-4 border-b border-gray-100 pb-4 mb-4">
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">ID Reservasi
+                                </p>
+                                <h4 class="text-base font-black text-indigo-700 break-words" id="m_no_res"></h4>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Nama Pemesan
+                                </p>
+                                <h4 class="text-base font-bold text-gray-900 break-words" id="m_nama"></h4>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mb-5">
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Kelas Kamar
+                                </p>
+                                <h4 class="text-sm font-bold text-gray-900" id="m_kelas"></h4>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Ruangan</p>
+                                <h4 class="text-sm font-bold text-gray-900" id="m_ruangan"></h4>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <div class="grid grid-cols-2 gap-4 items-center">
+                                <div>
+                                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Tipe
+                                        Pembayaran</p>
+                                    <h4 class="text-sm font-bold text-indigo-600" id="m_metode"></h4>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Detail
+                                        Pembayaran</p>
+                                    <select name="detail_pembayaran" id="m_detail"
+                                        class="w-full border border-gray-300 rounded-lg p-2 text-sm bg-white font-bold text-gray-900 shadow-sm focus:ring-indigo-500">
+                                        <option value="Cash/Tunai">Cash / Tunai</option>
+                                        <option value="Transfer Bank">Transfer Bank</option>
+                                        <option value="Q-RIS">Q-RIS</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div id="m_bukti_div" class="hidden border-t border-gray-200 pt-4 mt-4">
+                                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Bukti
+                                    Pembayaran (Tahap Dev)</p>
+                                <div
+                                    class="bg-white w-full h-32 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
+                                    <span class="text-gray-400 font-medium italic text-xs px-4 text-center">Menunggu
+                                        Integrasi API Payment Gateway...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="bg-gray-50 px-6 py-4 flex gap-3 border-t border-gray-100">
+                        <button type="submit"
+                            class="flex-1 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition">
+                            Valid & Terima
+                        </button>
+                        <button type="button" onclick="submitTolakReservasi()"
+                            class="flex-1 rounded-xl bg-white border border-red-200 px-5 py-3 text-sm font-bold text-red-600 shadow-sm hover:bg-red-50 transition">
+                            Tolak Bukti
+                        </button>
+                    </div>
+                </form>
+
+                <form id="formTolakModal" method="POST" action="" class="hidden">
+                    @csrf
+                </form>
+
+            </div>
+        </div>
+    </div>
+
     <script>
+        // FUNGSI SUBMIT FORM TOLAK
+        function submitTolakReservasi() {
+            if (confirm('Tolak dan batalkan reservasi tamu ini?')) {
+                document.getElementById('formTolakModal').submit();
+            }
+        }
+
+        // FUNGSI MODAL BUKA RESERVASI ADMIN
+        function bukaModalKonfirmasi(id, no_res, nama, kelas, ruangan, metode, detail) {
+            document.getElementById('m_no_res').innerText = '#' + no_res;
+            document.getElementById('m_nama').innerText = nama;
+            document.getElementById('m_kelas').innerText = kelas;
+            document.getElementById('m_ruangan').innerText = 'Kamar ' + ruangan;
+            document.getElementById('m_metode').innerText = metode;
+
+            // Set default value ke dalam Dropdown
+            let detailSelect = document.getElementById('m_detail');
+            let lowerDetail = detail.toLowerCase();
+
+            if (detail === '-' || lowerDetail.includes('bayar di tempat') || lowerDetail.includes('cash') || lowerDetail
+                .includes('tunai')) {
+                detailSelect.value = 'Cash/Tunai';
+            } else if (lowerDetail.includes('q-ris') || lowerDetail.includes('qris')) {
+                detailSelect.value = 'Q-RIS';
+            } else {
+                detailSelect.value = 'Transfer Bank';
+            }
+
+            if (metode === 'Transfer') {
+                document.getElementById('m_bukti_div').classList.remove('hidden');
+            } else {
+                document.getElementById('m_bukti_div').classList.add('hidden');
+            }
+
+            document.getElementById('formTerimaModal').action = `/reservasi/${id}/konfirmasi`;
+            document.getElementById('formTolakModal').action = `/reservasi/${id}/batal`;
+
+            document.getElementById('modalKonfirmasi').classList.remove('hidden');
+        }
+
+        // FUNGSI MODAL WALK IN
         function openWalkInModal() {
             document.getElementById('walkInModal').classList.remove('hidden');
             try {
@@ -468,7 +602,6 @@
             let inputField = document.getElementById(inputId);
             let currentVal = parseInt(inputField.value) || 0;
             let newVal = currentVal + change;
-
             if (newVal >= 0) {
                 inputField.value = newVal;
                 filterKamarDanHitung();
@@ -482,7 +615,6 @@
                 let checkOutInput = document.getElementById('check_out').value;
                 let kamarSelect = document.getElementById('kamar_id');
 
-                // Kalkulasi Durasi Hari
                 let diffDays = 1;
                 if (checkInInput && checkOutInput) {
                     let checkIn = new Date(checkInInput);
@@ -493,7 +625,6 @@
                 }
                 document.getElementById('rincian_hari').innerText = diffDays + ' Malam';
 
-                // Kalkulasi Biaya
                 let selectKelas = document.getElementById('kelas_kamar_id');
                 let hargaPerMalam = 0;
                 if (selectKelas && selectKelas.selectedIndex > 0) {
@@ -511,7 +642,6 @@
                     minimumFractionDigits: 0
                 }).format(totalBiayaKamar + totalAddOn);
 
-                // REQUEST AJAX UNTUK MENDAPATKAN KAMAR YANG BENAR-BENAR KOSONG
                 let selectedKamarValueBefore = kamarSelect.value;
                 kamarSelect.innerHTML = '<option value="">-- Sedang memuat kamar... --</option>';
 
@@ -522,7 +652,6 @@
                     let kamars = await response.json();
 
                     kamarSelect.innerHTML = '<option value="">-- Pilih Kamar --</option>';
-
                     if (kamars.length === 0) {
                         kamarSelect.innerHTML =
                         '<option value="" disabled>-- Kamar Penuh di Waktu Tersebut --</option>';
@@ -538,7 +667,6 @@
                 } else {
                     kamarSelect.innerHTML = '<option value="">-- Pilih Kelas & Tanggal Dahulu --</option>';
                 }
-
             } catch (error) {
                 console.error("Kesalahan sistem kalkulator:", error);
             }

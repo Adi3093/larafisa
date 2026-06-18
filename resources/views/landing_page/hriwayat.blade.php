@@ -8,41 +8,46 @@
             <p class="text-amber-100 mt-1">Pantau perkembangan reservasi kamar Anda secara real-time.</p>
         </div>
 
+        @if (session('success'))
+            <div
+                class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl shadow-sm font-bold">
+                ✅ {{ session('success') }}
+            </div>
+        @endif
+        @if (session('error'))
+            <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-sm font-bold">
+                ⚠️ {{ session('error') }}
+            </div>
+        @endif
+
         @php
-            // Menentukan Tahap Progression Bar Berdasarkan Status Riil Database
-            $currentStep = 1; // Default: Reservasi
+            $currentStep = 1;
             if ($isLoggedIn && $pesananAktif) {
                 $status = $pesananAktif->status_reservasi;
                 $metadataekstra = $pesananAktif->ekstra ?? [];
                 $metodeBayar = $metadataekstra['Metode Pembayaran'] ?? 'Bayar di tempat';
 
+                // REVISI LOGIKA STEP: "Bayar di tempat" menunggu pembayaran (Step 2), Transfer murni menunggu ACC respsionis (Step 3)
                 if ($status === 'Menunggu Konfirmasi') {
-                    // Jika memilih transfer, stand-by di menu Pembayaran, jika tidak langsung ke Konfirmasi
-                    $currentStep = $metodeBayar === 'Transfer' ? 2 : 3;
+                    $currentStep = $metodeBayar === 'Transfer' ? 3 : 2;
                 } elseif ($status === 'Terkonfirmasi') {
-                    $currentStep = 3; // Konfirmasi Berhasil, tinggal nunggu jadwal datang
+                    $currentStep = 3;
                 } elseif ($status === 'Check-In') {
-                    $currentStep = 4; // Tamu sedang di dalam kamar
+                    $currentStep = 4;
                 } elseif ($status === 'Selesai') {
-                    $currentStep = 5; // Sudah Check-Out
+                    $currentStep = 5;
                 }
             }
         @endphp
 
-        <!-- PROGRESSION STEP BAR (DIJAMIN RATA TENGAH PRESISI) -->
         <div class="bg-white rounded-3xl shadow-xl border border-amber-100 p-6 sm:px-10 pt-12 mb-8 overflow-hidden">
             <h2 class="sr-only">Steps</h2>
 
             <div class="relative flex items-center justify-between w-full">
-
-                <!-- Garis Background Abu-abu -->
                 <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1.5 bg-gray-100 rounded-lg z-0"></div>
-
-                <!-- Garis Progress Emas Dinamis -->
                 <div class="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 bg-amber-500 rounded-lg z-0 transition-all duration-700 ease-in-out"
                     style="width: {{ (($currentStep - 1) / 4) * 100 }}%"></div>
 
-                <!-- Step 1: Reservasi -->
                 <div class="relative z-10 flex justify-center items-center">
                     <span
                         class="absolute -top-8 sm:-start-2 text-[10px] sm:text-xs font-bold {{ $currentStep >= 1 ? 'text-amber-600' : 'text-gray-400' }} whitespace-nowrap">Reservasi</span>
@@ -60,7 +65,6 @@
                     </div>
                 </div>
 
-                <!-- Step 2: Pembayaran -->
                 <div class="relative z-10 flex justify-center items-center">
                     <span
                         class="absolute -top-8 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-bold {{ $currentStep >= 2 ? 'text-amber-600' : 'text-gray-400' }} whitespace-nowrap">Pembayaran</span>
@@ -78,7 +82,6 @@
                     </div>
                 </div>
 
-                <!-- Step 3: Konfirmasi -->
                 <div class="relative z-10 flex justify-center items-center">
                     <span
                         class="absolute -top-8 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-bold {{ $currentStep >= 3 ? 'text-amber-600' : 'text-gray-400' }} whitespace-nowrap">Konfirmasi</span>
@@ -96,7 +99,6 @@
                     </div>
                 </div>
 
-                <!-- Step 4: Check-In -->
                 <div class="relative z-10 flex justify-center items-center">
                     <span
                         class="absolute -top-8 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-bold {{ $currentStep >= 4 ? 'text-amber-600' : 'text-gray-400' }} whitespace-nowrap">Check-In</span>
@@ -114,7 +116,6 @@
                     </div>
                 </div>
 
-                <!-- Step 5: Check-Out -->
                 <div class="relative z-10 flex justify-center items-center">
                     <span
                         class="absolute -top-8 right-0 sm:auto sm:-end-2 text-[10px] sm:text-xs font-bold {{ $currentStep >= 5 ? 'text-amber-600' : 'text-gray-400' }} whitespace-nowrap">Check-Out</span>
@@ -131,15 +132,12 @@
                         @endif
                     </div>
                 </div>
-
             </div>
         </div>
 
-        <!-- CARD PESANAN AKTIF -->
         <h2 class="font-bold text-amber-950 text-xl mb-4 px-1">Pesanan Aktif Saat Ini</h2>
 
         <div class="bg-white rounded-3xl shadow-md border border-amber-100 p-6 sm:p-8 mb-10">
-            <!-- KONDISI 1: JIKA BELUM LOGIN -->
             @if (!$isLoggedIn)
                 <div class="text-center py-6">
                     <span class="text-5xl block mb-4">🔒</span>
@@ -155,8 +153,6 @@
                             Akun</a>
                     </div>
                 </div>
-
-                <!-- KONDISI 2: JIKA SUDAH LOGIN TAPI BELUM PUNYA PESANAN -->
             @elseif (!$pesananAktif)
                 <div class="text-center py-8">
                     <span class="text-5xl block mb-4">📭</span>
@@ -169,8 +165,6 @@
                             Booking Kamar</a>
                     </div>
                 </div>
-
-                <!-- KONDISI 3: JIKA MEMILIKI PESANAN AKTIF -->
             @else
                 <div class="flex flex-col md:flex-row gap-6 items-start">
                     <img src="{{ asset('storage/' . $pesananAktif->kamar?->kelasKamar?->thumbnail) }}"
@@ -206,17 +200,26 @@
                             </div>
                         </div>
 
-                        <!-- Tombol Aksi Kendala -->
                         <div class="mt-6 flex flex-wrap gap-2 border-t border-gray-100 pt-4">
-                            <button
-                                onclick="alert('Fitur ubah jadwal sedang dalam pengembangan. Silakan hubungi Resepsionis melalui WhatsApp.');"
-                                class="bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold py-2.5 px-4 rounded-xl border border-gray-200 transition">
-                                🔄 Ubah Jadwal Menginap
-                            </button>
+                            @php
+                                $f_in = \Carbon\Carbon::parse($pesananAktif->check_in)->format('Y-m-d\TH:i');
+                                $f_out = \Carbon\Carbon::parse($pesananAktif->check_out)->format('Y-m-d\TH:i');
+                                $kId = $pesananAktif->kamar_id;
+                                $klId = $pesananAktif->kamar?->kelas_kamar_id;
+                                $metodeBayarGuest = $pesananAktif->ekstra['Metode Pembayaran'] ?? 'Bayar di tempat';
+                            @endphp
+
+                            @if (in_array($pesananAktif->status_reservasi, ['Menunggu Konfirmasi', 'Terkonfirmasi']))
+                                <button
+                                    onclick="bukaModalUbahJadwal('{{ $pesananAktif->id }}', '{{ $metodeBayarGuest }}', '{{ $f_in }}', '{{ $f_out }}', '{{ $klId }}', '{{ $kId }}')"
+                                    class="bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold py-2.5 px-4 rounded-xl border border-gray-200 transition">
+                                    🔄 Ubah Jadwal Menginap
+                                </button>
+                            @endif
 
                             @if ($pesananAktif->status_reservasi === 'Menunggu Konfirmasi')
                                 <form action="{{ route('reservasi.tamu.batal', $pesananAktif->id) }}" method="POST"
-                                    onsubmit="return confirm('Apakah Anda yakin ingin membatalkan permohonan reservasi ini?')">
+                                    onsubmit="return confirm('Apakah Anda yakin ingin membatalkan permohonan reservasi ini secara permanen?')">
                                     @csrf @method('PUT')
                                     <button type="submit"
                                         class="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold py-2.5 px-4 rounded-xl border border-red-200 transition">
@@ -230,7 +233,6 @@
             @endif
         </div>
 
-        <!-- TABEL ARSIP RIWAYAT MASA LALU -->
         <h2 class="font-bold text-amber-950 text-xl mb-4 px-1">Arsip Riwayat Reservasi</h2>
         <div class="bg-white rounded-3xl shadow-sm border border-amber-200 overflow-hidden">
             <div class="overflow-x-auto">
@@ -262,7 +264,7 @@
                                     @php
                                         $color =
                                             $history->status_reservasi === 'Selesai'
-                                                ? 'bg-gray-100 text-gray-700'
+                                                ? 'bg-gray-100 text-gray-700 border-gray-200'
                                                 : 'bg-red-50 text-red-700 border-red-100';
                                     @endphp
                                     <span
@@ -281,6 +283,161 @@
                 </table>
             </div>
         </div>
-
     </div>
+
+    <div id="modalUbahJadwal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-sm"
+        aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
+            <div
+                class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md">
+
+                <div class="bg-amber-600 px-6 py-4 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-white">Ubah Jadwal & Kamar</h3>
+                    <button onclick="document.getElementById('modalUbahJadwal').classList.add('hidden')"
+                        class="text-amber-100 hover:text-white transition">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="bg-white px-6 pb-4 pt-5">
+
+                    <div id="lockWarning"
+                        class="hidden mb-4 bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-xl flex items-start gap-3 shadow-sm text-left">
+                        <svg class="w-5 h-5 text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                            </path>
+                        </svg>
+                        <div>
+                            <p class="text-[11px] leading-relaxed">Anda menggunakan metode pembayaran Transfer/QRIS.
+                                <strong>Perubahan Kelas dan Ruangan telah dikunci</strong> demi penyesuaian dana. Anda
+                                hanya diizinkan untuk memajukan/mengundurkan jadwal tanggal inap.</p>
+                        </div>
+                    </div>
+
+                    <form id="formUbahJadwal" method="POST" action="">
+                        @csrf @method('PUT')
+
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Check-In Baru</label>
+                                <input type="datetime-local" name="check_in" id="edit_check_in"
+                                    onchange="fetchKamarEdit()" required
+                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm transition focus:ring-amber-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Check-Out Baru</label>
+                                <input type="datetime-local" name="check_out" id="edit_check_out"
+                                    onchange="fetchKamarEdit()" required
+                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm transition focus:ring-amber-500">
+                            </div>
+                        </div>
+
+                        <div
+                            class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Kelas Kamar</label>
+                                <select id="edit_kelas_kamar_id" name="kelas_kamar_id" onchange="fetchKamarEdit()"
+                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm bg-white disabled:bg-gray-200">
+                                    <option value="">-- Pilih Kelas --</option>
+                                    @foreach ($kelasKamars as $kelas)
+                                        <option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Ruangan Fisik</label>
+                                <select id="edit_kamar_id" name="kamar_id" required
+                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm bg-white disabled:bg-gray-200">
+                                    <option value="">-- Memuat Data --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+                <div class="bg-gray-50 px-6 py-4 flex flex-row-reverse border-t border-gray-100">
+                    <button type="submit" form="formUbahJadwal"
+                        class="rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-amber-700 ml-3 transition w-full sm:w-auto">
+                        Terapkan Perubahan
+                    </button>
+                    <button type="button"
+                        onclick="document.getElementById('modalUbahJadwal').classList.add('hidden')"
+                        class="rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-gray-900 shadow-sm border border-gray-300 hover:bg-gray-50 transition w-full sm:w-auto mt-3 sm:mt-0">
+                        Batal
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentKamarId = null;
+
+        function bukaModalUbahJadwal(idRes, metode, checkIn, checkOut, kelasId, kamarId) {
+            document.getElementById('formUbahJadwal').action = `/reservasi-online/${idRes}/update`;
+            document.getElementById('edit_check_in').value = checkIn;
+            document.getElementById('edit_check_out').value = checkOut;
+
+            let kelasEl = document.getElementById('edit_kelas_kamar_id');
+            let kamarEl = document.getElementById('edit_kamar_id');
+
+            kelasEl.value = kelasId;
+            currentKamarId = kamarId;
+
+            // Kunci perubahan fasilitas ruangan jika sudah Transfer
+            if (metode === 'Transfer' || metode === 'Q-RIS') {
+                kelasEl.disabled = true;
+                kamarEl.disabled = true;
+                document.getElementById('lockWarning').classList.remove('hidden');
+            } else {
+                kelasEl.disabled = false;
+                kamarEl.disabled = false;
+                document.getElementById('lockWarning').classList.add('hidden');
+            }
+
+            fetchKamarEdit();
+            document.getElementById('modalUbahJadwal').classList.remove('hidden');
+        }
+
+        async function fetchKamarEdit() {
+            const kelasId = document.getElementById('edit_kelas_kamar_id').value;
+            const checkIn = document.getElementById('edit_check_in').value;
+            const checkOut = document.getElementById('edit_check_out').value;
+            const kamarSelect = document.getElementById('edit_kamar_id');
+
+            if (!kelasId || !checkIn || !checkOut) return;
+
+            kamarSelect.innerHTML = '<option value="">Sedang memuat ruangan...</option>';
+            try {
+                let response = await fetch(
+                    `/api/kamar-tersedia?kelas_id=${kelasId}&check_in=${checkIn}&check_out=${checkOut}`);
+                let kamars = await response.json();
+
+                kamarSelect.innerHTML = '<option value="">-- Pilih Kamar --</option>';
+                kamars.forEach(kmr => {
+                    let opt = document.createElement('option');
+                    opt.value = kmr.id;
+                    opt.text = 'Kamar ' + kmr.nomor_ruangan;
+                    // Pre-select kamar lama jika tersedia
+                    if (kmr.id == currentKamarId) opt.selected = true;
+                    kamarSelect.appendChild(opt);
+                });
+
+                // Jika ruangan lama sudah tidak tersedia (diambil orang lain di jam baru)
+                if (kamarSelect.selectedIndex === 0 && currentKamarId !== null) {
+                    kamarSelect.innerHTML +=
+                        `<option value="" disabled class="text-red-500">Ruangan lama Anda (#${currentKamarId}) penuh di jadwal ini</option>`;
+                }
+
+            } catch (error) {
+                kamarSelect.innerHTML = '<option value="">Gagal memuat sistem kamar</option>';
+            }
+        }
+    </script>
 </x-lplayout>

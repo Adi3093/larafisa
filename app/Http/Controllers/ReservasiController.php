@@ -185,10 +185,21 @@ class ReservasiController extends Controller
         return back()->with('success', 'Data reservasi ' . $reservasi->no_reservasi . ' berhasil diupdate!');
     }
 
-    public function konfirmasi($id)
+    public function konfirmasi(Request $request, $id)
     {
         $reservasi = Reservasi::findOrFail($id);
-        $reservasi->update(['status_reservasi' => 'Terkonfirmasi']);
+
+        // REVISI: Tangkap perubahan dari Select Dropdown jika ada
+        $ekstra = is_array($reservasi->ekstra) ? $reservasi->ekstra : json_decode($reservasi->ekstra, true);
+        if ($request->has('detail_pembayaran')) {
+            $ekstra['Detail Pembayaran'] = $request->detail_pembayaran;
+        }
+
+        $reservasi->update([
+            'status_reservasi' => 'Terkonfirmasi',
+            'ekstra' => $ekstra
+        ]);
+
         return back()->with('success', 'Pesanan Online diterima! Data telah diteruskan ke Meja Resepsionis.');
     }
 
