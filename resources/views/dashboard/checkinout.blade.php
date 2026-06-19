@@ -146,21 +146,47 @@
                                         </button>
                                     </form>
                                 @elseif($res->status_reservasi === 'Check-In')
-                                    <form method="POST" action="{{ route('checkinout.checkout', $res->id) }}"
-                                        class="m-0 inline-block">
-                                        @csrf
-                                        <button type="submit"
-                                            onclick="return confirm('Selesaikan masa inap dan proses Check-Out tamu ini?')"
-                                            class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5 w-full sm:w-auto justify-center">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
-                                                stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
-                                                </path>
-                                            </svg>
-                                            Proses Check-Out
-                                        </button>
-                                    </form>
+                                    @php
+                                        // Kalkulasi Biaya JSON untuk dilempar ke Javascript Modal
+                                        $checkInDate = \Carbon\Carbon::parse($res->check_in);
+                                        $checkOutDate = \Carbon\Carbon::parse($res->check_out);
+                                        $diffDays = $checkInDate->diffInDays($checkOutDate);
+                                        if ($diffDays == 0) {
+                                            $diffDays = 1;
+                                        }
+
+                                        $hargaKamar = $res->kamar->kelasKamar->harga ?? 0;
+                                        $totalKamar = $hargaKamar * $diffDays;
+
+                                        $ekstra = is_array($res->ekstra)
+                                            ? $res->ekstra
+                                            : json_decode($res->ekstra, true);
+                                        $qtyBed = $ekstra['Extra Bed'] ?? 0;
+                                        $qtySelimut = $ekstra['Extra Selimut'] ?? 0;
+                                        $metode = $ekstra['Metode Pembayaran'] ?? 'Bayar di tempat';
+                                        $detail = $ekstra['Detail Pembayaran'] ?? '-';
+
+                                        $totalBed = $qtyBed * 100000;
+                                        $totalSelimut = $qtySelimut * 25000;
+                                        $totalBiaya = $totalKamar + $totalBed + $totalSelimut;
+
+                                        $kamarName = 'Kamar ' . ($res->kamar->nomor_ruangan ?? '-');
+                                        $kelasName = $res->kamar->kelasKamar->nama_kelas ?? '-';
+                                    @endphp
+
+                                    <button type="button"
+                                        onclick="bukaModalCheckout('{{ $res->id }}', '{{ $res->no_reservasi }}', '{{ $res->nama_tamu }}', '{{ $res->no_hp }}', '{{ $kelasName }}', '{{ $kamarName }}', {{ $qtyBed }}, {{ $qtySelimut }}, '{{ $metode }}', '{{ $detail }}', {{ $totalBiaya }})"
+                                        class="bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5 w-full sm:w-auto justify-center">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                            </path>
+                                        </svg>
+                                        Buka (Check-Out)
+                                    </button>
                                 @endif
                             </td>
                         </tr>
@@ -191,4 +217,154 @@
     <div class="mb-8">
         {{ $reservasis->links() }}
     </div>
+
+    <div id="modalCheckout" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-sm"
+        aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
+            <div
+                class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+
+                <div class="bg-rose-600 px-6 py-4 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-white">Tinjau Pembayaran & Check-Out</h3>
+                    <button onclick="document.getElementById('modalCheckout').classList.add('hidden')"
+                        class="text-rose-200 hover:text-white transition">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <form id="formCheckoutModal" method="POST" action="">
+                    @csrf
+                    <div class="p-6 pb-2">
+
+                        <div class="flex justify-between items-start border-b border-gray-100 pb-4 mb-4">
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Data Tamu</p>
+                                <h4 class="text-lg font-black text-gray-900 leading-none" id="co_nama"></h4>
+                                <p class="text-sm text-gray-500 mt-1" id="co_kontak"></p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">ID Reservasi
+                                </p>
+                                <h4 class="text-sm font-bold text-indigo-600" id="co_no_res"></h4>
+                            </div>
+                        </div>
+
+                        <div class="mb-5">
+                            <h4 class="text-base font-bold text-gray-900 mb-2" id="co_kelas_kamar"></h4>
+
+                            <div id="co_addon_container" class="flex flex-wrap gap-2 mt-2">
+                            </div>
+                        </div>
+
+                        <div class="bg-rose-50 p-4 rounded-xl border border-rose-100 mb-4">
+                            <div class="flex justify-between items-center border-b border-rose-200 pb-3 mb-3">
+                                <p class="text-xs font-bold text-rose-800 uppercase tracking-wider">Total Tagihan Final
+                                </p>
+                                <h2 class="text-2xl font-black text-rose-700" id="co_total">Rp 0</h2>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 items-center">
+                                <div>
+                                    <p class="text-[10px] font-bold text-rose-800 uppercase tracking-wider mb-1">Status
+                                        Metode</p>
+                                    <p class="text-sm font-bold text-gray-900" id="co_metode"></p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-rose-800 uppercase tracking-wider mb-1">Ubah
+                                        Pembayaran Kasir</p>
+                                    <select name="detail_pembayaran" id="co_detail_pembayaran"
+                                        class="w-full border border-rose-200 rounded-lg p-2 text-sm bg-white font-bold text-gray-900 shadow-sm focus:ring-rose-500 focus:border-rose-500">
+                                        <option value="Cash/Tunai">Cash / Tunai</option>
+                                        <option value="Transfer Bank">Transfer Bank</option>
+                                        <option value="Q-RIS">Q-RIS</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 transition"
+                            onclick="document.getElementById('print_struk').click()">
+                            <input type="checkbox" id="print_struk" name="print_struk" value="1" checked
+                                class="w-5 h-5 text-rose-600 rounded border-gray-300 focus:ring-rose-500 cursor-pointer">
+                            <div>
+                                <p class="text-sm font-bold text-gray-800 leading-none">Cetak Struk Pembayaran
+                                    (Thermal)</p>
+                                <p class="text-[11px] text-gray-500 mt-1">Struk akan otomatis dicetak menggunakan
+                                    pengaturan printer bawaan kasir.</p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="bg-gray-50 px-6 py-4 flex gap-3 border-t border-gray-100 mt-4">
+                        <button type="submit"
+                            onclick="return confirm('Apakah pembayaran sudah lunas dan kunci sudah dikembalikan?')"
+                            class="flex-1 rounded-xl bg-rose-600 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-rose-700 transition flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                                </path>
+                            </svg>
+                            Selesaikan & Check-Out
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function bukaModalCheckout(id, no_res, nama, hp, kelas, ruangan, qtyBed, qtySelimut, metode, detail, total) {
+            document.getElementById('co_no_res').innerText = '#' + no_res;
+            document.getElementById('co_nama').innerText = nama;
+            document.getElementById('co_kontak').innerText = hp;
+            document.getElementById('co_kelas_kamar').innerText = ruangan + ' (' + kelas + ')';
+            document.getElementById('co_metode').innerText = metode;
+
+            // Format Rupiah
+            document.getElementById('co_total').innerText = new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(total);
+
+            // Set Dropdown Pembayaran Kasir Default
+            let detailSelect = document.getElementById('co_detail_pembayaran');
+            let lowerDetail = detail.toLowerCase();
+            if (detail === '-' || lowerDetail.includes('bayar') || lowerDetail.includes('cash') || lowerDetail.includes(
+                    'tunai')) {
+                detailSelect.value = 'Cash/Tunai';
+            } else if (lowerDetail.includes('q-ris') || lowerDetail.includes('qris')) {
+                detailSelect.value = 'Q-RIS';
+            } else {
+                detailSelect.value = 'Transfer Bank';
+            }
+
+            // Atur Label Layanan Tambahan Ekstra
+            let addonContainer = document.getElementById('co_addon_container');
+            addonContainer.innerHTML = ''; // bersihkan
+
+            if (qtyBed > 0) {
+                addonContainer.innerHTML +=
+                    `<span class="bg-gray-100 text-gray-700 text-[10px] font-bold px-2 py-1 rounded border border-gray-200">+ ${qtyBed} Extra Bed</span>`;
+            }
+            if (qtySelimut > 0) {
+                addonContainer.innerHTML +=
+                    `<span class="bg-gray-100 text-gray-700 text-[10px] font-bold px-2 py-1 rounded border border-gray-200">+ ${qtySelimut} Extra Selimut</span>`;
+            }
+            if (qtyBed == 0 && qtySelimut == 0) {
+                addonContainer.innerHTML = `<span class="text-xs italic text-gray-400">Tidak ada layanan ekstra</span>`;
+            }
+
+            // Set Form Action
+            document.getElementById('formCheckoutModal').action = `/checkinout/${id}/checkout`;
+
+            // Tampilkan Modal
+            document.getElementById('modalCheckout').classList.remove('hidden');
+        }
+    </script>
 </x-dblayout>

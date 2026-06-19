@@ -108,6 +108,7 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
     Route::get('/checkinout', [App\Http\Controllers\CheckInOutController::class, 'index'])->name('checkinout');
     Route::post('/checkinout/{id}/checkin', [App\Http\Controllers\CheckInOutController::class, 'checkin'])->name('checkinout.checkin');
     Route::post('/checkinout/{id}/checkout', [App\Http\Controllers\CheckInOutController::class, 'checkout'])->name('checkinout.checkout');
+    Route::get('/checkinout/{id}/print', [App\Http\Controllers\CheckInOutController::class, 'printStruk'])->name('checkinout.print');
 
     // Kelola Akun
     Route::get('/akun', [AccountController::class, 'index'])->name('akun');
