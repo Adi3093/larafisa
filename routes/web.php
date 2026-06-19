@@ -76,9 +76,8 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function () {
 
     // Dashboard Utama
-    Route::get('/dashboard', function () {
-        return view('dashboard.dashboard');
-    })->name('dashboard');
+    // Dashboard Utama (REVISI: Arahkan ke DashboardController)
+    Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
     // Kelola Kamar & Ruangan
     Route::get('/kamar', [KamarController::class, 'index'])->name('kamar');

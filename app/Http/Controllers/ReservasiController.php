@@ -26,7 +26,8 @@ class ReservasiController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('nama_tamu', 'like', "%{$search}%")
-                    ->orWhere('no_reservasi', 'like', "%{$search}%");
+                    ->orWhere('no_reservasi', 'like', "%{$search}%")
+                    ->orWhereDate('check_in', $search); // <-- Tambahan agar bisa baca tanggal dari klik kalender!
             });
         }
 
