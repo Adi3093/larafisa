@@ -163,38 +163,27 @@
             $checkinReq = request('filter_checkin', date('Y-m-d\TH:i'));
             $checkoutReq = request('filter_checkout', date('Y-m-d\TH:i', strtotime('+1 day')));
             $tamuReq = (int) request('filter_tamu', 1);
-
             $checkinDate = \Carbon\Carbon::parse($checkinReq);
             $checkoutDate = \Carbon\Carbon::parse($checkoutReq);
-
             $filteredKelas = collect();
-
             foreach ($kelasKamars as $kelas) {
-                // Konversi fasilitas ke format string agar mudah dicari
                 $fasilitasArray = is_array($kelas->fasilitas)
                     ? $kelas->fasilitas
                     : json_decode($kelas->fasilitas, true) ?? [];
                 $teksPencarian = strtolower($kelas->nama_kelas . ' ' . implode(' ', $fasilitasArray));
-
                 $isSingle = preg_match('/single/i', $teksPencarian);
                 $isDouble = preg_match('/(double|twin|queen|king|besar)/i', $teksPencarian);
-
-                // REVISI LOGIKA STATE AWAL: Hanya lakukan penyaringan ketat kasur jika user menekan tombol pencarian (terdapat parameter di URL)
                 if (request()->has('filter_checkin')) {
                     if ($tamuReq == 1) {
-                        // Jika 1 orang, HANYA memunculkan tipe kamar yang punya Single Bed
                         if (!$isSingle) {
                             continue;
                         }
                     } elseif ($tamuReq == 2) {
-                        // Jika 2 orang, HANYA memunculkan tipe kamar yang punya Double Bed ke atas
                         if (!$isDouble) {
                             continue;
                         }
                     }
                 }
-
-                // ATURAN 2: Filter berdasarkan ketersediaan (Jam/Waktu)
                 $totalKamarFisik = $kelas->kamars()->where('status', '!=', 'Maintenance')->count();
                 $terpakai = \App\Models\Reservasi::whereIn('status_reservasi', ['Terkonfirmasi', 'Check-In'])
                     ->whereHas('kamar', function ($q) use ($kelas) {
@@ -206,8 +195,6 @@
                     ->count('kamar_id');
 
                 $sisa = max(0, $totalKamarFisik - $terpakai);
-
-                // Hanya masukkan ke daftar jika kamar masih tersedia
                 if ($sisa > 0) {
                     $kelas->sisa_kamar_riil = $sisa;
                     $filteredKelas->push($kelas);
@@ -580,8 +567,6 @@
             document.getElementById('modal_nama_kelas').innerText = namaKelas;
             document.getElementById('modal_harga').innerText = harga;
             document.getElementById('modal_foto_utama').src = thumb;
-
-            // Logika Indikator Sisa Kamar di Dalam Menu Detail
             const ketersediaanElem = document.getElementById('modal_ketersediaan');
             const btnPesan = document.getElementById('modal_btn_pesan');
 
@@ -603,7 +588,6 @@
 
             let galeriHTML = '';
             let arrayFoto = [thumb, f1, f2, f3].filter(foto => foto !== '');
-
             arrayFoto.forEach(fotoUrl => {
                 galeriHTML += `
                     <div class="h-16 sm:h-24 rounded-xl overflow-hidden shadow-sm border-2 border-transparent hover:border-amber-400 cursor-pointer transition" onclick="document.getElementById('modal_foto_utama').src='${fotoUrl}'">
@@ -612,14 +596,12 @@
                 `;
             });
             document.getElementById('galeri_tambahan').innerHTML = galeriHTML;
-
             let fasHTML = '';
             fasilitas.forEach(item => {
                 fasHTML +=
                     `<li class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0"></span>${item}</li>`;
             });
             document.getElementById('modal_fasilitas').innerHTML = fasHTML;
-
             document.body.classList.add('overflow-hidden');
             document.getElementById('modalDetail').classList.remove('hidden');
         }
@@ -627,7 +609,6 @@
         function lanjutReservasi() {
             let checkin = document.getElementById('filter_checkin').value;
             let checkout = document.getElementById('filter_checkout').value;
-            // Pindah ke halaman reservasi dengan membawa parameter lengkap
             window.location.href =
                 `/reservasi-online?kelas_id=${kelasIdAktif}&filter_checkin=${checkin}&filter_checkout=${checkout}`;
         }
@@ -635,10 +616,7 @@
         function tutupDetailKelas() {
             document.body.classList.remove('overflow-hidden');
             document.getElementById('modalDetail').classList.add('hidden');
-        }
-
-
-        // --- FUNGSI RESET FILTER ---
+        } -
         function resetFilter() {
             window.location.href = "{{ url('/') }}#kamar";
         }

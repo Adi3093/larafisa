@@ -11,42 +11,30 @@ use Carbon\Carbon;
 
 class KamarController extends Controller
 {
-    // FUNGSI UTAMA LANDING PAGE (SINKRONISASI WAKTU & KAPASITAS)
+    // SINKRONISASI WAKTU & KAPASITAS
     public function landingPage(Request $request)
     {
-        // Mengambil input dengan nilai default untuk menghindari error 'undefined'
         $checkin = $request->input('filter_checkin', date('Y-m-d\TH:i'));
         $checkout = $request->input('filter_checkout', date('Y-m-d\TH:i', strtotime('+1 day')));
         $jumlahTamu = (int) $request->input('filter_tamu', 1);
-
         $checkinDate = Carbon::parse($checkin);
         $checkoutDate = Carbon::parse($checkout);
-
-        // Cekapakah user sudah menekan tombol submit pencarian secara eksplisit
         $isSearched = $request->has('filter_checkin');
-
         $semuaKelas = KelasKamar::all();
         $kelasKamars = collect();
 
         foreach ($semuaKelas as $kelas) {
             // Filter Fasilitas
             $fasilitasArray = is_array($kelas->fasilitas) ? $kelas->fasilitas : (json_decode($kelas->fasilitas, true) ?? []);
-
-            // REVISI AKURASI: Gabungkan nama kelas dan string fasilitas agar pencarian tipe bed tidak meleset
             $teksPencarian = strtolower($kelas->nama_kelas . ' ' . implode(' ', $fasilitasArray));
-
             $isSingle = preg_match('/single/i', $teksPencarian);
             $isDouble = preg_match('/(double|twin|queen|king|besar)/i', $teksPencarian);
-
-            // REVISI LOGIKA KAPASITAS BARU: Hanya memfilter jika user sudah menekan tombol cek ketersediaan
             if ($isSearched) {
                 if ($jumlahTamu == 1) {
-                    // Jika 1 orang, HANYA memunculkan tipe kamar yang punya Single Bed
                     if (!$isSingle) {
                         continue;
                     }
                 } elseif ($jumlahTamu == 2) {
-                    // Jika 2 orang, HANYA memunculkan tipe kamar yang punya Double Bed ke atas
                     if (!$isDouble) {
                         continue;
                     }
@@ -69,7 +57,6 @@ class KamarController extends Controller
             }
         }
 
-        // Variabel ini yang dikirim ke view
         $searchData = [
             'checkin' => $checkin,
             'checkout' => $checkout,

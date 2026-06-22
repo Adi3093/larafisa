@@ -257,23 +257,15 @@
                 hitungTotal();
                 return;
             }
-
-            // Tampilkan Preview Kamar
             const option = select.options[select.selectedIndex];
             currentHarga = parseInt(option.getAttribute('data-harga')) || 0;
-
             document.getElementById('prevNama').innerText = option.text;
 
-            // REVISI LOGIKA GAMBAR & THUMBNAIL
             const mainImgUrl = option.getAttribute('data-thumb');
             document.getElementById('prevImg').src = mainImgUrl;
-
-            // Kumpulkan foto
             const foto1 = option.getAttribute('data-foto1');
             const foto2 = option.getAttribute('data-foto2');
             const foto3 = option.getAttribute('data-foto3');
-
-            // Hapus duplikat link gambar yang sama dengan menggunakan struktur Set
             let arrayFoto = [mainImgUrl, foto1, foto2, foto3].filter(foto => foto && foto !== '');
             arrayFoto = [...new Set(arrayFoto)];
 
@@ -298,8 +290,6 @@
 
             placeholder.classList.add('hidden');
             content.classList.remove('hidden');
-
-            // Cek Ketersediaan Kamar via API
             const checkIn = document.getElementById('check_in').value;
             const checkOut = document.getElementById('check_out').value;
 
@@ -371,19 +361,14 @@
 
         function tambahNamaTamu() {
             let container = document.getElementById('containerNamaTamu');
-
-            // Bungkus input dan tombol hapus dalam div
             let divWrapper = document.createElement('div');
             divWrapper.className = 'flex items-center gap-2 mt-2';
-
             let input = document.createElement('input');
             input.type = 'text';
             input.name = 'nama_tamu[]';
             input.placeholder = 'Nama Anggota Tambahan';
             input.className =
                 'flex-1 border border-gray-300 rounded-xl p-3 text-gray-900 shadow-sm focus:border-amber-500 focus:ring-amber-500';
-
-            // Tombol Hapus Baris
             let btnRemove = document.createElement('button');
             btnRemove.type = 'button';
             btnRemove.innerHTML = 'Hapus';

@@ -33,7 +33,6 @@ class GuestReservationController extends Controller
 
     public function riwayat()
     {
-        // 1. KONDISI JIKA BELUM LOGIN
         if (!Auth::check()) {
             return view('landing_page.hriwayat', [
                 'isLoggedIn' => false,
@@ -44,8 +43,6 @@ class GuestReservationController extends Controller
         }
 
         $user = Auth::user();
-
-        // 2. PESANAN AKTIF TERBARU (Untuk Step Bar)
         $pesananAktif = Reservasi::with('kamar.kelasKamar')
             ->where(function ($q) use ($user) {
                 $q->where('nama_tamu', 'like', $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
@@ -54,7 +51,7 @@ class GuestReservationController extends Controller
             ->orderBy('created_at', 'desc')
             ->first();
 
-        // 3. ARSIP RESERVASI
+        // ARSIP RESERVASI
         $arsipReservasi = Reservasi::with('kamar.kelasKamar')
             ->where(function ($q) use ($user) {
                 $q->where('nama_tamu', 'like', $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
@@ -62,8 +59,6 @@ class GuestReservationController extends Controller
             ->whereIn('status_reservasi', ['Selesai', 'Batal', 'Dibatalkan'])
             ->orderBy('created_at', 'desc')
             ->get();
-
-        // Dibutuhkan untuk form Modal Ubah Jadwal
         $kelasKamars = KelasKamar::all();
 
         return view('landing_page.hriwayat', [
@@ -131,7 +126,7 @@ class GuestReservationController extends Controller
         return redirect()->route('riwayat.tamu')->with('success', "Reservasi $noReservasi berhasil dibuat!");
     }
 
-    // FUNGSI UBAH JADWAL OLEH TAMU
+    // UBAH JADWAL TAMU
     public function update(Request $request, $id)
     {
         $reservasi = Reservasi::findOrFail($id);
@@ -143,8 +138,6 @@ class GuestReservationController extends Controller
 
         $checkIn = Carbon::parse($request->check_in)->format('Y-m-d H:i:s');
         $checkOut = Carbon::parse($request->check_out)->format('Y-m-d H:i:s');
-
-        // Jika form disabled (Transfer/QRIS), input kamar_id tidak terkirim, maka ambil ID lama dari DB
         $kamarId = $request->kamar_id ?? $reservasi->kamar_id;
 
         $isTabrakan = Reservasi::where('kamar_id', $kamarId)

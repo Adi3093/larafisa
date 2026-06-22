@@ -147,7 +147,6 @@
                                     </form>
                                 @elseif($res->status_reservasi === 'Check-In')
                                     @php
-                                        // Kalkulasi Biaya JSON untuk dilempar ke Javascript Modal
                                         $checkInDate = \Carbon\Carbon::parse($res->check_in);
                                         $checkOutDate = \Carbon\Carbon::parse($res->check_out);
                                         $diffDays = $checkInDate->diffInDays($checkOutDate);
@@ -324,15 +323,12 @@
             document.getElementById('co_kontak').innerText = hp;
             document.getElementById('co_kelas_kamar').innerText = ruangan + ' (' + kelas + ')';
             document.getElementById('co_metode').innerText = metode;
-
-            // Format Rupiah
             document.getElementById('co_total').innerText = new Intl.NumberFormat('id-ID', {
                 style: 'currency',
                 currency: 'IDR',
                 minimumFractionDigits: 0
             }).format(total);
 
-            // Set Dropdown Pembayaran Kasir Default
             let detailSelect = document.getElementById('co_detail_pembayaran');
             let lowerDetail = detail.toLowerCase();
             if (detail === '-' || lowerDetail.includes('bayar') || lowerDetail.includes('cash') || lowerDetail.includes(
@@ -343,11 +339,8 @@
             } else {
                 detailSelect.value = 'Transfer Bank';
             }
-
-            // Atur Label Layanan Tambahan Ekstra
             let addonContainer = document.getElementById('co_addon_container');
-            addonContainer.innerHTML = ''; // bersihkan
-
+            addonContainer.innerHTML = '';
             if (qtyBed > 0) {
                 addonContainer.innerHTML +=
                     `<span class="bg-gray-100 text-gray-700 text-[10px] font-bold px-2 py-1 rounded border border-gray-200">+ ${qtyBed} Extra Bed</span>`;
@@ -359,11 +352,7 @@
             if (qtyBed == 0 && qtySelimut == 0) {
                 addonContainer.innerHTML = `<span class="text-xs italic text-gray-400">Tidak ada layanan ekstra</span>`;
             }
-
-            // Set Form Action
             document.getElementById('formCheckoutModal').action = `/checkinout/${id}/checkout`;
-
-            // Tampilkan Modal
             document.getElementById('modalCheckout').classList.remove('hidden');
         }
     </script>

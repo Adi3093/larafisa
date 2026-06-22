@@ -78,7 +78,7 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
     // Dashboard Utama
     // Dashboard Utama (REVISI: Arahkan ke DashboardController)
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
-
+    Route::get('/api/jadwal-harian', [App\Http\Controllers\DashboardController::class, 'getJadwalHarian'])->name('api.jadwal.harian');
     // Kelola Kamar & Ruangan
     Route::get('/kamar', [KamarController::class, 'index'])->name('kamar');
 

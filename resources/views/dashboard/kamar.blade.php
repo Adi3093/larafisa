@@ -463,7 +463,7 @@
                         img.classList.remove('hidden');
                     } else {
                         img.src = '';
-                        img.classList.add('hidden'); // Sembunyikan ikon gambar rusak jika kosong
+                        img.classList.add('hidden');
                     }
                 }
             };
@@ -472,20 +472,16 @@
             setPreview('foto_2', foto2);
             setPreview('foto_3', foto3);
 
-            // Set radio button aktif berdasarkan data thumbnail di database
+            // Radio Button Thumbnail
             let radios = document.getElementsByName('thumbnail_selection');
-            radios.forEach(r => r.checked = false); // Reset pilihan
+            radios.forEach(r => r.checked = false);
 
             if (thumb === foto1 && foto1) document.getElementById('radio_foto_1').checked = true;
             else if (thumb === foto2 && foto2) document.getElementById('radio_foto_2').checked = true;
             else if (thumb === foto3 && foto3) document.getElementById('radio_foto_3').checked = true;
-            else if (radios[0]) radios[0].checked = true; // Fallback jika tidak ada yang cocok, pilih foto 1
-
-            // Bersihkan centang fasilitas lama
+            else if (radios[0]) radios[0].checked = true;
             let checkboxes = document.querySelectorAll('.edit-fas-cb');
             checkboxes.forEach(cb => cb.checked = false);
-
-            // Centang otomatis berdasarkan data array fasilitas di database
             if (Array.isArray(fasilitas)) {
                 checkboxes.forEach(cb => {
                     if (fasilitas.includes(cb.value)) {

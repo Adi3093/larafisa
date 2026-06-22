@@ -11,12 +11,10 @@
 
         body {
             font-family: 'Courier New', Courier, monospace;
-            /* Font khas mesin struk */
             font-size: 12px;
             margin: 0;
             padding: 10px;
             width: 58mm;
-            /* Lebar standar printer kasir thermal */
             color: #000;
         }
 

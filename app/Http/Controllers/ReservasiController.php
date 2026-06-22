@@ -27,7 +27,7 @@ class ReservasiController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('nama_tamu', 'like', "%{$search}%")
                     ->orWhere('no_reservasi', 'like', "%{$search}%")
-                    ->orWhereDate('check_in', $search); // <-- Tambahan agar bisa baca tanggal dari klik kalender!
+                    ->orWhereDate('check_in', $search);
             });
         }
 
@@ -75,7 +75,7 @@ class ReservasiController extends Controller
         $reservasis = $query->paginate(10)->appends($request->query());
         $kelasKamars = KelasKamar::all();
 
-        // MENGHITUNG STATISTIK KARTU (3 CARD)
+        // MENGHITUNG STATISTIK CARD INFORMASI KAMAR
         $kamarTersedia = Kamar::where('status', 'Tersedia')->count();
         $kamarTerpakai = Kamar::whereIn('status', ['Terpakai', 'Dibooking'])->count();
         $kamarPerbaikan = Kamar::where('status', 'Maintenance')->count();
@@ -83,22 +83,18 @@ class ReservasiController extends Controller
         return view('dashboard.reservasi', compact('reservasis', 'kelasKamars', 'tab', 'kamarTersedia', 'kamarTerpakai', 'kamarPerbaikan'));
     }
 
-    // FUNGSI AJAX: Mencari Kamar Kosong Berdasarkan Rentang Waktu
+    // AJAX FETCH
     public function getKamarTersedia(Request $request)
     {
         $checkIn = Carbon::parse($request->check_in)->format('Y-m-d H:i:s');
         $checkOut = Carbon::parse($request->check_out)->format('Y-m-d H:i:s');
         $kelasId = $request->kelas_id;
-
-        // Cari ID kamar yang sedang/akan dipakai pada rentang jam tersebut
         $reservedKamarIds = Reservasi::whereIn('status_reservasi', ['Terkonfirmasi', 'Check-In'])
             ->where(function ($q) use ($checkIn, $checkOut) {
                 $q->where('check_in', '<', $checkOut)
                     ->where('check_out', '>', $checkIn);
             })
             ->pluck('kamar_id');
-
-        // Ambil fisik kamar yang kelasnya sama, tidak sedang maintenance, dan tidak ada di ID terpesan
         $availableKamars = Kamar::where('kelas_kamar_id', $kelasId)
             ->where('status', '!=', 'Maintenance')
             ->whereNotIn('id', $reservedKamarIds)
@@ -189,8 +185,6 @@ class ReservasiController extends Controller
     public function konfirmasi(Request $request, $id)
     {
         $reservasi = Reservasi::findOrFail($id);
-
-        // REVISI: Tangkap perubahan dari Select Dropdown jika ada
         $ekstra = is_array($reservasi->ekstra) ? $reservasi->ekstra : json_decode($reservasi->ekstra, true);
         if ($request->has('detail_pembayaran')) {
             $ekstra['Detail Pembayaran'] = $request->detail_pembayaran;

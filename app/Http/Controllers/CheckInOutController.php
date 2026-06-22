@@ -15,7 +15,6 @@ class CheckInOutController extends Controller
             ->orderBy('check_in', 'asc')
             ->paginate(10);
 
-        // MENGHITUNG STATISTIK KARTU (3 CARD)
         $kamarTersedia = Kamar::where('status', 'Tersedia')->count();
         $kamarTerpakai = Kamar::whereIn('status', ['Terpakai', 'Dibooking'])->count();
         $kamarPerbaikan = Kamar::where('status', 'Maintenance')->count();
@@ -39,7 +38,6 @@ class CheckInOutController extends Controller
     {
         $reservasi = Reservasi::findOrFail($id);
 
-        // Simpan perubahan metode pembayaran jika kasir/admin merubahnya saat check-out
         if ($request->has('detail_pembayaran')) {
             $ekstra = is_array($reservasi->ekstra) ? $reservasi->ekstra : json_decode($reservasi->ekstra, true);
             $ekstra['Detail Pembayaran'] = $request->detail_pembayaran;
@@ -52,7 +50,6 @@ class CheckInOutController extends Controller
             Kamar::where('id', $reservasi->kamar_id)->update(['status' => 'Tersedia']);
         }
 
-        // Cek apakah Checkbox Print dicentang
         if ($request->has('print_struk') && $request->print_struk == '1') {
             return redirect()->route('checkinout.print', $reservasi->id);
         }
@@ -60,7 +57,7 @@ class CheckInOutController extends Controller
         return back()->with('success', 'Proses Check-Out berhasil! Kamar kembali kosong dan riwayat tersimpan.');
     }
 
-    // FUNGSI KHUSUS UNTUK HALAMAN CETAK STRUK THERMAL
+    // CETAK STRUK
     public function printStruk($id)
     {
         $reservasi = Reservasi::with('kamar.kelasKamar')->findOrFail($id);
@@ -84,7 +81,6 @@ class CheckInOutController extends Controller
         $totalAkhir = $totalKamar + $totalBed + $totalSelimut;
         $kasir = Auth::user()->name;
 
-        // Render HTML Raw khusus untuk Struk Printer Thermal
         return view('dashboard.strukthermal', compact('reservasi', 'diffDays', 'hargaKamar', 'totalKamar', 'qtyBed', 'totalBed', 'qtySelimut', 'totalSelimut', 'totalAkhir', 'kasir', 'ekstra'));
     }
 }

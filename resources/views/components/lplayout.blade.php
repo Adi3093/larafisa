@@ -11,19 +11,13 @@
 <body class="bg-amber-50/50 antialiased pb-20 lg:pb-0 relative">
 
     @php
-        // REVISI: Cek apakah user sedang di menu Profil, Reservasi, ATAU Riwayat
         $isProfile = request()->routeIs('profil.tamu*');
         $isReservasi = request()->routeIs('reservasi.tamu*');
         $isRiwayat = request()->routeIs('riwayat.tamu*');
-
-        $isSolidBg = $isProfile || $isReservasi || $isRiwayat; // Gabungkan kondisi
-
-        // Navbar cerah transparan (kaca)
+        $isSolidBg = $isProfile || $isReservasi || $isRiwayat;
         $navBgClass = $isSolidBg
             ? 'bg-amber-600 border-none'
             : 'bg-white/80 backdrop-blur-md border-b border-amber-200/60 shadow-sm';
-
-        // Teks berwarna cokelat sangat gelap agar terbaca jelas (atau putih jika di header solid)
         $textColor = $isSolidBg ? 'text-white' : 'text-amber-950';
         $hoverColor = $isSolidBg ? 'hover:text-amber-100' : 'hover:text-amber-600';
     @endphp

@@ -26,8 +26,6 @@
                 $status = $pesananAktif->status_reservasi;
                 $metadataekstra = $pesananAktif->ekstra ?? [];
                 $metodeBayar = $metadataekstra['Metode Pembayaran'] ?? 'Bayar di tempat';
-
-                // REVISI LOGIKA STEP: "Bayar di tempat" menunggu pembayaran (Step 2), Transfer murni menunggu ACC respsionis (Step 3)
                 if ($status === 'Menunggu Konfirmasi') {
                     $currentStep = $metodeBayar === 'Transfer' ? 3 : 2;
                 } elseif ($status === 'Terkonfirmasi') {
@@ -315,7 +313,8 @@
                         <div>
                             <p class="text-[11px] leading-relaxed">Anda menggunakan metode pembayaran Transfer/QRIS.
                                 <strong>Perubahan Kelas dan Ruangan telah dikunci</strong> demi penyesuaian dana. Anda
-                                hanya diizinkan untuk memajukan/mengundurkan jadwal tanggal inap.</p>
+                                hanya diizinkan untuk memajukan/mengundurkan jadwal tanggal inap.
+                            </p>
                         </div>
                     </div>
 
@@ -383,14 +382,11 @@
             document.getElementById('formUbahJadwal').action = `/reservasi-online/${idRes}/update`;
             document.getElementById('edit_check_in').value = checkIn;
             document.getElementById('edit_check_out').value = checkOut;
-
             let kelasEl = document.getElementById('edit_kelas_kamar_id');
             let kamarEl = document.getElementById('edit_kamar_id');
 
             kelasEl.value = kelasId;
             currentKamarId = kamarId;
-
-            // Kunci perubahan fasilitas ruangan jika sudah Transfer
             if (metode === 'Transfer' || metode === 'Q-RIS') {
                 kelasEl.disabled = true;
                 kamarEl.disabled = true;
@@ -424,12 +420,9 @@
                     let opt = document.createElement('option');
                     opt.value = kmr.id;
                     opt.text = 'Kamar ' + kmr.nomor_ruangan;
-                    // Pre-select kamar lama jika tersedia
                     if (kmr.id == currentKamarId) opt.selected = true;
                     kamarSelect.appendChild(opt);
                 });
-
-                // Jika ruangan lama sudah tidak tersedia (diambil orang lain di jam baru)
                 if (kamarSelect.selectedIndex === 0 && currentKamarId !== null) {
                     kamarSelect.innerHTML +=
                         `<option value="" disabled class="text-red-500">Ruangan lama Anda (#${currentKamarId}) penuh di jadwal ini</option>`;
