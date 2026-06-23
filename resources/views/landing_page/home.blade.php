@@ -616,7 +616,8 @@
         function tutupDetailKelas() {
             document.body.classList.remove('overflow-hidden');
             document.getElementById('modalDetail').classList.add('hidden');
-        } -
+        }
+
         function resetFilter() {
             window.location.href = "{{ url('/') }}#kamar";
         }

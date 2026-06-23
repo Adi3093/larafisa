@@ -14,11 +14,25 @@ class GuestReservationController extends Controller
 {
     public function index(Request $request)
     {
-        $user = Auth::user();
         $kelasId = $request->kelas_id;
         $checkin = $request->filter_checkin ?? date('Y-m-d\TH:i');
         $checkout = $request->filter_checkout ?? date('Y-m-d\TH:i', strtotime('+1 day'));
         $kelasKamars = KelasKamar::all();
+
+        // CEK LOGIN: Jika belum login, user diset null dan pesanan aktif kosong
+        if (!Auth::check()) {
+            return view('landing_page.hreservasi', [
+                'isLoggedIn' => false,
+                'user' => null,
+                'kelasKamars' => $kelasKamars,
+                'kelasId' => $kelasId,
+                'checkin' => $checkin,
+                'checkout' => $checkout,
+                'reservasiAktif' => collect()
+            ]);
+        }
+
+        $user = Auth::user();
 
         $reservasiAktif = Reservasi::with('kamar.kelasKamar')
             ->where(function ($q) use ($user) {
@@ -28,11 +42,20 @@ class GuestReservationController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('landing_page.hreservasi', compact('kelasKamars', 'kelasId', 'checkin', 'checkout', 'user', 'reservasiAktif'));
+        return view('landing_page.hreservasi', [
+            'isLoggedIn' => true,
+            'user' => $user,
+            'kelasKamars' => $kelasKamars,
+            'kelasId' => $kelasId,
+            'checkin' => $checkin,
+            'checkout' => $checkout,
+            'reservasiAktif' => $reservasiAktif
+        ]);
     }
 
     public function riwayat()
     {
+        // 1. KONDISI JIKA BELUM LOGIN
         if (!Auth::check()) {
             return view('landing_page.hriwayat', [
                 'isLoggedIn' => false,
@@ -43,6 +66,8 @@ class GuestReservationController extends Controller
         }
 
         $user = Auth::user();
+
+        // 2. PESANAN AKTIF TERBARU (Untuk Step Bar)
         $pesananAktif = Reservasi::with('kamar.kelasKamar')
             ->where(function ($q) use ($user) {
                 $q->where('nama_tamu', 'like', $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
@@ -51,7 +76,7 @@ class GuestReservationController extends Controller
             ->orderBy('created_at', 'desc')
             ->first();
 
-        // ARSIP RESERVASI
+        // 3. ARSIP RESERVASI
         $arsipReservasi = Reservasi::with('kamar.kelasKamar')
             ->where(function ($q) use ($user) {
                 $q->where('nama_tamu', 'like', $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
@@ -59,6 +84,7 @@ class GuestReservationController extends Controller
             ->whereIn('status_reservasi', ['Selesai', 'Batal', 'Dibatalkan'])
             ->orderBy('created_at', 'desc')
             ->get();
+
         $kelasKamars = KelasKamar::all();
 
         return view('landing_page.hriwayat', [

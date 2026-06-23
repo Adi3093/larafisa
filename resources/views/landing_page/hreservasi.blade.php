@@ -23,165 +23,193 @@
         <div class="flex flex-col lg:flex-row gap-8 items-start">
 
             <div class="flex-1 w-full bg-white rounded-3xl shadow-xl border border-amber-100 p-6 sm:p-8">
-                <form action="{{ route('reservasi.tamu.store') }}" method="POST" id="formReservasi">
-                    @csrf
 
-                    <div class="bg-amber-50 p-5 rounded-2xl border border-amber-200 mb-8">
-                        <h3 class="font-bold text-amber-950 mb-4 border-b border-amber-200 pb-2">1. Pilih Kamar</h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-amber-900 mb-1">Kelas Kamar</label>
-                                <select name="kelas_kamar_id" id="kelas_kamar_id" onchange="updatePreviewKamar()"
-                                    required
-                                    class="w-full border border-amber-300 rounded-xl p-3 bg-white text-amber-950 shadow-sm focus:ring-amber-500">
-                                    <option value="">-- Pilih Kelas --</option>
-                                    @foreach ($kelasKamars as $kelas)
-                                        <option value="{{ $kelas->id }}" data-harga="{{ $kelas->harga }}"
-                                            data-fasilitas="{{ json_encode($kelas->fasilitas) }}"
-                                            data-thumb="{{ asset('storage/' . $kelas->thumbnail) }}"
-                                            data-foto1="{{ $kelas->foto_1 ? asset('storage/' . $kelas->foto_1) : '' }}"
-                                            data-foto2="{{ $kelas->foto_2 ? asset('storage/' . $kelas->foto_2) : '' }}"
-                                            data-foto3="{{ $kelas->foto_3 ? asset('storage/' . $kelas->foto_3) : '' }}"
-                                            {{ $kelasId == $kelas->id ? 'selected' : '' }}>
-                                            {{ $kelas->nama_kelas }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-amber-900 mb-1">Pilih Ruangan</label>
-                                <select name="kamar_id" id="kamar_id" required
-                                    class="w-full border border-amber-300 rounded-xl p-3 bg-white text-amber-950 shadow-sm focus:ring-amber-500">
-                                    <option value="">-- Pilih Kelas Dahulu --</option>
-                                </select>
-                            </div>
+                @if (!$isLoggedIn)
+                    <div class="text-center py-16">
+                        <span class="text-6xl block mb-6">🔐</span>
+                        <h3 class="text-2xl font-black text-amber-950 mb-2">Login Diperlukan</h3>
+                        <p class="text-base text-gray-500 max-w-md mx-auto leading-relaxed mb-8">
+                            Untuk melanjutkan proses pemesanan kamar hotel, silakan masuk ke dalam akun Anda atau
+                            daftarkan diri terlebih dahulu jika belum memiliki akun.
+                        </p>
+                        <div class="flex flex-col sm:flex-row justify-center gap-3">
+                            <a href="{{ route('login') }}"
+                                class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-8 rounded-xl transition shadow-md shadow-amber-600/30">
+                                Log In Sekarang
+                            </a>
+                            <a href="{{ route('register') }}"
+                                class="bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold py-3 px-8 rounded-xl border border-amber-200 transition">
+                                Daftar Akun Baru
+                            </a>
                         </div>
                     </div>
+                @else
+                    <form action="{{ route('reservasi.tamu.store') }}" method="POST" id="formReservasi">
+                        @csrf
 
-                    <h3 class="font-bold text-amber-950 mb-4 border-b border-gray-100 pb-2">2. Identitas Pemesan</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">No. KTP (NIK)</label>
-                            <input type="text" name="no_ktp" value="{{ $user->no_ktp }}" required maxlength="16"
-                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                class="w-full border border-gray-300 rounded-xl p-3 bg-white text-gray-900 shadow-sm focus:border-amber-500 focus:ring-amber-500">
-                            <p class="text-[10px] text-amber-600 mt-1">*Sesuai profil akun Anda (Bisa diedit)</p>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Email</label>
-                            <input type="email" name="email" value="{{ $user->email }}" required
-                                class="w-full border border-gray-300 rounded-xl p-3 bg-white text-gray-900 shadow-sm focus:border-amber-500 focus:ring-amber-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Nomor WhatsApp Aktif</label>
-                            <input type="text" name="no_hp" required maxlength="15"
-                                oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="Cth: 0812345678"
-                                class="w-full border border-gray-300 rounded-xl p-3 text-gray-900 shadow-sm focus:border-amber-500 focus:ring-amber-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Umur Pemesan Utama</label>
-                            <input type="number" name="umur" id="umur" required min="1"
-                                placeholder="Usia Anda saat ini..."
-                                class="w-full border border-gray-300 rounded-xl p-3 text-gray-900 shadow-sm focus:border-amber-500 focus:ring-amber-500">
-                        </div>
-                    </div>
-
-                    <div class="mb-8 p-5 border border-gray-200 rounded-2xl bg-gray-50/50">
-                        <label class="block text-xs font-bold text-gray-700 mb-3">Daftar Nama Tamu yang Menginap</label>
-                        <div id="containerNamaTamu" class="space-y-3">
-                            <input type="text" name="nama_tamu[]" value="{{ $user->name }}" required
-                                placeholder="Nama Lengkap Pemesan 1"
-                                class="w-full border border-gray-300 rounded-xl p-3 text-gray-900 shadow-sm focus:border-amber-500 focus:ring-amber-500">
-                        </div>
-                        <button type="button" onclick="tambahNamaTamu()"
-                            class="mt-4 text-xs font-bold text-amber-600 hover:text-amber-800 transition">+ Tambah
-                            Anggota Lainnya</button>
-                    </div>
-
-                    <h3 class="font-bold text-amber-950 mb-4 border-b border-gray-100 pb-2">3. Waktu & Tambahan</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Check-In</label>
-                            <input type="datetime-local" name="check_in" id="check_in" value="{{ $checkin }}"
-                                onchange="hitungTotal()" required
-                                class="w-full border border-gray-300 rounded-xl p-3 shadow-sm focus:ring-amber-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Check-Out</label>
-                            <input type="datetime-local" name="check_out" id="check_out" value="{{ $checkout }}"
-                                onchange="hitungTotal()" required
-                                class="w-full border border-gray-300 rounded-xl p-3 shadow-sm focus:ring-amber-500">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                        <div
-                            class="flex items-center justify-between p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
-                            <div>
-                                <p class="text-sm font-bold text-gray-800">Extra Bed</p>
-                                <p class="text-xs text-gray-400 mt-0.5">+Rp 100.000 / unit</p>
-                            </div>
-                            <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
-                                <button type="button" onclick="adjustQty('extra_bed', -1)"
-                                    class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200">−</button>
-                                <input type="number" name="extra_bed" id="extra_bed" value="0" readonly
-                                    class="w-10 text-center bg-transparent border-none text-sm font-bold p-0 focus:ring-0">
-                                <button type="button" onclick="adjustQty('extra_bed', 1)"
-                                    class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200">&plus;</button>
+                        <div class="bg-amber-50 p-5 rounded-2xl border border-amber-200 mb-8">
+                            <h3 class="font-bold text-amber-950 mb-4 border-b border-amber-200 pb-2">1. Pilih Kamar</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-amber-900 mb-1">Kelas Kamar</label>
+                                    <select name="kelas_kamar_id" id="kelas_kamar_id" onchange="updatePreviewKamar()"
+                                        required
+                                        class="w-full border border-amber-300 rounded-xl p-3 bg-white text-amber-950 shadow-sm focus:ring-amber-500">
+                                        <option value="">-- Pilih Kelas --</option>
+                                        @foreach ($kelasKamars as $kelas)
+                                            <option value="{{ $kelas->id }}" data-harga="{{ $kelas->harga }}"
+                                                data-fasilitas="{{ json_encode($kelas->fasilitas) }}"
+                                                data-thumb="{{ asset('storage/' . $kelas->thumbnail) }}"
+                                                data-foto1="{{ $kelas->foto_1 ? asset('storage/' . $kelas->foto_1) : '' }}"
+                                                data-foto2="{{ $kelas->foto_2 ? asset('storage/' . $kelas->foto_2) : '' }}"
+                                                data-foto3="{{ $kelas->foto_3 ? asset('storage/' . $kelas->foto_3) : '' }}"
+                                                {{ $kelasId == $kelas->id ? 'selected' : '' }}>
+                                                {{ $kelas->nama_kelas }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-amber-900 mb-1">Pilih Ruangan</label>
+                                    <select name="kamar_id" id="kamar_id" required
+                                        class="w-full border border-amber-300 rounded-xl p-3 bg-white text-amber-950 shadow-sm focus:ring-amber-500">
+                                        <option value="">-- Pilih Kelas Dahulu --</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                        <div
-                            class="flex items-center justify-between p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
+
+                        <h3 class="font-bold text-amber-950 mb-4 border-b border-gray-100 pb-2">2. Identitas Pemesan
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
                             <div>
-                                <p class="text-sm font-bold text-gray-800">Extra Selimut</p>
-                                <p class="text-xs text-gray-400 mt-0.5">+Rp 25.000 / unit</p>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">No. KTP (NIK)</label>
+                                <input type="text" name="no_ktp" value="{{ $user->no_ktp ?? '' }}" required
+                                    maxlength="16" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                    class="w-full border border-gray-300 rounded-xl p-3 bg-white text-gray-900 shadow-sm focus:border-amber-500 focus:ring-amber-500">
+                                <p class="text-[10px] text-amber-600 mt-1">*Sesuai profil akun Anda (Bisa diedit)</p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Email</label>
+                                <input type="email" name="email" value="{{ $user->email ?? '' }}" required
+                                    class="w-full border border-gray-300 rounded-xl p-3 bg-white text-gray-900 shadow-sm focus:border-amber-500 focus:ring-amber-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Nomor WhatsApp Aktif</label>
+                                <input type="text" name="no_hp" required maxlength="15"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                    placeholder="Cth: 0812345678"
+                                    class="w-full border border-gray-300 rounded-xl p-3 text-gray-900 shadow-sm focus:border-amber-500 focus:ring-amber-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Umur Pemesan Utama</label>
+                                <input type="number" name="umur" id="umur" required min="1"
+                                    placeholder="Usia Anda saat ini..."
+                                    class="w-full border border-gray-300 rounded-xl p-3 text-gray-900 shadow-sm focus:border-amber-500 focus:ring-amber-500">
+                            </div>
+                        </div>
+
+                        <div class="mb-8 p-5 border border-gray-200 rounded-2xl bg-gray-50/50">
+                            <label class="block text-xs font-bold text-gray-700 mb-3">Daftar Nama Tamu yang
+                                Menginap</label>
+                            <div id="containerNamaTamu" class="space-y-3">
+                                <input type="text" name="nama_tamu[]" value="{{ $user->name ?? '' }}" required
+                                    placeholder="Nama Lengkap Pemesan 1"
+                                    class="w-full border border-gray-300 rounded-xl p-3 text-gray-900 shadow-sm focus:border-amber-500 focus:ring-amber-500">
+                            </div>
+                            <button type="button" onclick="tambahNamaTamu()"
+                                class="mt-4 text-xs font-bold text-amber-600 hover:text-amber-800 transition">+ Tambah
+                                Anggota Lainnya</button>
+                        </div>
+
+                        <h3 class="font-bold text-amber-950 mb-4 border-b border-gray-100 pb-2">3. Waktu & Tambahan</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Check-In</label>
+                                <input type="datetime-local" name="check_in" id="check_in" value="{{ $checkin }}"
+                                    onchange="hitungTotal()" required
+                                    class="w-full border border-gray-300 rounded-xl p-3 shadow-sm focus:ring-amber-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Check-Out</label>
+                                <input type="datetime-local" name="check_out" id="check_out"
+                                    value="{{ $checkout }}" onchange="hitungTotal()" required
+                                    class="w-full border border-gray-300 rounded-xl p-3 shadow-sm focus:ring-amber-500">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                            <div
+                                class="flex items-center justify-between p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
+                                <div>
+                                    <p class="text-sm font-bold text-gray-800">Extra Bed</p>
+                                    <p class="text-xs text-gray-400 mt-0.5">+Rp 100.000 / unit</p>
+                                </div>
+                                <div
+                                    class="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
+                                    <button type="button" onclick="adjustQty('extra_bed', -1)"
+                                        class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200">−</button>
+                                    <input type="number" name="extra_bed" id="extra_bed" value="0" readonly
+                                        class="w-10 text-center bg-transparent border-none text-sm font-bold p-0 focus:ring-0">
+                                    <button type="button" onclick="adjustQty('extra_bed', 1)"
+                                        class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200">&plus;</button>
+                                </div>
                             </div>
                             <div
-                                class="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
-                                <button type="button" onclick="adjustQty('extra_selimut', -1)"
-                                    class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200">−</button>
-                                <input type="number" name="extra_selimut" id="extra_selimut" value="0"
-                                    readonly
-                                    class="w-10 text-center bg-transparent border-none text-sm font-bold p-0 focus:ring-0">
-                                <button type="button" onclick="adjustQty('extra_selimut', 1)"
-                                    class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200">&plus;</button>
+                                class="flex items-center justify-between p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
+                                <div>
+                                    <p class="text-sm font-bold text-gray-800">Extra Selimut</p>
+                                    <p class="text-xs text-gray-400 mt-0.5">+Rp 25.000 / unit</p>
+                                </div>
+                                <div
+                                    class="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
+                                    <button type="button" onclick="adjustQty('extra_selimut', -1)"
+                                        class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200">−</button>
+                                    <input type="number" name="extra_selimut" id="extra_selimut" value="0"
+                                        readonly
+                                        class="w-10 text-center bg-transparent border-none text-sm font-bold p-0 focus:ring-0">
+                                    <button type="button" onclick="adjustQty('extra_selimut', 1)"
+                                        class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200">&plus;</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <h3 class="font-bold text-amber-950 mb-4 border-b border-gray-100 pb-2">4. Metode Pembayaran</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                        <div>
-                            <select name="metode_pembayaran" id="metode_pembayaran" onchange="toggleSubMetode()"
-                                required
-                                class="w-full border border-gray-300 rounded-xl p-3 bg-white text-gray-900 shadow-sm focus:ring-amber-500">
-                                <option value="">-- Pilih Metode --</option>
-                                <option value="Bayar di tempat">Bayar di Tempat (Resepsionis)</option>
-                                <option value="Transfer">Transfer Online</option>
-                            </select>
+                        <h3 class="font-bold text-amber-950 mb-4 border-b border-gray-100 pb-2">4. Metode Pembayaran
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                            <div>
+                                <select name="metode_pembayaran" id="metode_pembayaran" onchange="toggleSubMetode()"
+                                    required
+                                    class="w-full border border-gray-300 rounded-xl p-3 bg-white text-gray-900 shadow-sm focus:ring-amber-500">
+                                    <option value="">-- Pilih Metode --</option>
+                                    <option value="Bayar di tempat">Bayar di Tempat (Resepsionis)</option>
+                                    <option value="Transfer">Transfer Online</option>
+                                </select>
+                            </div>
+                            <div id="subMetodeDiv" class="hidden">
+                                <select name="detail_pembayaran" id="detail_pembayaran"
+                                    class="w-full border border-gray-300 rounded-xl p-3 bg-blue-50 text-blue-900 shadow-sm focus:ring-blue-500">
+                                    <option value="Transfer Bank">Transfer Bank</option>
+                                    <option value="Q-RIS">Scan Q-RIS</option>
+                                </select>
+                            </div>
                         </div>
-                        <div id="subMetodeDiv" class="hidden">
-                            <select name="detail_pembayaran" id="detail_pembayaran"
-                                class="w-full border border-gray-300 rounded-xl p-3 bg-blue-50 text-blue-900 shadow-sm focus:ring-blue-500">
-                                <option value="Transfer Bank">Transfer Bank</option>
-                                <option value="Q-RIS">Scan Q-RIS</option>
-                            </select>
-                        </div>
-                    </div>
 
-                    <div
-                        class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pt-6 border-t border-amber-200">
-                        <div>
-                            <p class="text-sm font-bold text-gray-500 uppercase tracking-wider">Total Pembayaran</p>
-                            <h2 class="text-3xl font-black text-amber-600" id="totalDisplay">Rp 0</h2>
-                            <p class="text-xs font-bold text-gray-400 mt-1" id="durasiDisplay">0 Malam</p>
+                        <div
+                            class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pt-6 border-t border-amber-200">
+                            <div>
+                                <p class="text-sm font-bold text-gray-500 uppercase tracking-wider">Total Pembayaran
+                                </p>
+                                <h2 class="text-3xl font-black text-amber-600" id="totalDisplay">Rp 0</h2>
+                                <p class="text-xs font-bold text-gray-400 mt-1" id="durasiDisplay">0 Malam</p>
+                            </div>
+                            <button type="button" onclick="validasiDanSubmit()"
+                                class="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-bold text-lg py-4 px-10 rounded-2xl transition shadow-lg shadow-amber-600/30 transform hover:-translate-y-1">
+                                Buat Reservasi
+                            </button>
                         </div>
-                        <button type="button" onclick="validasiDanSubmit()"
-                            class="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-bold text-lg py-4 px-10 rounded-2xl transition shadow-lg shadow-amber-600/30 transform hover:-translate-y-1">
-                            Buat Reservasi
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                @endif
             </div>
 
             <div class="w-full lg:w-80 shrink-0 sticky top-24">

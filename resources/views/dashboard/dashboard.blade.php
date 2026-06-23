@@ -1,7 +1,6 @@
 <x-dblayout>
     <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Dashboard Resepsionis</h1>
-        <p class="text-sm text-gray-500 mt-1">Ringkasan okupansi kamar dan jadwal kedatangan tamu hotel FISA.</p>
+        <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -44,7 +43,7 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Dlm Perbaikan</p>
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Dalam Perbaikan</p>
                         <h3 class="text-2xl font-black text-gray-900">{{ $kamarPerbaikan }}</h3>
                     </div>
                 </div>

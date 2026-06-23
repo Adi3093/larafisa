@@ -1,8 +1,6 @@
 <x-dblayout>
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Check-in/Check-Out</h1>
-        <p class="text-sm text-gray-500 mt-1">Kelola proses serah terima kunci untuk tamu yang akan Check-In dan
-            Check-Out hari ini.</p>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
