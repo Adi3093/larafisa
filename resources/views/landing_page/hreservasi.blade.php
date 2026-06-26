@@ -203,10 +203,18 @@
                                 <h2 class="text-3xl font-black text-amber-600" id="totalDisplay">Rp 0</h2>
                                 <p class="text-xs font-bold text-gray-400 mt-1" id="durasiDisplay">0 Malam</p>
                             </div>
-                            <button type="button" onclick="validasiDanSubmit()"
-                                class="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-bold text-lg py-4 px-10 rounded-2xl transition shadow-lg shadow-amber-600/30 transform hover:-translate-y-1">
-                                Buat Reservasi
-                            </button>
+
+                            @if ($isMaintenance)
+                                <button type="button" disabled
+                                    class="w-full sm:w-auto bg-gray-400 text-white font-bold text-lg py-4 px-10 rounded-2xl cursor-not-allowed">
+                                    Sistem Sedang Perbaikan
+                                </button>
+                            @else
+                                <button type="button" onclick="validasiDanSubmit()"
+                                    class="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-bold text-lg py-4 px-10 rounded-2xl transition shadow-lg shadow-amber-600/30 transform hover:-translate-y-1">
+                                    Buat Reservasi
+                                </button>
+                            @endif
                         </div>
                     </form>
                 @endif
@@ -216,6 +224,16 @@
                 <div class="bg-white rounded-3xl shadow-xl border border-amber-100 p-6">
                     <h3 class="font-bold text-amber-950 mb-4 text-lg border-b border-amber-100 pb-2">Kamar Pilihan Anda
                     </h3>
+                    @if ($isMaintenance)
+                        <div
+                            class="mb-4 bg-red-50 border border-red-200 rounded-2xl p-4 shadow-sm text-center animate-pulse">
+                            <span class="text-3xl block mb-2">🚧</span>
+                            <h4 class="font-bold text-red-800 text-sm">Sistem Dalam Perbaikan</h4>
+                            <p class="text-xs text-red-600 mt-1 leading-relaxed">Mohon maaf, fitur Reservasi Online
+                                sedang dinonaktifkan sementara untuk keperluan pemeliharaan rutin. Silakan coba beberapa
+                                saat lagi.</p>
+                        </div>
+                    @endif
 
                     <div id="placeholderPreview" class="text-center py-8">
                         <svg class="w-16 h-16 text-gray-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24"

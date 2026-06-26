@@ -105,6 +105,9 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
     Route::get('/settings/profil', [ProfileController::class, 'index'])->name('settings.profil');
     Route::put('/settings/profil', [ProfileController::class, 'update'])->name('settings.profil.update');
 
+    // Rute API untuk menyimpan status Maintenance ke Server
+    Route::post('/settings/maintenance', [App\Http\Controllers\ProfileController::class, 'updateMaintenance'])->name('settings.maintenance');
+
     Route::get('/pendapatan', function () {
         return view('dashboard.pendapatan');
     });

@@ -9,6 +9,7 @@ use App\Models\Reservasi;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache; // TAMBAHAN WAJIB
 
 class GuestReservationController extends Controller
 {
@@ -19,7 +20,24 @@ class GuestReservationController extends Controller
         $checkout = $request->filter_checkout ?? date('Y-m-d\TH:i', strtotime('+1 day'));
         $kelasKamars = KelasKamar::all();
 
-        // CEK LOGIN: Jika belum login, user diset null dan pesanan aktif kosong
+        // LOGIKA PENGECEKAN MAINTENANCE DARI SERVER (CACHE)
+        $isMaintenance = false;
+
+        // Cek Maintenance Instan
+        if (Cache::get('maintenance_mode') === 'true' && Cache::get('main_online') === 'true') {
+            $isMaintenance = true;
+        }
+
+        // Cek Maintenance Kalender (Otomatis)
+        if (Cache::get('jadwal_maintenance') === 'true' && Cache::get('auto_maintenance') === 'true' && Cache::get('check_jadwal_online') === 'true') {
+            $savedDates = json_decode(Cache::get('jadwal_tersimpan'), true) ?? [];
+            $hariIni = \Carbon\Carbon::today()->format('Y-m-d');
+            if (in_array($hariIni, $savedDates)) {
+                $isMaintenance = true;
+            }
+        }
+
+        // Jika belum login
         if (!Auth::check()) {
             return view('landing_page.hreservasi', [
                 'isLoggedIn' => false,
@@ -28,7 +46,8 @@ class GuestReservationController extends Controller
                 'kelasId' => $kelasId,
                 'checkin' => $checkin,
                 'checkout' => $checkout,
-                'reservasiAktif' => collect()
+                'reservasiAktif' => collect(),
+                'isMaintenance' => $isMaintenance
             ]);
         }
 
@@ -49,13 +68,13 @@ class GuestReservationController extends Controller
             'kelasId' => $kelasId,
             'checkin' => $checkin,
             'checkout' => $checkout,
-            'reservasiAktif' => $reservasiAktif
+            'reservasiAktif' => $reservasiAktif,
+            'isMaintenance' => $isMaintenance
         ]);
     }
 
     public function riwayat()
     {
-        // 1. KONDISI JIKA BELUM LOGIN
         if (!Auth::check()) {
             return view('landing_page.hriwayat', [
                 'isLoggedIn' => false,
@@ -66,8 +85,6 @@ class GuestReservationController extends Controller
         }
 
         $user = Auth::user();
-
-        // 2. PESANAN AKTIF TERBARU (Untuk Step Bar)
         $pesananAktif = Reservasi::with('kamar.kelasKamar')
             ->where(function ($q) use ($user) {
                 $q->where('nama_tamu', 'like', $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
@@ -76,7 +93,6 @@ class GuestReservationController extends Controller
             ->orderBy('created_at', 'desc')
             ->first();
 
-        // 3. ARSIP RESERVASI
         $arsipReservasi = Reservasi::with('kamar.kelasKamar')
             ->where(function ($q) use ($user) {
                 $q->where('nama_tamu', 'like', $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
@@ -152,7 +168,6 @@ class GuestReservationController extends Controller
         return redirect()->route('riwayat.tamu')->with('success', "Reservasi $noReservasi berhasil dibuat!");
     }
 
-    // UBAH JADWAL TAMU
     public function update(Request $request, $id)
     {
         $reservasi = Reservasi::findOrFail($id);
