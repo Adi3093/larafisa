@@ -13,6 +13,7 @@ class ProfileController extends Controller
     {
         return view('dashboard.settings');
     }
+
     public function update(Request $request)
     {
         $user = Auth::user();
@@ -20,9 +21,10 @@ class ProfileController extends Controller
             'name' => 'required|string|max:45',
             'username' => 'required|string|max:20|unique:users,username,' . $user->id,
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
-            'password' => 'nullable|min:8',
+            'password' => 'nullable|min:8|confirmed', // REVISI: Tambahkan confirmed
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
+
         if ($request->hasFile('avatar')) {
             if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
                 Storage::disk('public')->delete($user->avatar);
@@ -30,13 +32,16 @@ class ProfileController extends Controller
             $avatarPath = $request->file('avatar')->store('avatars', 'public');
             $user->avatar = $avatarPath;
         }
+
         $user->name = $request->name;
         $user->username = $request->username;
         $user->email = $request->email;
+
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
+
         $user->save();
-        return back()->with('success', 'Profil berhasil diperbarui!');
+        return back()->with('success', 'Profil sistem Anda berhasil diperbarui!');
     }
 }
