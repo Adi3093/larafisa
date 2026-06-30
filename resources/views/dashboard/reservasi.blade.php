@@ -105,6 +105,7 @@
         <form method="GET" action="{{ route('reservasi') }}"
             class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end w-full mb-6 pb-6 border-b border-amber-50">
             <input type="hidden" name="tab" value="{{ $tab }}">
+
             <div class="col-span-1 sm:col-span-2 lg:col-span-1">
                 <label class="block text-xs font-bold text-amber-800/70 uppercase tracking-wider mb-2">Search</label>
                 <div class="relative">
@@ -119,6 +120,7 @@
                         class="pl-9 w-full border border-amber-200 rounded-xl shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 py-2.5 text-sm transition text-amber-950">
                 </div>
             </div>
+
             <div>
                 <label class="block text-xs font-bold text-amber-800/70 uppercase tracking-wider mb-2">Filter
                     Kelas</label>
@@ -132,6 +134,7 @@
                     @endforeach
                 </select>
             </div>
+
             <div>
                 <label class="block text-xs font-bold text-amber-800/70 uppercase tracking-wider mb-2">Urutan
                     (A/Z)</label>
@@ -148,6 +151,7 @@
                         Harga Terendah</option>
                 </select>
             </div>
+
             <div>
                 <label class="block text-xs font-bold text-amber-800/70 uppercase tracking-wider mb-2">Jadwal
                     Mendatang</label>
@@ -157,6 +161,7 @@
                     <option value="1" {{ request('filter_mingguan') == '1' ? 'selected' : '' }}>H-7 Inap</option>
                 </select>
             </div>
+
             <div class="flex gap-2 w-full">
                 <button type="submit"
                     class="flex-1 bg-amber-600 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-amber-700 transition shadow-sm text-center">Filter</button>
@@ -182,7 +187,9 @@
                     <tbody class="divide-y divide-amber-50 text-amber-950">
                         @forelse($reservasis as $res)
                             <tr class="hover:bg-amber-50/30 transition">
-                                <td class="px-6 py-4 font-bold text-amber-600">#{{ $res->no_reservasi }}</td>
+                                <td class="px-6 py-4 font-bold text-amber-600">
+                                    #{{ $res->no_reservasi }}
+                                </td>
                                 <td class="px-6 py-4">
                                     <div class="font-bold text-amber-950">{{ $res->nama_tamu }}</div>
                                     <div class="text-xs text-amber-900/60 mt-0.5">{{ $res->no_hp }}</div>
@@ -194,14 +201,16 @@
                                         {{ $res->kamar?->kelasKamar?->nama_kelas ?? '-' }}</div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="font-bold text-amber-950 text-xs"><span
-                                            class="text-emerald-600 font-extrabold">In:</span>
+                                    <div class="font-bold text-amber-950 text-xs">
+                                        <span class="text-emerald-600 font-extrabold">In:</span>
                                         {{ \Carbon\Carbon::parse($res->check_in)->translatedFormat('d M Y - H:i') }}
-                                        WIB</div>
-                                    <div class="text-xs text-amber-800/80 font-bold mt-1"><span
-                                            class="text-red-500 font-extrabold">Out:</span>
+                                        WIB
+                                    </div>
+                                    <div class="text-xs text-amber-800/80 font-bold mt-1">
+                                        <span class="text-red-500 font-extrabold">Out:</span>
                                         {{ \Carbon\Carbon::parse($res->check_out)->translatedFormat('d M Y - H:i') }}
-                                        WIB</div>
+                                        WIB
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4">
                                     @php
@@ -244,8 +253,9 @@
                                             </button>
                                         @elseif($res->status_reservasi === 'Terkonfirmasi' || $res->status_reservasi === 'Check-In')
                                             <a href="{{ route('checkinout') }}"
-                                                class="text-xs font-bold text-amber-600 hover:underline flex items-center gap-1">Buka
-                                                Resepsionis &rarr;</a>
+                                                class="text-xs font-bold text-amber-600 hover:underline flex items-center gap-1">
+                                                Buka Resepsionis &rarr;
+                                            </a>
                                         @else
                                             <span class="text-[10px] text-amber-900/40 font-medium italic">Arsip
                                                 Terkunci</span>
@@ -299,131 +309,136 @@
                         @csrf
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
 
-                            <div class="lg:col-span-2 space-y-5">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-xs font-bold text-amber-950 mb-1">Nama Tamu</label>
-                                        <input type="text" name="nama_tamu" required
-                                            class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm transition">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold text-amber-950 mb-1">No.
-                                            Handphone</label>
-                                        <input type="text" name="no_hp" required maxlength="15"
-                                            oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                            placeholder="Contoh: 081234567890"
-                                            class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm transition">
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-bold text-amber-950 mb-1">Nomor KTP (NIK)</label>
-                                    <input type="text" name="no_ktp" required maxlength="16"
-                                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                        placeholder="Masukkan 16 digit NIK..."
-                                        class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm transition">
-                                </div>
-
-                                <div class="border border-amber-200 rounded-xl p-5 bg-amber-50/30 space-y-4">
+                            <div class="lg:col-span-2 flex flex-col h-full justify-between">
+                                <div class="space-y-5">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <label class="block text-xs font-bold text-amber-950 mb-1">Kelas
-                                                Kamar</label>
-                                            <select name="kelas_kamar_id" id="kelas_kamar_id"
-                                                onchange="filterKamarDanHitung()" required
-                                                class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm bg-white transition">
-                                                <option value="" data-harga="0">-- Pilih Kelas --</option>
-                                                @foreach ($kelasKamars as $kelas)
-                                                    <option value="{{ $kelas->id }}"
-                                                        data-harga="{{ $kelas->harga }}">{{ $kelas->nama_kelas }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
+                                            <label class="block text-xs font-bold text-amber-950 mb-1">Nama
+                                                Tamu</label>
+                                            <input type="text" name="nama_tamu" required
+                                                class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm transition">
                                         </div>
                                         <div>
                                             <label class="block text-xs font-bold text-amber-950 mb-1">No.
-                                                Ruangan</label>
-                                            <select name="kamar_id" id="kamar_id" required
-                                                class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm bg-white transition">
-                                                <option value="">-- Pilih Kamar --</option>
-                                            </select>
+                                                Handphone</label>
+                                            <input type="text" name="no_hp" required maxlength="15"
+                                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                                placeholder="Contoh: 081234567890"
+                                                class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm transition">
                                         </div>
                                     </div>
 
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-xs font-bold text-amber-950 mb-1">Tanggal
-                                                Check-In</label>
-                                            <input type="datetime-local" name="check_in" id="check_in"
-                                                value="{{ date('Y-m-d\TH:i') }}" onchange="filterKamarDanHitung()"
-                                                required
-                                                class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm transition">
+                                    <div>
+                                        <label class="block text-xs font-bold text-amber-950 mb-1">Nomor KTP
+                                            (NIK)</label>
+                                        <input type="text" name="no_ktp" required maxlength="16"
+                                            oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                            placeholder="Masukkan 16 digit NIK..."
+                                            class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm transition">
+                                    </div>
+
+                                    <div class="border border-amber-200 rounded-xl p-5 space-y-4">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-xs font-bold text-amber-950 mb-1">Kelas
+                                                    Kamar</label>
+                                                <select name="kelas_kamar_id" id="kelas_kamar_id"
+                                                    onchange="filterKamarDanHitung()" required
+                                                    class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm bg-white transition">
+                                                    <option value="" data-harga="0">-- Pilih Kelas --</option>
+                                                    @foreach ($kelasKamars as $kelas)
+                                                        <option value="{{ $kelas->id }}"
+                                                            data-harga="{{ $kelas->harga }}">{{ $kelas->nama_kelas }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-amber-950 mb-1">No.
+                                                    Ruangan</label>
+                                                <select name="kamar_id" id="kamar_id" required
+                                                    class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm bg-white transition">
+                                                    <option value="">-- Pilih Kamar --</option>
+                                                </select>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label class="block text-xs font-bold text-amber-950 mb-1">Tanggal
-                                                Check-Out</label>
-                                            <input type="datetime-local" name="check_out" id="check_out"
-                                                value="{{ date('Y-m-d\TH:i', strtotime('+1 day')) }}"
-                                                onchange="filterKamarDanHitung()" required
-                                                class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm transition">
+
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-xs font-bold text-amber-950 mb-1">Tanggal
+                                                    Check-In</label>
+                                                <input type="datetime-local" name="check_in" id="check_in"
+                                                    value="{{ date('Y-m-d\TH:i') }}"
+                                                    onchange="filterKamarDanHitung()" required
+                                                    class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm transition">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-amber-950 mb-1">Tanggal
+                                                    Check-Out</label>
+                                                <input type="datetime-local" name="check_out" id="check_out"
+                                                    value="{{ date('Y-m-d\TH:i', strtotime('+1 day')) }}"
+                                                    onchange="filterKamarDanHitung()" required
+                                                    class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm transition">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-amber-950 mb-2">Layanan
+                                            Ekstra</label>
+                                        <div class="space-y-3">
+                                            <div
+                                                class="flex items-center justify-between p-3 border border-amber-200 rounded-xl bg-white shadow-sm">
+                                                <span class="text-sm font-bold text-amber-950">Ekstra Bed</span>
+                                                <div
+                                                    class="flex items-center border border-amber-200 rounded-lg overflow-hidden bg-gray-50">
+                                                    <button type="button" onclick="adjustQty('extra_bed_qty', -1)"
+                                                        class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200 transition text-lg leading-none">&minus;</button>
+                                                    <input type="number" name="ekstra[Extra Bed]" id="extra_bed_qty"
+                                                        value="0" min="0" readonly
+                                                        class="w-10 text-center bg-transparent border-none text-sm font-bold text-gray-800 p-0 focus:ring-0">
+                                                    <button type="button" onclick="adjustQty('extra_bed_qty', 1)"
+                                                        class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200 transition text-lg leading-none">&plus;</button>
+                                                </div>
+                                            </div>
+                                            <div
+                                                class="flex items-center justify-between p-3 border border-amber-200 rounded-xl bg-white shadow-sm">
+                                                <span class="text-sm font-bold text-amber-950">Ekstra Selimut</span>
+                                                <div
+                                                    class="flex items-center border border-amber-200 rounded-lg overflow-hidden bg-gray-50">
+                                                    <button type="button"
+                                                        onclick="adjustQty('extra_selimut_qty', -1)"
+                                                        class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200 transition text-lg leading-none">&minus;</button>
+                                                    <input type="number" name="ekstra[Extra Selimut]"
+                                                        id="extra_selimut_qty" value="0" min="0" readonly
+                                                        class="w-10 text-center bg-transparent border-none text-sm font-bold text-gray-800 p-0 focus:ring-0">
+                                                    <button type="button" onclick="adjustQty('extra_selimut_qty', 1)"
+                                                        class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200 transition text-lg leading-none">&plus;</button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label class="block text-xs font-bold text-amber-950 mb-2">Layanan Ekstra</label>
-                                    <div class="space-y-3">
-                                        <div
-                                            class="flex items-center justify-between p-3 border border-amber-200 rounded-xl bg-white shadow-sm">
-                                            <span class="text-sm font-bold text-amber-950">Ekstra Bed</span>
-                                            <div
-                                                class="flex items-center border border-amber-200 rounded-lg overflow-hidden bg-gray-50">
-                                                <button type="button" onclick="adjustQty('extra_bed_qty', -1)"
-                                                    class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200 transition text-lg leading-none">&minus;</button>
-                                                <input type="number" name="ekstra[Extra Bed]" id="extra_bed_qty"
-                                                    value="0" min="0" readonly
-                                                    class="w-10 text-center bg-transparent border-none text-sm font-bold text-gray-800 p-0 focus:ring-0">
-                                                <button type="button" onclick="adjustQty('extra_bed_qty', 1)"
-                                                    class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200 transition text-lg leading-none">&plus;</button>
-                                            </div>
-                                        </div>
-                                        <div
-                                            class="flex items-center justify-between p-3 border border-amber-200 rounded-xl bg-white shadow-sm">
-                                            <span class="text-sm font-bold text-amber-950">Ekstra Selimut</span>
-                                            <div
-                                                class="flex items-center border border-amber-200 rounded-lg overflow-hidden bg-gray-50">
-                                                <button type="button" onclick="adjustQty('extra_selimut_qty', -1)"
-                                                    class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200 transition text-lg leading-none">&minus;</button>
-                                                <input type="number" name="ekstra[Extra Selimut]"
-                                                    id="extra_selimut_qty" value="0" min="0" readonly
-                                                    class="w-10 text-center bg-transparent border-none text-sm font-bold text-gray-800 p-0 focus:ring-0">
-                                                <button type="button" onclick="adjustQty('extra_selimut_qty', 1)"
-                                                    class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200 transition text-lg leading-none">&plus;</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div
-                                    class="pt-5 border-t border-amber-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                                    <div class="w-full sm:w-auto text-left">
+                                <div class="mt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                                    <div class="w-full md:w-auto text-left">
                                         <p class="text-xs font-bold text-amber-800 uppercase tracking-wider">Total
                                             Biaya (<span id="rincian_hari">1 Malam</span>)</p>
-                                        <div class="text-2xl font-black text-amber-700 leading-none mt-1"
+                                        <div class="text-3xl font-black text-amber-600 leading-none mt-1"
                                             id="total_biaya_display">Rp 0</div>
                                     </div>
-                                    <div class="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
+                                    <div class="flex gap-2 w-full md:w-auto">
                                         <button type="button" onclick="closeWalkInModal()"
-                                            class="flex-1 sm:flex-none rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-gray-700 shadow-sm border border-gray-200 hover:bg-gray-50 transition">
+                                            class="flex-1 md:flex-none rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-gray-700 shadow-sm border border-gray-200 hover:bg-gray-50 transition">
                                             Batal
                                         </button>
                                         <button type="submit" name="action_type" value="simpan_checkin"
-                                            class="flex-1 sm:flex-none rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition"
+                                            class="flex-1 md:flex-none rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition"
                                             onclick="return confirm('Apakah Anda yakin tamu akan langsung Check-In sekarang?')">
                                             Simpan & Check-in
                                         </button>
                                         <button type="submit" name="action_type" value="simpan"
-                                            class="flex-1 sm:flex-none rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-amber-700 transition">
+                                            class="flex-1 md:flex-none rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-amber-700 transition">
                                             Simpan
                                         </button>
                                     </div>
@@ -433,7 +448,7 @@
 
                             <div class="lg:col-span-1">
                                 <div
-                                    class="bg-amber-50/50 rounded-2xl border border-amber-200 p-5 sticky top-6 shadow-inner min-h-full">
+                                    class="bg-amber-50/20 rounded-2xl border border-amber-200 p-5 shadow-sm min-h-full">
 
                                     <div id="walkin_placeholder" class="text-center py-10">
                                         <svg class="w-16 h-16 text-amber-200 mx-auto mb-3" fill="none"
@@ -448,20 +463,17 @@
 
                                     <div id="walkin_content" class="hidden">
                                         <img id="wi_img_main" src=""
-                                            class="w-full h-40 object-cover rounded-xl mb-3 shadow-sm border border-amber-200 bg-white transition-all duration-300">
+                                            class="w-full h-44 object-cover rounded-xl mb-3 shadow-sm border border-amber-200 bg-white transition-all duration-300">
 
                                         <div id="wi_thumbnails" class="grid grid-cols-3 gap-2 mb-5"></div>
 
                                         <h4 id="wi_nama_kelas" class="text-xl font-black text-amber-950 mb-1"></h4>
-                                        <p class="text-sm font-bold text-amber-600 mb-4" id="wi_harga"></p>
+                                        <p class="text-sm font-bold text-amber-600 mb-6" id="wi_harga"></p>
 
-                                        <div class="border-t border-amber-200 pt-3">
-                                            <p
-                                                class="text-[10px] font-bold text-amber-800 uppercase tracking-wider mb-2">
-                                                Fasilitas Kamar:</p>
-                                            <ul id="wi_fasilitas"
-                                                class="grid grid-cols-2 gap-y-1.5 text-xs font-medium text-amber-950">
-                                            </ul>
+                                        <div class="border-t border-amber-200 pt-4">
+                                            <p class="text-xs font-bold text-amber-800 uppercase tracking-wider mb-3">
+                                                Fasilitas Kamar</p>
+                                            <ul id="wi_fasilitas" class="grid grid-cols-2 gap-y-3 gap-x-2"></ul>
                                         </div>
                                     </div>
 
@@ -661,25 +673,39 @@
                         let thumbsHtml = '';
                         let images = [dataKelas.thumbnail, dataKelas.foto_1, dataKelas.foto_2, dataKelas.foto_3].filter(
                             Boolean);
-                        let uniqueImages = [...new Set(images)]; // Hilangkan foto yang sama (duplikat)
+                        let uniqueImages = [...new Set(images)]; // Hilangkan foto duplikat
 
                         uniqueImages.forEach(img => {
                             let fullUrl = '/storage/' + img;
                             thumbsHtml +=
-                                `<div class="h-12 rounded-lg overflow-hidden shadow-sm border border-amber-200 hover:border-amber-500 cursor-pointer transition" onclick="document.getElementById('wi_img_main').src='${fullUrl}'"><img src="${fullUrl}" class="w-full h-full object-cover"></div>`;
+                                `<div class="h-16 rounded-xl overflow-hidden shadow-sm border-2 border-transparent hover:border-amber-400 cursor-pointer transition" onclick="document.getElementById('wi_img_main').src='${fullUrl}'"><img src="${fullUrl}" class="w-full h-full object-cover"></div>`;
                         });
                         document.getElementById('wi_thumbnails').innerHTML = thumbsHtml;
 
-                        let fasHtml = '';
-                        try {
-                            let parsedFas = JSON.parse(dataKelas.fasilitas);
-                            if (Array.isArray(parsedFas)) {
-                                parsedFas.forEach(f => {
-                                    fasHtml +=
-                                        `<li class="flex items-center gap-1.5"><span class="text-amber-500 text-[10px]">✔</span> ${f}</li>`;
-                                });
+                        // LOGIKA ANTI-ERROR PARSING FASILITAS
+                        let fasArr = dataKelas.fasilitas;
+                        if (typeof fasArr === 'string') {
+                            try {
+                                fasArr = JSON.parse(fasArr);
+                            } catch (e) {
+                                fasArr = [];
                             }
-                        } catch (e) {}
+                        }
+
+                        let fasHtml = '';
+                        if (Array.isArray(fasArr)) {
+                            fasArr.forEach(f => {
+                                // Desain Grid Sesuai Wireframe
+                                fasHtml += `
+                                    <li class="flex items-center gap-1.5 text-xs font-semibold text-amber-950">
+                                        <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        ${f}
+                                    </li>
+                                `;
+                            });
+                        }
                         document.getElementById('wi_fasilitas').innerHTML = fasHtml;
                     }
                 } else {

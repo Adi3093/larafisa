@@ -109,8 +109,7 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
 
     // Rute API untuk menyimpan status Maintenance ke Server
     Route::post('/settings/maintenance', [App\Http\Controllers\ProfileController::class, 'updateMaintenance'])->name('settings.maintenance');
-
-    Route::get('/pendapatan', function () {
-        return view('dashboard.pendapatan');
-    });
+    //Laporan Pendapatan
+    Route::get('/pendapatan', [App\Http\Controllers\PendapatanController::class, 'index'])->name('pendapatan');
+    Route::get('/pendapatan/export/{format}', [App\Http\Controllers\PendapatanController::class, 'export'])->name('pendapatan.export');
 });
