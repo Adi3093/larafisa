@@ -93,6 +93,8 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
     Route::post('/akun', [AccountController::class, 'store'])->name('akun.store');
     Route::put('/akun/{id}', [AccountController::class, 'update'])->name('akun.update');
 
+    Route::get('/api/cek-notifikasi', [App\Http\Controllers\ReservasiController::class, 'cekNotifikasi'])->name('api.notifikasi');
+
     Route::get('/dtamu', function () {
         return view('dashboard.dtamu');
     });

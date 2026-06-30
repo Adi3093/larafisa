@@ -6,30 +6,28 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('reservasis', function (Blueprint $table) {
             $table->id();
             $table->string('no_reservasi')->unique();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('dibuat_oleh_user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('kamar_id')->constrained('kamars')->cascadeOnDelete();
             $table->string('nama_tamu');
-            $table->string('no_ktp');
-            $table->string('no_hp');
-            $table->foreignId('kamar_id')->constrained('kamars')->onDelete('cascade');
-            $table->json('ekstra')->nullable();
+            $table->string('no_ktp', 16)->nullable();
+            $table->string('no_hp', 15);
+
             $table->datetime('check_in');
             $table->datetime('check_out');
+            $table->json('ekstra')->nullable();
             $table->enum('tipe_reservasi', ['Walk-in', 'Online'])->default('Walk-in');
             $table->enum('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi', 'Check-In', 'Selesai', 'Dibatalkan'])->default('Terkonfirmasi');
+
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('reservasis');

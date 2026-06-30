@@ -35,4 +35,11 @@ export default defineConfig({
         }),
         tailwindcss(), // 2. Mengaktifkan plugin di dalam Vite
     ],
+    // server: {
+    //     host: '0.0.0.0', // Mengizinkan akses dari luar
+    //     port: 5173,
+    //     hmr: {
+    //         host: '10.42.64.93', // WAJIB: Paksa Vite menggunakan IP Laptop Anda, bukan localhost
+    //     },
+    // },
 });

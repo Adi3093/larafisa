@@ -54,6 +54,8 @@
 
 <body class="bg-gray-50 antialiased">
 
+    <div id="toast-container" class="fixed top-20 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+
     <nav class="fixed top-0 z-50 w-full bg-white border-b border-amber-200 shadow-sm">
         <div class="px-3 py-3 lg:px-5 lg:pl-3">
             <div class="flex items-center justify-between">
@@ -293,6 +295,111 @@
             {{ $slot }}
         </div>
     </div>
+    <style>
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+
+        .toast-slide-in {
+            animation: slideInRight 0.4s ease-out forwards;
+        }
+
+        .toast-fade-out {
+            animation: fadeOut 0.4s ease-out forwards;
+        }
+    </style>
+
+    <script>
+        // Fungsi Memunculkan Notifikasi Secara Visual
+        function showGlobalToast(type, customName = '') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            let icon = '',
+                title = '',
+                desc = '',
+                bgColor = '',
+                textColor = '';
+
+            if (type === 'reservasi') {
+                icon = '🛎️';
+                title = 'Reservasi Online Baru!';
+                desc = customName ? `Ada pesanan kamar baru dari <b>${customName}</b> via Website.` :
+                    'Ada pesanan kamar baru via Website.';
+                bgColor = 'bg-blue-50';
+                textColor = 'text-blue-900';
+            } else if (type === 'checkin') {
+                icon = '🔑';
+                title = 'Waktu Check-In Tiba';
+                desc = 'Ada jadwal kedatangan tamu hari ini.';
+                bgColor = 'bg-emerald-50';
+                textColor = 'text-emerald-900';
+            } else if (type === 'checkout') {
+                icon = '⏰';
+                title = 'Peringatan Check-Out';
+                desc = 'Ada tamu yang telah melewati batas waktu inap.';
+                bgColor = 'bg-rose-50';
+                textColor = 'text-rose-900';
+            }
+
+            toast.className =
+                `flex items-start gap-3 p-4 w-72 md:w-80 rounded-2xl shadow-xl border border-gray-200 pointer-events-auto toast-slide-in ${bgColor}`;
+            toast.innerHTML =
+                `<div class="text-2xl">${icon}</div><div class="flex-1"><h4 class="text-sm font-black ${textColor}">${title}</h4><p class="text-xs text-gray-600 mt-1 leading-relaxed">${desc}</p></div>`;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.replace('toast-slide-in', 'toast-fade-out');
+                setTimeout(() => toast.remove(), 400);
+            }, 4000);
+        }
+
+        // AJAX POLLING: Mengecek database ke server setiap 10 detik
+        setInterval(async () => {
+            // Hanya bekerja jika Admin menyalakan sakelar Notifikasi Reservasi di Pengaturan
+            if (localStorage.getItem('notif_reservasi') === 'true') {
+                try {
+                    let response = await fetch('/api/cek-notifikasi');
+                    let data = await response.json();
+
+                    if (data.latest_id > 0) {
+                        // Ambil ID terakhir yang pernah dinotifikasi dari penyimpanan browser
+                        let lastSavedId = localStorage.getItem('last_notified_res_id') || 0;
+
+                        // Jika ada ID baru yang lebih besar dari ID yang terakhir disimpan
+                        if (data.latest_id > parseInt(lastSavedId)) {
+                            showGlobalToast('reservasi', data.nama_tamu);
+
+                            // Perbarui ID terakhir agar notifikasi tidak muncul berulang-ulang
+                            localStorage.setItem('last_notified_res_id', data.latest_id);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Gagal mendeteksi reservasi baru:", error);
+                }
+            }
+        }, 10000); // 10000 milidetik = 10 detik
+    </script>
 
 </body>
 

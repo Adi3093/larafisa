@@ -32,8 +32,6 @@
         </div>
     @endif
 
-    <div id="toast-container" class="fixed top-20 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
-
     <div class="flex items-end pl-0 sm:pl-2 flex-wrap gap-y-2">
         <button type="button" onclick="switchTab('profil')" id="tab-btn-profil"
             class="px-5 sm:px-6 py-3 bg-white border border-amber-200 border-b-white rounded-t-xl font-bold text-amber-700 text-xs sm:text-sm relative z-10 -mb-[1px] shadow-sm shadow-white transition">
@@ -169,7 +167,7 @@
                             <p class="text-xs text-gray-500 mt-0.5">Memunculkan pop-up saat ada pesanan masuk.</p>
                         </div>
                         <div class="flex items-center gap-3">
-                            <button onclick="testNotification('reservasi')"
+                            <button onclick="showGlobalToast('reservasi')"
                                 class="text-[10px] bg-white border border-amber-200 text-amber-700 px-3 py-1.5 rounded-lg font-bold hover:bg-amber-100 transition shadow-sm">Test</button>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" id="toggle_notif_reservasi" class="sr-only peer"
@@ -188,7 +186,7 @@
                             <p class="text-xs text-gray-500 mt-0.5">Pengingat saat waktu Check-In tamu tiba.</p>
                         </div>
                         <div class="flex items-center gap-3">
-                            <button onclick="testNotification('checkin')"
+                            <button onclick="showGlobalToast('checkin')"
                                 class="text-[10px] bg-white border border-amber-200 text-amber-700 px-3 py-1.5 rounded-lg font-bold hover:bg-amber-100 transition shadow-sm">Test</button>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" id="toggle_notif_checkin" class="sr-only peer"
@@ -207,7 +205,7 @@
                             <p class="text-xs text-gray-500 mt-0.5">Peringatan jika tamu melewati batas waktu inap.</p>
                         </div>
                         <div class="flex items-center gap-3">
-                            <button onclick="testNotification('checkout')"
+                            <button onclick="showGlobalToast('checkout')"
                                 class="text-[10px] bg-white border border-amber-200 text-amber-700 px-3 py-1.5 rounded-lg font-bold hover:bg-amber-100 transition shadow-sm">Test</button>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" id="toggle_notif_checkout" class="sr-only peer"
@@ -664,43 +662,6 @@
         }
 
         // 5. FUNGSI TEST NOTIFIKASI
-        function testNotification(type) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            let icon = '';
-            let title = '';
-            let desc = '';
-            let bgColor = '';
-            let textColor = '';
-            if (type === 'reservasi') {
-                icon = '🛎️';
-                title = 'Reservasi Online Baru!';
-                desc = 'Ada pesanan kamar baru.';
-                bgColor = 'bg-blue-50';
-                textColor = 'text-blue-900';
-            } else if (type === 'checkin') {
-                icon = '🔑';
-                title = 'Waktu Check-In Tiba';
-                desc = 'Tamu Kamar 201 dijadwalkan masuk.';
-                bgColor = 'bg-emerald-50';
-                textColor = 'text-emerald-900';
-            } else if (type === 'checkout') {
-                icon = '⏰';
-                title = 'Peringatan Check-Out';
-                desc = 'Tamu Kamar 104 Overstay.';
-                bgColor = 'bg-rose-50';
-                textColor = 'text-rose-900';
-            }
-            toast.className =
-                `flex items-start gap-3 p-4 w-72 md:w-80 rounded-2xl shadow-xl border border-gray-200 pointer-events-auto toast-slide-in ${bgColor}`;
-            toast.innerHTML =
-                `<div class="text-2xl">${icon}</div><div class="flex-1"><h4 class="text-sm font-black ${textColor}">${title}</h4><p class="text-xs text-gray-600 mt-1 leading-relaxed">${desc}</p></div>`;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.classList.replace('toast-slide-in', 'toast-fade-out');
-                setTimeout(() => toast.remove(), 400);
-            }, 4000);
-        }
 
         // 6. FUNGSI MAINTENANCE AJAX (SERVER) & KALENDER
         function toggleMaintenanceOptions(isChecked) {
@@ -787,30 +748,6 @@
         }
     </script>
     <style>
-        /* Animasi Pop Up Notifikasi */
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-            }
-
-            to {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-        }
-
         .toast-slide-in {
             animation: slideInRight 0.4s ease-out forwards;
         }

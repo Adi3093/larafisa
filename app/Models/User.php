@@ -26,6 +26,16 @@ use Illuminate\Notifications\Notifiable;
 ])]
 class User extends Authenticatable
 {
+    public function riwayatReservasi()
+    {
+        return $this->hasMany(Reservasi::class, 'user_id');
+    }
+
+    // Mengambil semua reservasi walk-in yang pernah dibuat oleh resepsionis ini
+    public function reservasiDibuat()
+    {
+        return $this->hasMany(Reservasi::class, 'dibuat_oleh_user_id');
+    }
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 

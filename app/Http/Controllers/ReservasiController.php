@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Kamar;
-use App\Models\Reservasi;
 use App\Models\KelasKamar;
-use Illuminate\Support\Str;
+use App\Models\Reservasi;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class ReservasiController extends Controller
 {
@@ -135,6 +136,7 @@ class ReservasiController extends Controller
 
         Reservasi::create([
             'no_reservasi' => $noReservasi,
+            'dibuat_oleh_user_id' =>  Auth::id(),
             'nama_tamu' => $request->nama_tamu,
             'no_ktp' => $request->no_ktp ?? '-',
             'no_hp' => $request->no_hp,
@@ -196,6 +198,19 @@ class ReservasiController extends Controller
         ]);
 
         return back()->with('success', 'Pesanan Online diterima! Data telah diteruskan ke Meja Resepsionis.');
+    }
+    public function cekNotifikasi()
+    {
+        // Mencari 1 data reservasi online terbaru yang masuk
+        $latestReservasi = \App\Models\Reservasi::where('tipe_reservasi', 'Online')
+            ->where('status_reservasi', 'Menunggu Konfirmasi')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        return response()->json([
+            'latest_id' => $latestReservasi ? $latestReservasi->id : 0,
+            'nama_tamu' => $latestReservasi ? $latestReservasi->nama_tamu : '',
+        ]);
     }
 
     public function batal($id)
