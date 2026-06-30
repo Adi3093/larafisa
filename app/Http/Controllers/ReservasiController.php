@@ -84,7 +84,6 @@ class ReservasiController extends Controller
         return view('dashboard.reservasi', compact('reservasis', 'kelasKamars', 'tab', 'kamarTersedia', 'kamarTerpakai', 'kamarPerbaikan'));
     }
 
-    // AJAX FETCH
     public function getKamarTersedia(Request $request)
     {
         $checkIn = Carbon::parse($request->check_in)->format('Y-m-d H:i:s');
@@ -96,6 +95,7 @@ class ReservasiController extends Controller
                     ->where('check_out', '>', $checkIn);
             })
             ->pluck('kamar_id');
+
         $availableKamars = Kamar::where('kelas_kamar_id', $kelasId)
             ->where('status', '!=', 'Maintenance')
             ->whereNotIn('id', $reservedKamarIds)
@@ -118,8 +118,9 @@ class ReservasiController extends Controller
 
         $checkIn = Carbon::parse($request->check_in)->format('Y-m-d H:i:s');
         $checkOut = Carbon::parse($request->check_out)->format('Y-m-d H:i:s');
+        $kamarId = $request->kamar_id;
 
-        $isTabrakan = Reservasi::where('kamar_id', $request->kamar_id)
+        $isTabrakan = Reservasi::where('kamar_id', $kamarId)
             ->whereIn('status_reservasi', ['Terkonfirmasi', 'Check-In'])
             ->where(function ($q) use ($checkIn, $checkOut) {
                 $q->where(function ($sub) use ($checkIn, $checkOut) {
@@ -132,6 +133,10 @@ class ReservasiController extends Controller
             return back()->withInput()->with('error', 'Kamar tersebut sudah terpesan pada rentang jam dan tanggal yang Anda pilih!');
         }
 
+        // TANGKAP ACTION TYPE DARI TOMBOL (simpan ATAU simpan_checkin)
+        $actionType = $request->input('action_type', 'simpan');
+        $statusReservasi = ($actionType === 'simpan_checkin') ? 'Check-In' : 'Terkonfirmasi';
+
         $noReservasi = 'RSV-' . date('Ymd') . '-' . strtoupper(Str::random(4));
 
         Reservasi::create([
@@ -140,15 +145,21 @@ class ReservasiController extends Controller
             'nama_tamu' => $request->nama_tamu,
             'no_ktp' => $request->no_ktp ?? '-',
             'no_hp' => $request->no_hp,
-            'kamar_id' => $request->kamar_id,
+            'kamar_id' => $kamarId,
             'check_in' => $checkIn,
             'check_out' => $checkOut,
             'ekstra' => $request->ekstra ?? [],
             'tipe_reservasi' => 'Walk-in',
-            'status_reservasi' => 'Terkonfirmasi'
+            'status_reservasi' => $statusReservasi // Status dinamis
         ]);
 
-        return back()->with('success', 'Reservasi Walk-in ' . $noReservasi . ' berhasil didaftarkan dan masuk ke Antrean Check-In!');
+        // Jika Langsung Check-in, Update status kamar fisik menjadi Terpakai
+        if ($statusReservasi === 'Check-In') {
+            Kamar::where('id', $kamarId)->update(['status' => 'Terpakai']);
+            return back()->with('success', 'Reservasi Walk-in ' . $noReservasi . ' berhasil dibuat dan tamu langsung Check-In!');
+        }
+
+        return back()->with('success', 'Reservasi Walk-in ' . $noReservasi . ' berhasil didaftarkan ke antrean.');
     }
 
     public function update(Request $request, $id)
@@ -199,9 +210,9 @@ class ReservasiController extends Controller
 
         return back()->with('success', 'Pesanan Online diterima! Data telah diteruskan ke Meja Resepsionis.');
     }
+
     public function cekNotifikasi()
     {
-        // Mencari 1 data reservasi online terbaru yang masuk
         $latestReservasi = \App\Models\Reservasi::where('tipe_reservasi', 'Online')
             ->where('status_reservasi', 'Menunggu Konfirmasi')
             ->orderBy('id', 'desc')
