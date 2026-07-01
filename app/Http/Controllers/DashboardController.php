@@ -5,41 +5,112 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Kamar;
 use App\Models\Reservasi;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // Statistik Card Informasi Kamar
+        // 1. Statistik Card Atas (Kamar)
         $kamarTersedia = Kamar::where('status', 'Tersedia')->count();
         $kamarTerpakai = Kamar::whereIn('status', ['Terpakai', 'Dibooking'])->count();
         $kamarPerbaikan = Kamar::where('status', 'Maintenance')->count();
-        $jumlahTamu = Reservasi::where('status_reservasi', 'Check-In')->count();
+
+        // 2. Data Tamu & Pendapatan (Untuk Card Tengah & Grafik)
+        $now = Carbon::now();
+
+        // Ambil reservasi selesai untuk menghitung pendapatan asli
+        $resSelesai = Reservasi::with('kamar.kelasKamar')->where('status_reservasi', 'Selesai')->get();
+
+        $pendapatanBulan = 0;
+        $tamuBulan = 0;
+        $pendapatanMinggu = 0;
+        $tamuMinggu = 0;
+
+        // Wadah Array untuk Chart.js
+        $chartBulanTamu = array_fill(1, 12, 0);
+        $chartBulanUang = array_fill(1, 12, 0);
+
+        $chartMingguTamu = array_fill(1, 7, 0);
+        $chartMingguUang = array_fill(1, 7, 0);
+
+        $startOfWeek = $now->copy()->startOfWeek();
+        $endOfWeek = $now->copy()->endOfWeek();
+
+        foreach ($resSelesai as $res) {
+            $outDate = Carbon::parse($res->check_out);
+
+            $in = Carbon::parse($res->check_in);
+            $diffDays = max(1, $in->diffInDays($outDate));
+            $hargaKamar = $res->kamar->kelasKamar->harga ?? 0;
+            $ekstra = is_array($res->ekstra) ? $res->ekstra : (json_decode($res->ekstra, true) ?? []);
+            $bed = ($ekstra['Extra Bed'] ?? 0) * 100000;
+            $selimut = ($ekstra['Extra Selimut'] ?? 0) * 25000;
+            $uang = ($hargaKamar * $diffDays) + $bed + $selimut;
+
+            // Masukkan ke array Bulanan (Jika tahun ini)
+            if ($outDate->year === $now->year) {
+                $m = $outDate->month;
+                $chartBulanTamu[$m] += 1;
+                $chartBulanUang[$m] += $uang;
+
+                if ($m === $now->month) {
+                    $tamuBulan += 1;
+                    $pendapatanBulan += $uang;
+                }
+            }
+
+            // Masukkan ke array Mingguan (Jika masuk rentang minggu ini)
+            if ($outDate->between($startOfWeek, $endOfWeek)) {
+                $dayIndex = $outDate->dayOfWeekIso; // 1 = Senin, 7 = Minggu
+                $chartMingguTamu[$dayIndex] += 1;
+                $chartMingguUang[$dayIndex] += $uang;
+
+                $tamuMinggu += 1;
+                $pendapatanMinggu += $uang;
+            }
+        }
+
+        // Format Data Akhir untuk Chart.js
+        $chartData = [
+            'labels_bulan' => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+            'data_tamu_bulan' => array_values($chartBulanTamu),
+            'data_uang_bulan' => array_values($chartBulanUang),
+
+            'labels_minggu' => ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
+            'data_tamu_minggu' => array_values($chartMingguTamu),
+            'data_uang_minggu' => array_values($chartMingguUang),
+        ];
+
+        // 3. Kalender & Jadwal Mendatang
         $jadwalReservasi = Reservasi::whereIn('status_reservasi', ['Terkonfirmasi', 'Menunggu Konfirmasi'])
             ->select('check_in', 'id')
             ->get()
-            ->map(function ($res) {
-                return \Carbon\Carbon::parse($res->check_in)->format('Y-m-d');
-            })
-            ->unique()
-            ->values();
+            ->map(fn($res) => Carbon::parse($res->check_in)->format('Y-m-d'))
+            ->unique()->values();
+
+        // Diurutkan dari hari ini ke masa depan (bukan ke belakang)
         $listJadwalMendatang = Reservasi::with('kamar.kelasKamar')
             ->whereIn('status_reservasi', ['Terkonfirmasi', 'Menunggu Konfirmasi'])
-            ->whereDate('check_in', \Carbon\Carbon::today())
+            ->whereDate('check_in', '>=', Carbon::today())
             ->orderBy('check_in', 'asc')
+            ->limit(10)
             ->get();
 
         return view('dashboard.dashboard', compact(
             'kamarTersedia',
             'kamarTerpakai',
             'kamarPerbaikan',
-            'jumlahTamu',
+            'tamuBulan',
+            'pendapatanBulan',
+            'tamuMinggu',
+            'pendapatanMinggu',
+            'chartData',
             'jadwalReservasi',
             'listJadwalMendatang'
         ));
     }
 
-    //KALENDER
     public function getJadwalHarian(Request $request)
     {
         $tanggal = $request->tanggal;
@@ -52,12 +123,11 @@ class DashboardController extends Controller
                 return [
                     'no_reservasi' => $item->no_reservasi,
                     'nama_tamu' => $item->nama_tamu,
-                    'waktu_in' => \Carbon\Carbon::parse($item->check_in)->translatedFormat('d M Y, H:i') . ' WIB',
+                    'waktu_in' => Carbon::parse($item->check_in)->translatedFormat('d M Y, H:i') . ' WIB',
                     'kamar' => $item->kamar ? $item->kamar->nomor_ruangan : 'Belum Set'
                 ];
             });
 
         return response()->json($jadwal);
     }
-    //
 }
