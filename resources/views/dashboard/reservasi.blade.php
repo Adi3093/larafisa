@@ -1,6 +1,6 @@
 <x-dblayout>
     <div class="mb-6">
-        <h1 class="text-2xl font-bold text-amber-950 tracking-tight">Manajemen Reservasi</h1>
+        <h1 class="text-2xl font-bold text-amber-950 tracking-tight">Data Reservasi</h1>
         <p class="text-sm text-amber-900/70 mt-1">Kelola data reservasi walk-in, persetujuan online, dan pelacakan
             riwayat.</p>
     </div>
@@ -747,13 +747,13 @@
                 if (kelasId && checkInInput && checkOutInput) {
                     let response = await fetch(
                         `/api/kamar-tersedia?kelas_id=${kelasId}&check_in=${checkInInput}&check_out=${checkOutInput}`
-                        );
+                    );
                     let kamars = await response.json();
 
                     kamarSelect.innerHTML = '<option value="">-- Pilih Kamar --</option>';
                     if (kamars.length === 0) {
                         kamarSelect.innerHTML =
-                        '<option value="" disabled>-- Kamar Penuh di Waktu Tersebut --</option>';
+                            '<option value="" disabled>-- Kamar Penuh di Waktu Tersebut --</option>';
                     } else {
                         kamars.forEach(kmr => {
                             let option = document.createElement('option');

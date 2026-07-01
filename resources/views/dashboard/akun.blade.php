@@ -110,7 +110,7 @@
                         <th class="px-6 py-4 whitespace-nowrap">Nama & Kontak</th>
                         <th class="px-6 py-4 whitespace-nowrap">Username</th>
                         <th class="px-6 py-4 whitespace-nowrap">Role</th>
-                        <th class="px-6 py-4 whitespace-nowrap">Status Aktivitas</th>
+                        <th class="px-6 py-4 whitespace-nowrap">Status</th>
                         <th class="px-6 py-4 whitespace-nowrap">Aksi</th>
                     </tr>
                 </thead>

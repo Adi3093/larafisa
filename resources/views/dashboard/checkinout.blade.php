@@ -1,6 +1,6 @@
 <x-dblayout>
     <div class="mb-6">
-        <h1 class="text-2xl font-bold text-amber-950 tracking-tight">Meja Resepsionis (Check-in / Check-Out)</h1>
+        <h1 class="text-2xl font-bold text-amber-950 tracking-tight">Check-in / Check-Out</h1>
         <p class="text-sm text-amber-900/70 mt-1">Kelola kedatangan tamu dan proses pembayaran akhir.</p>
     </div>
 

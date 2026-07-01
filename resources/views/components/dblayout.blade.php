@@ -186,27 +186,13 @@
                 <li>
                     <a href="{{ route('checkinout') }}"
                         class="flex items-center p-2 rounded-lg group transition {{ request()->is('checkinout') ? 'bg-amber-50 text-amber-700 font-bold border border-amber-200' : 'text-gray-600 hover:bg-amber-50 hover:text-amber-700' }}">
-                        <svg class="w-5 h-5 transition duration-75 {{ request()->is('checkinout') ? 'text-amber-700' : 'text-gray-400 group-hover:text-amber-600' }}"
-                            aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                            viewBox="0 0 24 24">
-                            <path fill-rule="evenodd"
-                                d="M8 10V7a4 4 0 1 1 8 0v3h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1zm2-3a2 2 0 1 1 4 0v3h-4V7zm2 6a1 1 0 0 1 1 1v3a1 1 0 1 1-2 0v-3a1 1 0 0 1 1-1z"
-                                clip-rule="evenodd" />
-                        </svg>
-                        <span class="flex-1 ms-3 whitespace-nowrap">Check-In / Out</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a href="/dtamu"
-                        class="flex items-center p-2 rounded-lg group transition {{ request()->is('dtamu') ? 'bg-amber-50 text-amber-700 font-bold border border-amber-200' : 'text-gray-600 hover:bg-amber-50 hover:text-amber-700' }}">
                         <svg class="w-5 h-5 transition duration-75 {{ request()->is('dtamu') ? 'text-amber-700' : 'text-gray-400 group-hover:text-amber-600' }}"
                             aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
                             viewBox="0 0 20 18">
                             <path
                                 d="M14 2a3.963 3.963 0 0 0-1.4.267 6.439 6.439 0 0 1-1.331 6.638A4 4 0 1 0 14 2Zm1 9h-1.264A6.957 6.957 0 0 1 15 15v2a2.97 2.97 0 0 1-.184 1H19a1 1 0 0 0 1-1v-1a5.006 5.006 0 0 0-5-5ZM6.5 9a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM8 10H5a5.006 5.006 0 0 0-5 5v2a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-2a5.006 5.006 0 0 0-5-5Z" />
                         </svg>
-                        <span class="flex-1 ms-3 whitespace-nowrap">Daftar Tamu</span>
+                        <span class="flex-1 ms-3 whitespace-nowrap">Check-In / Out</span>
                     </a>
                 </li>
 
@@ -379,7 +365,19 @@
             // Hanya bekerja jika Admin menyalakan sakelar Notifikasi Reservasi di Pengaturan
             if (localStorage.getItem('notif_reservasi') === 'true') {
                 try {
-                    let response = await fetch('/api/cek-notifikasi');
+                    // TAMBAHAN: Memberikan identitas AJAX agar Laravel tidak menyimpannya saat sesi habis
+                    let response = await fetch('/api/cek-notifikasi', {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    // Jika sesi login habis (401 Unauthorized), hentikan proses pengecekan diam-diam
+                    if (response.status === 401 || response.status === 419) {
+                        return;
+                    }
+
                     let data = await response.json();
 
                     if (data.latest_id > 0) {

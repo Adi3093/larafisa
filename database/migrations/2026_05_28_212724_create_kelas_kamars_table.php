@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nama_kelas');
             $table->integer('harga');
+            $table->integer('kapasitas')->default(2);
             $table->json('fasilitas');
             $table->string('thumbnail');
             $table->string('foto_1')->nullable();

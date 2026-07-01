@@ -11,7 +11,6 @@ use Carbon\Carbon;
 
 class KamarController extends Controller
 {
-    // SINKRONISASI WAKTU & KAPASITAS
     public function landingPage(Request $request)
     {
         $checkin = $request->input('filter_checkin', date('Y-m-d\TH:i'));
@@ -24,24 +23,11 @@ class KamarController extends Controller
         $kelasKamars = collect();
 
         foreach ($semuaKelas as $kelas) {
-            // Filter Fasilitas
-            $fasilitasArray = is_array($kelas->fasilitas) ? $kelas->fasilitas : (json_decode($kelas->fasilitas, true) ?? []);
-            $teksPencarian = strtolower($kelas->nama_kelas . ' ' . implode(' ', $fasilitasArray));
-            $isSingle = preg_match('/single/i', $teksPencarian);
-            $isDouble = preg_match('/(double|twin|queen|king|besar)/i', $teksPencarian);
-            if ($isSearched) {
-                if ($jumlahTamu == 1) {
-                    if (!$isSingle) {
-                        continue;
-                    }
-                } elseif ($jumlahTamu == 2) {
-                    if (!$isDouble) {
-                        continue;
-                    }
-                }
+            // Filter Berdasarkan Kapasitas yang baru
+            if ($isSearched && $kelas->kapasitas < $jumlahTamu) {
+                continue; // Skip jika kapasitas kelas tidak muat untuk jumlah tamu
             }
 
-            // Cek ketersediaan
             $totalKamar = Kamar::where('kelas_kamar_id', $kelas->id)->where('status', '!=', 'Maintenance')->count();
             $terpakai = Reservasi::whereIn('status_reservasi', ['Terkonfirmasi', 'Check-In'])
                 ->whereHas('kamar', fn($q) => $q->where('kelas_kamar_id', $kelas->id))
@@ -57,12 +43,7 @@ class KamarController extends Controller
             }
         }
 
-        $searchData = [
-            'checkin' => $checkin,
-            'checkout' => $checkout,
-            'tamu' => $jumlahTamu
-        ];
-
+        $searchData = ['checkin' => $checkin, 'checkout' => $checkout, 'tamu' => $jumlahTamu];
         return view('landing_page.home', compact('kelasKamars', 'searchData'));
     }
 
@@ -87,17 +68,9 @@ class KamarController extends Controller
 
         $kamarQuery = Kamar::with('kelasKamar');
 
-        if ($request->filled('ruangan_search')) {
-            $kamarQuery->where('nomor_ruangan', 'like', '%' . $request->ruangan_search . '%');
-        }
-
-        if ($request->filled('ruangan_kelas')) {
-            $kamarQuery->where('kelas_kamar_id', $request->ruangan_kelas);
-        }
-
-        if ($request->filled('ruangan_status')) {
-            $kamarQuery->where('status', $request->ruangan_status);
-        }
+        if ($request->filled('ruangan_search')) $kamarQuery->where('nomor_ruangan', 'like', '%' . $request->ruangan_search . '%');
+        if ($request->filled('ruangan_kelas')) $kamarQuery->where('kelas_kamar_id', $request->ruangan_kelas);
+        if ($request->filled('ruangan_status')) $kamarQuery->where('status', $request->ruangan_status);
 
         $ruanganPerPage = $request->ruangan_per_page ?? 5;
         $kamars = $kamarQuery->latest()->paginate($ruanganPerPage, ['*'], 'ruangan_page')->appends($request->all());
@@ -112,6 +85,7 @@ class KamarController extends Controller
         $request->validate([
             'nama_kelas' => 'required|string|max:255',
             'harga' => 'required|numeric|min:0',
+            'kapasitas' => 'required|integer|min:1', // Validasi Kapasitas
             'fasilitas' => 'required|array',
             'foto_1' => 'nullable|image|max:5120',
             'foto_2' => 'nullable|image|max:5120',
@@ -124,18 +98,50 @@ class KamarController extends Controller
         if ($request->hasFile('foto_2')) $data['foto_2'] = $request->file('foto_2')->store('kamar', 'public');
         if ($request->hasFile('foto_3')) $data['foto_3'] = $request->file('foto_3')->store('kamar', 'public');
 
-        if (isset($data['foto_1'])) {
-            $data['thumbnail'] = $data['foto_1'];
-        } elseif (isset($data['foto_2'])) {
-            $data['thumbnail'] = $data['foto_2'];
-        } elseif (isset($data['foto_3'])) {
-            $data['thumbnail'] = $data['foto_3'];
-        } else {
-            $data['thumbnail'] = 'default-kamar.jpg';
-        }
+        $data['thumbnail'] = $data['foto_1'] ?? ($data['foto_2'] ?? ($data['foto_3'] ?? 'default-kamar.jpg'));
 
         KelasKamar::create($data);
         return back()->with('success', 'Kelas kamar baru berhasil dibuat!');
+    }
+
+    public function updateKelas(Request $request, $id)
+    {
+        $kelas = KelasKamar::findOrFail($id);
+
+        $request->validate([
+            'nama_kelas' => 'required|string|max:255',
+            'harga' => 'required|numeric|min:0',
+            'kapasitas' => 'required|integer|min:1', // Validasi Kapasitas
+            'fasilitas' => 'required|array',
+            'foto_1' => 'nullable|image|max:5120',
+            'foto_2' => 'nullable|image|max:5120',
+            'foto_3' => 'nullable|image|max:5120',
+        ]);
+
+        $data = $request->except(['foto_1', 'foto_2', 'foto_3', 'thumbnail_selection']);
+        $fotos = ['foto_1', 'foto_2', 'foto_3'];
+        $currentPhotos = [];
+
+        foreach ($fotos as $foto) {
+            if ($request->hasFile($foto)) {
+                if ($kelas->$foto) Storage::disk('public')->delete($kelas->$foto);
+                $path = $request->file($foto)->store('kamar', 'public');
+                $data[$foto] = $path;
+                $currentPhotos[$foto] = $path;
+            } else {
+                $currentPhotos[$foto] = $kelas->$foto;
+            }
+        }
+
+        if ($request->has('thumbnail_selection')) {
+            $selectedField = $request->thumbnail_selection;
+            if (isset($currentPhotos[$selectedField]) && $currentPhotos[$selectedField] != null) {
+                $data['thumbnail'] = $currentPhotos[$selectedField];
+            }
+        }
+
+        $kelas->update($data);
+        return back()->with('success', 'Katalog kelas kamar berhasil diperbarui!');
     }
 
     public function destroyKelas($id)
@@ -156,7 +162,6 @@ class KamarController extends Controller
             'nomor_ruangan' => 'required|string|unique:kamars,nomor_ruangan',
             'status' => 'required|in:Tersedia,Terpakai,Dibooking,Maintenance',
         ]);
-
         Kamar::create($request->all());
         return back()->with('success', 'Ruangan nomor ' . $request->nomor_ruangan . ' berhasil ditambahkan!');
     }
@@ -169,51 +174,8 @@ class KamarController extends Controller
             'nomor_ruangan' => 'required|string|unique:kamars,nomor_ruangan,' . $id,
             'status' => 'required|in:Tersedia,Terpakai,Dibooking,Maintenance',
         ]);
-
         $kamar->update($request->all());
         return back()->with('success', 'Status ruangan ' . $request->nomor_ruangan . ' berhasil diperbarui!');
-    }
-
-    public function updateKelas(Request $request, $id)
-    {
-        $kelas = KelasKamar::findOrFail($id);
-
-        $request->validate([
-            'nama_kelas' => 'required|string|max:255',
-            'harga' => 'required|numeric|min:0',
-            'fasilitas' => 'required|array',
-            'foto_1' => 'nullable|image|max:5120',
-            'foto_2' => 'nullable|image|max:5120',
-            'foto_3' => 'nullable|image|max:5120',
-        ]);
-
-        $data = $request->except(['foto_1', 'foto_2', 'foto_3', 'thumbnail_selection']);
-
-        $fotos = ['foto_1', 'foto_2', 'foto_3'];
-        $currentPhotos = [];
-
-        foreach ($fotos as $foto) {
-            if ($request->hasFile($foto)) {
-                if ($kelas->$foto) {
-                    Storage::disk('public')->delete($kelas->$foto);
-                }
-                $path = $request->file($foto)->store('kamar', 'public');
-                $data[$foto] = $path;
-                $currentPhotos[$foto] = $path;
-            } else {
-                $currentPhotos[$foto] = $kelas->$foto;
-            }
-        }
-
-        if ($request->has('thumbnail_selection')) {
-            $selectedField = $request->thumbnail_selection;
-            if (isset($currentPhotos[$selectedField]) && $currentPhotos[$selectedField] != null) {
-                $data['thumbnail'] = $currentPhotos[$selectedField];
-            }
-        }
-
-        $kelas->update($data);
-        return back()->with('success', 'Katalog kelas kamar berhasil diperbarui!');
     }
 
     public function destroyKamar($id)

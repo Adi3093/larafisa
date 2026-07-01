@@ -11,6 +11,7 @@ class KelasKamar extends Model
     protected $fillable = [
         'nama_kelas',
         'harga',
+        'kapasitas',
         'fasilitas',
         'thumbnail',
         'foto_1',

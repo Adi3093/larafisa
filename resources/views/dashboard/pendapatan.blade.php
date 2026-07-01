@@ -69,8 +69,8 @@
                 <div class="md:col-span-1">
                     <select name="periode" onchange="document.getElementById('formPendapatan').submit()"
                         class="w-full border border-amber-200 rounded-xl shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm bg-amber-50 text-amber-950 font-bold transition">
-                        <option value="mingguan" {{ $periode == 'mingguan' ? 'selected' : '' }}>Filter Mingguan</option>
-                        <option value="bulanan" {{ $periode == 'bulanan' ? 'selected' : '' }}>Filter Bulanan</option>
+                        <option value="mingguan" {{ $periode == 'mingguan' ? 'selected' : '' }}>Mingguan</option>
+                        <option value="bulanan" {{ $periode == 'bulanan' ? 'selected' : '' }}>Bulanan</option>
                     </select>
                 </div>
                 <div class="md:col-span-3 flex flex-wrap gap-3 justify-start md:justify-end">
