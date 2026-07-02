@@ -9,7 +9,7 @@ use App\Models\Reservasi;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache; // TAMBAHAN WAJIB
+use Illuminate\Support\Facades\Cache;
 
 class GuestReservationController extends Controller
 {
@@ -20,15 +20,11 @@ class GuestReservationController extends Controller
         $checkout = $request->filter_checkout ?? date('Y-m-d\TH:i', strtotime('+1 day'));
         $kelasKamars = KelasKamar::all();
 
-        // LOGIKA PENGECEKAN MAINTENANCE DARI SERVER (CACHE)
+        // LOGIKA PENGECEKAN MAINTENANCE
         $isMaintenance = false;
-
-        // Cek Maintenance Instan
         if (Cache::get('maintenance_mode') === 'true' && Cache::get('main_online') === 'true') {
             $isMaintenance = true;
         }
-
-        // Cek Maintenance Kalender (Otomatis)
         if (Cache::get('jadwal_maintenance') === 'true' && Cache::get('auto_maintenance') === 'true' && Cache::get('check_jadwal_online') === 'true') {
             $savedDates = json_decode(Cache::get('jadwal_tersimpan'), true) ?? [];
             $hariIni = \Carbon\Carbon::today()->format('Y-m-d');
@@ -37,7 +33,6 @@ class GuestReservationController extends Controller
             }
         }
 
-        // Jika belum login
         if (!Auth::check()) {
             return view('landing_page.hreservasi', [
                 'isLoggedIn' => false,
@@ -52,10 +47,9 @@ class GuestReservationController extends Controller
         }
 
         $user = Auth::user();
-
         $reservasiAktif = Reservasi::with('kamar.kelasKamar')
             ->where(function ($q) use ($user) {
-                $q->where('nama_tamu', 'like', $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
+                $q->where('nama_tamu', 'like', '%' . $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
             })
             ->whereIn('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi'])
             ->orderBy('created_at', 'desc')
@@ -87,7 +81,7 @@ class GuestReservationController extends Controller
         $user = Auth::user();
         $pesananAktif = Reservasi::with('kamar.kelasKamar')
             ->where(function ($q) use ($user) {
-                $q->where('nama_tamu', 'like', $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
+                $q->where('nama_tamu', 'like', '%' . $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
             })
             ->whereIn('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi', 'Check-In'])
             ->orderBy('created_at', 'desc')
@@ -95,7 +89,7 @@ class GuestReservationController extends Controller
 
         $arsipReservasi = Reservasi::with('kamar.kelasKamar')
             ->where(function ($q) use ($user) {
-                $q->where('nama_tamu', 'like', $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
+                $q->where('nama_tamu', 'like', '%' . $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
             })
             ->whereIn('status_reservasi', ['Selesai', 'Batal', 'Dibatalkan'])
             ->orderBy('created_at', 'desc')
@@ -114,47 +108,51 @@ class GuestReservationController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_tamu' => 'required|array',
+            'nama_tamu' => 'required|string|max:255',
             'no_ktp' => 'required|string|max:16',
             'no_hp' => 'required|string|max:15',
             'kelas_kamar_id' => 'required|exists:kelas_kamars,id',
-            'kamar_id' => 'required',
             'check_in' => 'required|date',
             'check_out' => 'required|date|after:check_in',
-            'umur' => 'required|numeric|min:17'
-        ], ['umur.min' => 'Maaf, Anda harus berusia minimal 17 tahun untuk melakukan reservasi.']);
+            // Hapus validasi kamar_id karena alokasinya sistem otomatis
+        ]);
 
         $checkIn = Carbon::parse($request->check_in)->format('Y-m-d H:i:s');
         $checkOut = Carbon::parse($request->check_out)->format('Y-m-d H:i:s');
-        $kamarId = $request->kamar_id;
 
-        if ($kamarId === 'random') {
-            $reservedIds = Reservasi::whereIn('status_reservasi', ['Terkonfirmasi', 'Check-In'])
-                ->where(function ($q) use ($checkIn, $checkOut) {
-                    $q->where('check_in', '<', $checkOut)->where('check_out', '>', $checkIn);
-                })->pluck('kamar_id');
+        // 1. Logika Pencarian Kamar Acak Secara Otomatis
+        $reservedIds = Reservasi::whereIn('status_reservasi', ['Terkonfirmasi', 'Check-In'])
+            ->where(function ($q) use ($checkIn, $checkOut) {
+                $q->where('check_in', '<', $checkOut)->where('check_out', '>', $checkIn);
+            })->pluck('kamar_id');
 
-            $kamarBebas = Kamar::where('kelas_kamar_id', $request->kelas_kamar_id)
-                ->where('status', '!=', 'Maintenance')
-                ->whereNotIn('id', $reservedIds)->first();
+        $kamarBebas = Kamar::where('kelas_kamar_id', $request->kelas_kamar_id)
+            ->where('status', '!=', 'Maintenance')
+            ->whereNotIn('id', $reservedIds)
+            ->inRandomOrder() // Mengacak pemilihan kamar kosong
+            ->first();
 
-            if (!$kamarBebas) return back()->withInput()->with('error', 'Seluruh ruangan di kelas ini sudah penuh pada tanggal tersebut.');
-            $kamarId = $kamarBebas->id;
+        if (!$kamarBebas) {
+            return back()->withInput()->with('error', 'Mohon maaf, seluruh ruangan di kelas ini sudah penuh pada tanggal yang Anda pilih.');
         }
 
-        $namaGabungan = implode(' & ', array_filter($request->nama_tamu));
+        $kamarId = $kamarBebas->id;
+
+        // 2. Susun Data Ekstra Baru
         $ekstra = [
+            'Jumlah Anggota' => (int) $request->jumlah_anggota,
             'Extra Bed' => (int) $request->extra_bed,
             'Extra Selimut' => (int) $request->extra_selimut,
+            'Pesan Tambahan' => $request->pesan_tambahan ?? '-',
             'Metode Pembayaran' => $request->metode_pembayaran,
-            'Detail Pembayaran' => $request->detail_pembayaran ?? '-'
+            'Detail Pembayaran' => $request->metode_pembayaran === 'QRIS' ? 'Menunggu Scan QRIS' : 'Bayar di Tempat'
         ];
 
         $noReservasi = 'RSV-' . date('Ymd') . '-' . strtoupper(Str::random(4));
 
         Reservasi::create([
             'no_reservasi' => $noReservasi,
-            'nama_tamu' => $namaGabungan,
+            'nama_tamu' => $request->nama_tamu,
             'no_ktp' => $request->no_ktp,
             'no_hp' => $request->no_hp,
             'kamar_id' => $kamarId,
@@ -165,7 +163,7 @@ class GuestReservationController extends Controller
             'status_reservasi' => 'Menunggu Konfirmasi'
         ]);
 
-        return redirect()->route('riwayat.tamu')->with('success', "Reservasi $noReservasi berhasil dibuat!");
+        return redirect()->route('riwayat.tamu')->with('success', "Reservasi $noReservasi berhasil dibuat! Silakan pantau status tiket Anda.");
     }
 
     public function update(Request $request, $id)
@@ -179,9 +177,8 @@ class GuestReservationController extends Controller
 
         $checkIn = Carbon::parse($request->check_in)->format('Y-m-d H:i:s');
         $checkOut = Carbon::parse($request->check_out)->format('Y-m-d H:i:s');
-        $kamarId = $request->kamar_id ?? $reservasi->kamar_id;
 
-        $isTabrakan = Reservasi::where('kamar_id', $kamarId)
+        $isTabrakan = Reservasi::where('kamar_id', $reservasi->kamar_id)
             ->where('id', '!=', $id)
             ->whereIn('status_reservasi', ['Terkonfirmasi', 'Check-In'])
             ->where(function ($q) use ($checkIn, $checkOut) {
@@ -195,8 +192,7 @@ class GuestReservationController extends Controller
 
         $reservasi->update([
             'check_in' => $checkIn,
-            'check_out' => $checkOut,
-            'kamar_id' => $kamarId
+            'check_out' => $checkOut
         ]);
 
         return back()->with('success', 'Jadwal menginap Anda berhasil diperbarui!');

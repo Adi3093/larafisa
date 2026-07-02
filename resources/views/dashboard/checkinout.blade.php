@@ -59,7 +59,6 @@
 
     <div class="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm mb-6">
         <form method="GET" action="{{ route('checkinout') }}" id="filterForm" class="flex flex-col md:flex-row gap-4">
-
             <div class="flex-1 relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg class="h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -71,44 +70,34 @@
                     placeholder="Cari Nama / No. Reservasi..."
                     class="pl-9 w-full border border-amber-200 rounded-xl shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 py-2.5 text-sm text-amber-950 transition">
             </div>
-
             <div class="w-full md:w-48">
                 <select name="filter_kelas"
                     class="w-full border border-amber-200 rounded-xl shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 py-2.5 text-sm bg-white text-amber-950 transition">
                     <option value="">-- Kelas Kamar --</option>
                     @foreach ($kelasKamars as $kelas)
                         <option value="{{ $kelas->id }}"
-                            {{ request('filter_kelas') == $kelas->id ? 'selected' : '' }}>
-                            {{ $kelas->nama_kelas }}
+                            {{ request('filter_kelas') == $kelas->id ? 'selected' : '' }}>{{ $kelas->nama_kelas }}
                         </option>
                     @endforeach
                 </select>
             </div>
-
             <div class="w-full md:w-48">
                 <select name="filter_kamar"
                     class="w-full border border-amber-200 rounded-xl shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 py-2.5 text-sm bg-white text-amber-950 transition">
                     <option value="">-- No. Ruangan --</option>
                     @foreach ($kamars as $kmr)
                         <option value="{{ $kmr->id }}"
-                            {{ request('filter_kamar') == $kmr->id ? 'selected' : '' }}>
-                            Kamar {{ $kmr->nomor_ruangan }}
-                        </option>
+                            {{ request('filter_kamar') == $kmr->id ? 'selected' : '' }}>Kamar
+                            {{ $kmr->nomor_ruangan }}</option>
                     @endforeach
                 </select>
             </div>
-
             <input type="hidden" name="per_page" value="{{ request('per_page', 10) }}">
-
             <div class="flex gap-2">
                 <button type="submit"
-                    class="bg-amber-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-amber-700 transition shadow-sm">
-                    Cari
-                </button>
+                    class="bg-amber-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-amber-700 transition shadow-sm">Cari</button>
                 <a href="{{ route('checkinout') }}"
-                    class="bg-white text-amber-700 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-amber-50 transition border border-amber-200 shadow-sm flex items-center justify-center">
-                    Reset
-                </a>
+                    class="bg-white text-amber-700 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-amber-50 transition border border-amber-200 shadow-sm flex items-center justify-center">Reset</a>
             </div>
         </form>
     </div>
@@ -116,31 +105,20 @@
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
         @forelse($reservasis as $res)
             @php
-                // Hitung Kalkulasi Harga untuk di dalam Card
                 $checkInDate = \Carbon\Carbon::parse($res->check_in);
                 $checkOutDate = \Carbon\Carbon::parse($res->check_out);
-                $diffDays = $checkInDate->diffInDays($checkOutDate);
-                if ($diffDays == 0) {
-                    $diffDays = 1;
-                }
+                $diffDays = max(1, $checkInDate->diffInDays($checkOutDate));
 
                 $hargaKamar = $res->kamar->kelasKamar->harga ?? 0;
-                $totalKamar = $hargaKamar * $diffDays;
-
-                $ekstra = is_array($res->ekstra) ? $res->ekstra : json_decode($res->ekstra, true);
+                $ekstra = is_array($res->ekstra) ? $res->ekstra : json_decode($res->ekstra, true) ?? [];
                 $qtyBed = $ekstra['Extra Bed'] ?? 0;
                 $qtySelimut = $ekstra['Extra Selimut'] ?? 0;
                 $metode = $ekstra['Metode Pembayaran'] ?? 'Bayar di tempat';
                 $detail = $ekstra['Detail Pembayaran'] ?? '-';
 
-                $totalBed = $qtyBed * 100000;
-                $totalSelimut = $qtySelimut * 25000;
-                $totalBiaya = $totalKamar + $totalBed + $totalSelimut;
-
                 $kamarName = 'Kamar ' . ($res->kamar->nomor_ruangan ?? '?');
                 $kelasName = $res->kamar->kelasKamar->nama_kelas ?? '-';
 
-                // Tentukan border dan warna berdasarkan status
                 $cardBorder =
                     $res->status_reservasi === 'Terkonfirmasi'
                         ? 'border-amber-300 shadow-amber-100'
@@ -150,7 +128,6 @@
 
             <div
                 class="bg-white rounded-2xl border {{ $cardBorder }} shadow-md flex flex-col overflow-hidden transition-transform hover:-translate-y-1">
-
                 <div class="{{ $headerBg }} px-5 py-4 border-b border-gray-100 flex justify-between items-center">
                     <div>
                         <h2 class="text-2xl font-black text-gray-900 leading-none">{{ $kamarName }}</h2>
@@ -204,59 +181,50 @@
                     </div>
 
                     <div class="border-t border-gray-100 pt-3 flex justify-between items-end">
-                        <p class="text-xs font-bold text-gray-500 uppercase">Total Biaya:</p>
-                        <p class="text-lg font-black text-amber-700">Rp {{ number_format($totalBiaya, 0, ',', '.') }}
+                        <p class="text-xs font-bold text-gray-500 uppercase">Estimasi Biaya:</p>
+                        <p class="text-lg font-black text-amber-700">Rp
+                            {{ number_format($hargaKamar * $diffDays + $qtyBed * 100000 + $qtySelimut * 25000, 0, ',', '.') }}
                         </p>
                     </div>
                 </div>
 
                 <div class="p-4 bg-gray-50 border-t border-gray-100 flex gap-2">
-
                     @if ($res->status_reservasi === 'Terkonfirmasi')
                         <button type="button"
                             class="flex-1 bg-white border border-gray-300 text-gray-700 px-3 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-100 transition text-center"
-                            onclick="alert('Silakan Proses Check-In terlebih dahulu untuk mengelola pembayaran.')">
-                            Detail
-                        </button>
+                            onclick="alert('Silakan Proses Check-In terlebih dahulu untuk mengelola pembayaran.')">Detail</button>
                         <form method="POST" action="{{ route('checkinout.checkin', $res->id) }}"
                             class="flex-1 m-0">
                             @csrf
                             <button type="submit"
                                 onclick="return confirm('Serahkan kunci dan proses Check-In tamu ini?')"
-                                class="w-full bg-amber-600 hover:bg-amber-700 text-white px-3 py-2.5 rounded-xl text-xs font-bold transition shadow-sm shadow-amber-600/20 text-center">
-                                Check-In
-                            </button>
+                                class="w-full bg-amber-600 hover:bg-amber-700 text-white px-3 py-2.5 rounded-xl text-xs font-bold transition shadow-sm shadow-amber-600/20 text-center">Check-In</button>
                         </form>
                     @elseif($res->status_reservasi === 'Check-In')
                         <button type="button"
-                            class="flex-1 bg-white border border-gray-300 text-gray-700 px-3 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-100 transition text-center"
-                            onclick="bukaModalCheckout('{{ $res->id }}', '{{ $res->no_reservasi }}', '{{ $res->nama_tamu }}', '{{ $res->no_hp }}', '{{ $kelasName }}', '{{ $kamarName }}', {{ $qtyBed }}, {{ $qtySelimut }}, '{{ $metode }}', '{{ $detail }}', {{ $totalBiaya }})">
+                            class="flex-1 bg-white border border-amber-200 text-amber-700 px-3 py-2.5 rounded-xl text-xs font-bold hover:bg-amber-50 transition text-center shadow-sm"
+                            onclick="bukaModalCheckout('{{ $res->id }}', '{{ $res->no_reservasi }}', '{{ $res->nama_tamu }}', '{{ $res->no_hp }}', '{{ $kelasName }}', '{{ $kamarName }}', {{ $qtyBed }}, {{ $qtySelimut }}, '{{ $metode }}', '{{ $detail }}', '{{ $res->check_in }}', '{{ $checkOutDate->format('Y-m-d\TH:i') }}', {{ $hargaKamar }})">
                             Detail Biaya
                         </button>
                         <button type="button"
-                            onclick="bukaModalCheckout('{{ $res->id }}', '{{ $res->no_reservasi }}', '{{ $res->nama_tamu }}', '{{ $res->no_hp }}', '{{ $kelasName }}', '{{ $kamarName }}', {{ $qtyBed }}, {{ $qtySelimut }}, '{{ $metode }}', '{{ $detail }}', {{ $totalBiaya }})"
-                            class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2.5 rounded-xl text-xs font-bold transition shadow-sm shadow-emerald-600/20 text-center">
+                            class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2.5 rounded-xl text-xs font-bold transition shadow-sm shadow-emerald-600/20 text-center"
+                            onclick="bukaModalCheckout('{{ $res->id }}', '{{ $res->no_reservasi }}', '{{ $res->nama_tamu }}', '{{ $res->no_hp }}', '{{ $kelasName }}', '{{ $kamarName }}', {{ $qtyBed }}, {{ $qtySelimut }}, '{{ $metode }}', '{{ $detail }}', '{{ $res->check_in }}', '{{ $checkOutDate->format('Y-m-d\TH:i') }}', {{ $hargaKamar }})">
                             Check-Out
                         </button>
                     @endif
                 </div>
-
             </div>
         @empty
             <div
                 class="col-span-1 md:col-span-2 xl:col-span-3 py-16 text-center bg-white rounded-2xl border border-gray-100">
                 <div class="flex flex-col items-center justify-center text-gray-500">
-                    <div class="bg-gray-50 p-4 rounded-full mb-4">
-                        <svg class="w-12 h-12 text-amber-300" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
+                    <div class="bg-gray-50 p-4 rounded-full mb-4"><svg class="w-12 h-12 text-amber-300"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4">
                             </path>
-                        </svg>
-                    </div>
+                        </svg></div>
                     <p class="font-bold text-gray-900 text-lg">Meja Resepsionis Kosong</p>
-                    <p class="text-sm mt-1 max-w-sm">Saat ini tidak ada tamu yang sedang mengantre atau tidak ada data
-                        yang cocok dengan filter Anda.</p>
                 </div>
             </div>
         @endforelse
@@ -265,7 +233,6 @@
     @if ($reservasis->total() > 0)
         <div
             class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-
             <div class="flex items-center gap-2">
                 <label class="text-sm font-bold text-gray-600">Tampilkan:</label>
                 <form method="GET" action="{{ route('checkinout') }}" id="formPerPage">
@@ -278,7 +245,6 @@
                     @if (request('filter_kamar'))
                         <input type="hidden" name="filter_kamar" value="{{ request('filter_kamar') }}">
                     @endif
-
                     <select name="per_page" onchange="document.getElementById('formPerPage').submit()"
                         class="border border-gray-200 rounded-lg text-sm bg-gray-50 focus:ring-amber-500 focus:border-amber-500 font-bold text-amber-700 py-1.5 px-3">
                         <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10 Baris</option>
@@ -287,10 +253,7 @@
                     </select>
                 </form>
             </div>
-
-            <div class="w-full sm:w-auto overflow-x-auto">
-                {{ $reservasis->links() }}
-            </div>
+            <div class="w-full sm:w-auto overflow-x-auto">{{ $reservasis->links() }}</div>
         </div>
     @endif
 
@@ -299,7 +262,6 @@
         <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
             <div
                 class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-amber-100">
-
                 <div class="bg-amber-600 px-6 py-4 flex justify-between items-center">
                     <h3 class="text-lg font-bold text-white">Tinjau Pembayaran & Check-Out</h3>
                     <button onclick="document.getElementById('modalCheckout').classList.add('hidden')"
@@ -314,7 +276,6 @@
                 <form id="formCheckoutModal" method="POST" action="">
                     @csrf
                     <div class="p-6 pb-2">
-
                         <div class="flex justify-between items-start border-b border-gray-100 pb-4 mb-4">
                             <div>
                                 <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Data Tamu</p>
@@ -328,9 +289,19 @@
                             </div>
                         </div>
 
-                        <div class="mb-5">
-                            <h4 class="text-base font-bold text-gray-900 mb-2" id="co_kelas_kamar"></h4>
+                        <div class="mb-4">
+                            <h4 class="text-base font-bold text-gray-900 mb-1" id="co_kelas_kamar"></h4>
                             <div id="co_addon_container" class="flex flex-wrap gap-2 mt-2"></div>
+                        </div>
+
+                        <div class="mb-5 border-t border-gray-100 pt-3">
+                            <label class="block text-xs font-bold text-gray-700 mb-1.5">Atur / Perpanjang Waktu
+                                Check-Out</label>
+                            <input type="datetime-local" name="tanggal_checkout" id="co_tanggal_checkout"
+                                onchange="hitungTotalCheckoutLive()" required
+                                class="w-full border border-amber-200 rounded-xl p-2.5 text-sm bg-white font-bold text-gray-900 shadow-sm focus:ring-amber-500 focus:border-amber-500 transition">
+                            <p class="text-[10px] text-amber-600 font-medium mt-1">*Jika tanggal diubah, tagihan final
+                                di bawah akan otomatis melakukan kalkulasi ulang.</p>
                         </div>
 
                         <div class="bg-amber-50/50 p-4 rounded-xl border border-amber-200 mb-4">
@@ -339,7 +310,6 @@
                                     Final</p>
                                 <h2 class="text-2xl font-black text-amber-700" id="co_total">Rp 0</h2>
                             </div>
-
                             <div class="grid grid-cols-2 gap-4 items-center">
                                 <div>
                                     <p class="text-[10px] font-bold text-amber-800 uppercase tracking-wider mb-1">
@@ -348,7 +318,7 @@
                                 </div>
                                 <div>
                                     <p class="text-[10px] font-bold text-amber-800 uppercase tracking-wider mb-1">Ubah
-                                        Pembayaran</p>
+                                        Pembayaran Kasir</p>
                                     <select name="detail_pembayaran" id="co_detail_pembayaran"
                                         class="w-full border border-amber-200 rounded-lg p-2 text-sm bg-white font-bold text-amber-950 shadow-sm focus:ring-amber-500 focus:border-amber-500">
                                         <option value="Cash/Tunai">Cash / Tunai</option>
@@ -364,17 +334,17 @@
                             <input type="checkbox" id="print_struk" name="print_struk" value="1" checked
                                 class="w-5 h-5 text-amber-600 rounded border-gray-300 focus:ring-amber-500 cursor-pointer">
                             <div>
-                                <p class="text-sm font-bold text-gray-800 leading-none">Cetak Struk Pembayaran</p>
+                                <p class="text-sm font-bold text-gray-800 leading-none">Cetak Struk Pembayaran
+                                    (Thermal)</p>
                                 <p class="text-[11px] text-gray-500 mt-1">Struk akan otomatis dicetak menggunakan
                                     pengaturan printer bawaan kasir.</p>
                             </div>
                         </div>
-
                     </div>
 
                     <div class="bg-gray-50 px-6 py-4 flex gap-3 border-t border-gray-100 mt-4">
                         <button type="submit"
-                            onclick="return confirm('Apakah pembayaran sudah lunas dan kunci sudah dikembalikan?')"
+                            onclick="return confirm('Apakah seluruh tagihan pembayaran sudah valid dan kunci telah diserahkan?')"
                             class="flex-1 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -385,23 +355,36 @@
                         </button>
                     </div>
                 </form>
-
             </div>
         </div>
     </div>
 
     <script>
-        function bukaModalCheckout(id, no_res, nama, hp, kelas, ruangan, qtyBed, qtySelimut, metode, detail, total) {
+        // Deklarasi Global Context untuk Modal
+        let cacheHargaKamar = 0;
+        let cacheCheckIn = '';
+        let cacheQtyBed = 0;
+        let cacheQtySelimut = 0;
+
+        function bukaModalCheckout(id, no_res, nama, hp, kelas, ruangan, qtyBed, qtySelimut, metode, detail, checkIn,
+            checkOut, hargaKamar) {
             document.getElementById('co_no_res').innerText = '#' + no_res;
             document.getElementById('co_nama').innerText = nama;
             document.getElementById('co_kontak').innerText = hp;
             document.getElementById('co_kelas_kamar').innerText = ruangan + ' (' + kelas + ')';
             document.getElementById('co_metode').innerText = metode;
-            document.getElementById('co_total').innerText = new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0
-            }).format(total);
+
+            // Set Tanggal Checkout ke Input Field
+            document.getElementById('co_tanggal_checkout').value = checkOut;
+
+            // Simpan Data Ke Cache Global JS untuk kalkulasi Live
+            cacheHargaKamar = hargaKamar;
+            cacheCheckIn = checkIn;
+            cacheQtyBed = qtyBed;
+            cacheQtySelimut = qtySelimut;
+
+            // Jalankan Kalkulator Live Pertama Kali
+            hitungTotalCheckoutLive();
 
             let detailSelect = document.getElementById('co_detail_pembayaran');
             let lowerDetail = detail.toLowerCase();
@@ -430,6 +413,31 @@
 
             document.getElementById('formCheckoutModal').action = `/checkinout/${id}/checkout`;
             document.getElementById('modalCheckout').classList.remove('hidden');
+        }
+
+        // FUNGSI UTAMA KALKULATOR LIVE DI DALAM MODAL
+        function hitungTotalCheckoutLive() {
+            let cin = new Date(cacheCheckIn);
+            let cout = new Date(document.getElementById('co_tanggal_checkout').value);
+            let diffDays = 1;
+
+            if (!isNaN(cin) && !isNaN(cout)) {
+                let diffTime = cout - cin;
+                diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                if (diffDays <= 0) diffDays = 1;
+            }
+
+            let totalKamar = cacheHargaKamar * diffDays;
+            let totalBed = cacheQtyBed * 100000;
+            let totalSelimut = cacheQtySelimut * 25000;
+            let totalFinal = totalKamar + totalBed + totalSelimut;
+
+            // Update Angka di UI Modal secara Real-time
+            document.getElementById('co_total').innerText = new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(totalFinal);
         }
     </script>
 </x-dblayout>

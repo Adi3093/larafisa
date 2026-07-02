@@ -105,7 +105,6 @@
         <form method="GET" action="{{ route('reservasi') }}"
             class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end w-full mb-6 pb-6 border-b border-amber-50">
             <input type="hidden" name="tab" value="{{ $tab }}">
-
             <div class="col-span-1 sm:col-span-2 lg:col-span-1">
                 <label class="block text-xs font-bold text-amber-800/70 uppercase tracking-wider mb-2">Search</label>
                 <div class="relative">
@@ -187,9 +186,7 @@
                     <tbody class="divide-y divide-amber-50 text-amber-950">
                         @forelse($reservasis as $res)
                             <tr class="hover:bg-amber-50/30 transition">
-                                <td class="px-6 py-4 font-bold text-amber-600">
-                                    #{{ $res->no_reservasi }}
-                                </td>
+                                <td class="px-6 py-4 font-bold text-amber-600">#{{ $res->no_reservasi }}</td>
                                 <td class="px-6 py-4">
                                     <div class="font-bold text-amber-950">{{ $res->nama_tamu }}</div>
                                     <div class="text-xs text-amber-900/60 mt-0.5">{{ $res->no_hp }}</div>
@@ -232,13 +229,17 @@
                                     <div class="flex justify-end gap-2">
                                         @if ($res->status_reservasi === 'Menunggu Konfirmasi')
                                             @php
-                                                $metode = $res->ekstra['Metode Pembayaran'] ?? 'Bayar di tempat';
-                                                $detail = $res->ekstra['Detail Pembayaran'] ?? '-';
+                                                $ekstra = is_array($res->ekstra)
+                                                    ? $res->ekstra
+                                                    : json_decode($res->ekstra, true) ?? [];
+                                                $metode = $ekstra['Metode Pembayaran'] ?? 'Bayar di tempat';
+                                                $detail = $ekstra['Detail Pembayaran'] ?? '-';
+                                                $pesanTamu = $ekstra['Pesan Tambahan'] ?? '-';
                                                 $kelasName = $res->kamar?->kelasKamar?->nama_kelas ?? '-';
                                                 $ruangName = $res->kamar?->nomor_ruangan ?? '-';
                                             @endphp
                                             <button
-                                                onclick="bukaModalKonfirmasi({{ $res->id }}, '{{ $res->no_reservasi }}', '{{ $res->nama_tamu }}', '{{ $kelasName }}', '{{ $ruangName }}', '{{ $metode }}', '{{ $detail }}')"
+                                                onclick='bukaModalKonfirmasi({{ $res->id }}, @json($res->no_reservasi), @json($res->nama_tamu), @json($kelasName), @json($ruangName), @json($metode), @json($detail), @json($pesanTamu))'
                                                 class="bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1">
                                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
                                                     stroke="currentColor">
@@ -293,7 +294,6 @@
         <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
             <div
                 class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 w-full max-w-5xl border border-amber-100">
-
                 <div class="bg-amber-600 px-6 py-4 flex justify-between items-center">
                     <h3 class="text-lg font-bold text-white">Tambah Reservasi Baru (Walk-In)</h3>
                     <button onclick="closeWalkInModal()" class="text-amber-100 hover:text-white transition">
@@ -303,40 +303,31 @@
                         </svg>
                     </button>
                 </div>
-
                 <div class="bg-white p-6">
                     <form id="walkInForm" method="POST" action="{{ route('reservasi.store') }}">
                         @csrf
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-
                             <div class="lg:col-span-2 flex flex-col h-full justify-between">
                                 <div class="space-y-5">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-xs font-bold text-amber-950 mb-1">Nama
-                                                Tamu</label>
-                                            <input type="text" name="nama_tamu" required
+                                        <div><label class="block text-xs font-bold text-amber-950 mb-1">Nama
+                                                Tamu</label><input type="text" name="nama_tamu" required
                                                 class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm transition">
                                         </div>
-                                        <div>
-                                            <label class="block text-xs font-bold text-amber-950 mb-1">No.
-                                                Handphone</label>
-                                            <input type="text" name="no_hp" required maxlength="15"
+                                        <div><label class="block text-xs font-bold text-amber-950 mb-1">No.
+                                                Handphone</label><input type="text" name="no_hp" required
+                                                maxlength="15"
                                                 oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                                 placeholder="Contoh: 081234567890"
                                                 class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm transition">
                                         </div>
                                     </div>
-
-                                    <div>
-                                        <label class="block text-xs font-bold text-amber-950 mb-1">Nomor KTP
-                                            (NIK)</label>
-                                        <input type="text" name="no_ktp" required maxlength="16"
+                                    <div><label class="block text-xs font-bold text-amber-950 mb-1">Nomor KTP
+                                            (NIK)</label><input type="text" name="no_ktp" required maxlength="16"
                                             oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                             placeholder="Masukkan 16 digit NIK..."
                                             class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm transition">
                                     </div>
-
                                     <div class="border border-amber-200 rounded-xl p-5 space-y-4">
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
@@ -362,27 +353,22 @@
                                                 </select>
                                             </div>
                                         </div>
-
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label class="block text-xs font-bold text-amber-950 mb-1">Tanggal
-                                                    Check-In</label>
-                                                <input type="datetime-local" name="check_in" id="check_in"
-                                                    value="{{ date('Y-m-d\TH:i') }}"
+                                            <div><label class="block text-xs font-bold text-amber-950 mb-1">Tanggal
+                                                    Check-In</label><input type="datetime-local" name="check_in"
+                                                    id="check_in" value="{{ date('Y-m-d\TH:i') }}"
                                                     onchange="filterKamarDanHitung()" required
                                                     class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm transition">
                                             </div>
-                                            <div>
-                                                <label class="block text-xs font-bold text-amber-950 mb-1">Tanggal
-                                                    Check-Out</label>
-                                                <input type="datetime-local" name="check_out" id="check_out"
+                                            <div><label class="block text-xs font-bold text-amber-950 mb-1">Tanggal
+                                                    Check-Out</label><input type="datetime-local" name="check_out"
+                                                    id="check_out"
                                                     value="{{ date('Y-m-d\TH:i', strtotime('+1 day')) }}"
                                                     onchange="filterKamarDanHitung()" required
                                                     class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm transition">
                                             </div>
                                         </div>
                                     </div>
-
                                     <div>
                                         <label class="block text-xs font-bold text-amber-950 mb-2">Layanan
                                             Ekstra</label>
@@ -419,7 +405,6 @@
                                         </div>
                                     </div>
                                 </div>
-
                                 <div class="mt-6 flex flex-col md:flex-row items-center justify-between gap-4">
                                     <div class="w-full md:w-auto text-left">
                                         <p class="text-xs font-bold text-amber-800 uppercase tracking-wider">Total
@@ -429,27 +414,20 @@
                                     </div>
                                     <div class="flex gap-2 w-full md:w-auto">
                                         <button type="button" onclick="closeWalkInModal()"
-                                            class="flex-1 md:flex-none rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-gray-700 shadow-sm border border-gray-200 hover:bg-gray-50 transition">
-                                            Batal
-                                        </button>
+                                            class="flex-1 md:flex-none rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-gray-700 shadow-sm border border-gray-200 hover:bg-gray-50 transition">Batal</button>
                                         <button type="submit" name="action_type" value="simpan_checkin"
                                             class="flex-1 md:flex-none rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition"
-                                            onclick="return confirm('Apakah Anda yakin tamu akan langsung Check-In sekarang?')">
-                                            Simpan & Check-in
-                                        </button>
+                                            onclick="return confirm('Apakah Anda yakin tamu akan langsung Check-In sekarang?')">Simpan
+                                            & Check-in</button>
                                         <button type="submit" name="action_type" value="simpan"
-                                            class="flex-1 md:flex-none rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-amber-700 transition">
-                                            Simpan
-                                        </button>
+                                            class="flex-1 md:flex-none rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-amber-700 transition">Simpan</button>
                                     </div>
                                 </div>
-
                             </div>
 
                             <div class="lg:col-span-1">
                                 <div
                                     class="bg-amber-50/20 rounded-2xl border border-amber-200 p-5 shadow-sm min-h-full">
-
                                     <div id="walkin_placeholder" class="text-center py-10">
                                         <svg class="w-16 h-16 text-amber-200 mx-auto mb-3" fill="none"
                                             viewBox="0 0 24 24" stroke="currentColor">
@@ -460,26 +438,20 @@
                                         <p class="text-sm text-amber-900/40 font-medium">Pilih kelas kamar untuk
                                             melihat preview.</p>
                                     </div>
-
                                     <div id="walkin_content" class="hidden">
                                         <img id="wi_img_main" src=""
                                             class="w-full h-44 object-cover rounded-xl mb-3 shadow-sm border border-amber-200 bg-white transition-all duration-300">
-
                                         <div id="wi_thumbnails" class="grid grid-cols-3 gap-2 mb-5"></div>
-
                                         <h4 id="wi_nama_kelas" class="text-xl font-black text-amber-950 mb-1"></h4>
                                         <p class="text-sm font-bold text-amber-600 mb-6" id="wi_harga"></p>
-
                                         <div class="border-t border-amber-200 pt-4">
                                             <p class="text-xs font-bold text-amber-800 uppercase tracking-wider mb-3">
                                                 Fasilitas Kamar</p>
                                             <ul id="wi_fasilitas" class="grid grid-cols-2 gap-y-3 gap-x-2"></ul>
                                         </div>
                                     </div>
-
                                 </div>
                             </div>
-
                         </div>
                     </form>
                 </div>
@@ -517,6 +489,7 @@
                                 <h4 class="text-base font-bold text-amber-950 break-words" id="m_nama"></h4>
                             </div>
                         </div>
+
                         <div class="grid grid-cols-2 gap-4 mb-5">
                             <div>
                                 <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Kelas Kamar
@@ -528,6 +501,21 @@
                                 <h4 class="text-sm font-bold text-amber-950" id="m_ruangan"></h4>
                             </div>
                         </div>
+
+                        <div class="mb-5 p-4 bg-amber-50 rounded-xl border border-amber-100 shadow-inner"
+                            id="m_pesan_div">
+                            <p
+                                class="text-xs text-amber-800/70 font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+                                    </path>
+                                </svg>
+                                Pesan / Permintaan Tambahan
+                            </p>
+                            <p class="text-sm font-medium text-amber-950 italic" id="m_pesan"></p>
+                        </div>
+
                         <div class="bg-amber-50/50 p-4 rounded-xl border border-amber-100">
                             <div class="grid grid-cols-2 gap-4 items-center">
                                 <div>
@@ -573,7 +561,6 @@
     </div>
 
     <script>
-        // Data Json Kelas Kamar untuk Panel Preview (Kanan)
         const kelasDataWalkin = @json($kelasKamars);
 
         function submitTolakReservasi() {
@@ -582,12 +569,17 @@
             }
         }
 
-        function bukaModalKonfirmasi(id, no_res, nama, kelas, ruangan, metode, detail) {
+        // FUNGSI INI DIUBAH UNTUK MENANGKAP PARAMETER "PESAN TAMBAHAN"
+        function bukaModalKonfirmasi(id, no_res, nama, kelas, ruangan, metode, detail, pesanTamu) {
             document.getElementById('m_no_res').innerText = '#' + no_res;
             document.getElementById('m_nama').innerText = nama;
             document.getElementById('m_kelas').innerText = kelas;
             document.getElementById('m_ruangan').innerText = 'Kamar ' + ruangan;
             document.getElementById('m_metode').innerText = metode;
+
+            // Masukkan data Pesan Tamu ke dalam modal
+            document.getElementById('m_pesan').innerText = (pesanTamu && pesanTamu !== '-' && pesanTamu !== '') ?
+                pesanTamu : 'Tidak ada pesan khusus dari tamu.';
 
             let detailSelect = document.getElementById('m_detail');
             let lowerDetail = detail.toLowerCase();
@@ -650,7 +642,6 @@
                 let checkOutInput = document.getElementById('check_out').value;
                 let kamarSelect = document.getElementById('kamar_id');
 
-                // PANEL KANAN: UPDATE TAMPILAN PREVIEW KAMAR
                 const placeholder = document.getElementById('walkin_placeholder');
                 const content = document.getElementById('walkin_content');
 
@@ -673,7 +664,7 @@
                         let thumbsHtml = '';
                         let images = [dataKelas.thumbnail, dataKelas.foto_1, dataKelas.foto_2, dataKelas.foto_3].filter(
                             Boolean);
-                        let uniqueImages = [...new Set(images)]; // Hilangkan foto duplikat
+                        let uniqueImages = [...new Set(images)];
 
                         uniqueImages.forEach(img => {
                             let fullUrl = '/storage/' + img;
@@ -682,7 +673,6 @@
                         });
                         document.getElementById('wi_thumbnails').innerHTML = thumbsHtml;
 
-                        // LOGIKA ANTI-ERROR PARSING FASILITAS
                         let fasArr = dataKelas.fasilitas;
                         if (typeof fasArr === 'string') {
                             try {
@@ -695,15 +685,8 @@
                         let fasHtml = '';
                         if (Array.isArray(fasArr)) {
                             fasArr.forEach(f => {
-                                // Desain Grid Sesuai Wireframe
-                                fasHtml += `
-                                    <li class="flex items-center gap-1.5 text-xs font-semibold text-amber-950">
-                                        <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                        ${f}
-                                    </li>
-                                `;
+                                fasHtml +=
+                                    `<li class="flex items-center gap-1.5 text-xs font-semibold text-amber-950"><svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>${f}</li>`;
                             });
                         }
                         document.getElementById('wi_fasilitas').innerHTML = fasHtml;
@@ -713,7 +696,6 @@
                     content.classList.add('hidden');
                 }
 
-                // PANEL KIRI: KALKULASI HARGA & FETCH KAMAR
                 let diffDays = 1;
                 if (checkInInput && checkOutInput) {
                     let checkIn = new Date(checkInInput);
@@ -747,13 +729,13 @@
                 if (kelasId && checkInInput && checkOutInput) {
                     let response = await fetch(
                         `/api/kamar-tersedia?kelas_id=${kelasId}&check_in=${checkInInput}&check_out=${checkOutInput}`
-                    );
+                        );
                     let kamars = await response.json();
 
                     kamarSelect.innerHTML = '<option value="">-- Pilih Kamar --</option>';
                     if (kamars.length === 0) {
                         kamarSelect.innerHTML =
-                            '<option value="" disabled>-- Kamar Penuh di Waktu Tersebut --</option>';
+                        '<option value="" disabled>-- Kamar Penuh di Waktu Tersebut --</option>';
                     } else {
                         kamars.forEach(kmr => {
                             let option = document.createElement('option');
