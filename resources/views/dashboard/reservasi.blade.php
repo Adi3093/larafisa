@@ -233,22 +233,22 @@
                                                     ? $res->ekstra
                                                     : json_decode($res->ekstra, true) ?? [];
                                                 $metode = $ekstra['Metode Pembayaran'] ?? 'Bayar di tempat';
-                                                $detail = $ekstra['Detail Pembayaran'] ?? '-';
                                                 $pesanTamu = $ekstra['Pesan Tambahan'] ?? '-';
                                                 $kelasName = $res->kamar?->kelasKamar?->nama_kelas ?? '-';
                                                 $ruangName = $res->kamar?->nomor_ruangan ?? '-';
+                                                $totalBayar = $ekstra['Total Bayar'] ?? 0;
+
+                                                // Ambil data pembayaran jika ada
+                                                $pembayaran = $res->pembayaran;
+                                                $noInvoice = $pembayaran ? $pembayaran->invoice : '-';
+                                                $statusBayar = $pembayaran ? $pembayaran->status : '-';
+                                                $qrImage = $pembayaran ? $pembayaran->qr_image : '';
                                             @endphp
                                             <button
-                                                onclick='bukaModalKonfirmasi({{ $res->id }}, @json($res->no_reservasi), @json($res->nama_tamu), @json($kelasName), @json($ruangName), @json($metode), @json($detail), @json($pesanTamu))'
+                                                onclick='bukaModalKonfirmasi({{ $res->id }}, @json($res->no_reservasi), @json($res->nama_tamu), @json($res->no_hp), @json($kelasName), @json($ruangName), @json($metode), @json($pesanTamu), @json($res->check_in), @json($res->check_out), @json($ekstra), @json($noInvoice), @json($statusBayar), @json($qrImage), @json($totalBayar))'
                                                 class="bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1">
                                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
                                                     stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                                    </path>
                                                 </svg>
                                                 Buka
                                             </button>
@@ -463,7 +463,7 @@
         aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
             <div
-                class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-amber-100">
+                class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-4xl border border-amber-100">
                 <div class="bg-amber-600 px-6 py-4 flex justify-between items-center">
                     <h3 class="text-lg font-bold text-white">Tinjau Bukti Reservasi</h3>
                     <button onclick="document.getElementById('modalKonfirmasi').classList.add('hidden')"
@@ -476,83 +476,109 @@
                 </div>
                 <form id="formTerimaModal" method="POST" action="">
                     @csrf
-                    <div class="p-6">
-                        <div class="grid grid-cols-2 gap-4 border-b border-gray-100 pb-4 mb-4">
-                            <div>
+                    <div class="flex flex-col md:flex-row p-6 gap-6">
+
+                        <div class="w-full md:w-1/2 space-y-4">
+                            <div class="border-b border-gray-200 pb-3">
                                 <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">ID Reservasi
                                 </p>
-                                <h4 class="text-base font-black text-amber-700 break-words" id="m_no_res"></h4>
+                                <h4 class="text-base font-black text-amber-700" id="m_no_res"></h4>
                             </div>
-                            <div>
+                            <div class="border-b border-gray-200 pb-3">
                                 <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Nama Pemesan
                                 </p>
-                                <h4 class="text-base font-bold text-amber-950 break-words" id="m_nama"></h4>
+                                <h4 class="text-base font-bold text-amber-950" id="m_nama"></h4>
+                                <p class="text-sm font-medium text-gray-600 mt-1" id="m_nohp"></p>
                             </div>
-                        </div>
 
-                        <div class="grid grid-cols-2 gap-4 mb-5">
-                            <div>
+                            <div class="border-b border-gray-200 pb-3">
                                 <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Kelas Kamar
                                 </p>
-                                <h4 class="text-sm font-bold text-amber-950" id="m_kelas"></h4>
+                                <h4 class="text-sm font-bold text-amber-950 mb-3"><span id="m_kelas"></span> (<span
+                                        id="m_ruangan"></span>)</h4>
+
+                                <div class="grid grid-cols-2 gap-3 mb-2">
+                                    <div>
+                                        <p class="text-[10px] text-gray-500 font-bold uppercase mb-1">Check-in</p>
+                                        <div class="border border-gray-200 rounded p-2 text-xs font-bold text-center"
+                                            id="m_cin"></div>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] text-gray-500 font-bold uppercase mb-1">Check-out</p>
+                                        <div class="border border-gray-200 rounded p-2 text-xs font-bold text-center"
+                                            id="m_cout"></div>
+                                    </div>
+                                </div>
+                                <p class="text-xs font-medium text-gray-600" id="m_durasi"></p>
                             </div>
+
+                            <div class="border-b border-gray-200 pb-3">
+                                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Layanan Extra
+                                    :</p>
+                                <ul class="text-sm text-amber-950 font-medium space-y-1" id="m_extra"></ul>
+                            </div>
+
                             <div>
-                                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Ruangan</p>
-                                <h4 class="text-sm font-bold text-amber-950" id="m_ruangan"></h4>
+                                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Pesan Dari
+                                    Tamu :</p>
+                                <div class="border border-amber-200 rounded-lg p-3 text-sm text-gray-600 bg-amber-50/50 min-h-[80px]"
+                                    id="m_pesan"></div>
                             </div>
                         </div>
 
-                        <div class="mb-5 p-4 bg-amber-50 rounded-xl border border-amber-100 shadow-inner"
-                            id="m_pesan_div">
-                            <p
-                                class="text-xs text-amber-800/70 font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
-                                    </path>
-                                </svg>
-                                Pesan / Permintaan Tambahan
-                            </p>
-                            <p class="text-sm font-medium text-amber-950 italic" id="m_pesan"></p>
-                        </div>
+                        <div class="w-full md:w-1/2 md:border-l md:border-gray-200 md:pl-6 flex flex-col">
 
-                        <div class="bg-amber-50/50 p-4 rounded-xl border border-amber-100">
-                            <div class="grid grid-cols-2 gap-4 items-center">
-                                <div>
-                                    <p class="text-xs text-amber-800/70 font-bold uppercase tracking-wider mb-1">Tipe
-                                        Pembayaran</p>
-                                    <h4 class="text-sm font-bold text-amber-600" id="m_metode"></h4>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-amber-800/70 font-bold uppercase tracking-wider mb-1">Detail
-                                        Pembayaran</p>
-                                    <select name="detail_pembayaran" id="m_detail"
-                                        class="w-full border border-amber-200 rounded-lg p-2 text-sm bg-white font-bold text-amber-950 shadow-sm focus:ring-amber-500">
-                                        <option value="Cash/Tunai">Cash / Tunai</option>
-                                        <option value="Transfer Bank">Transfer Bank</option>
-                                        <option value="Q-RIS">Q-RIS</option>
-                                    </select>
-                                </div>
+                            <div class="border border-gray-300 rounded-xl bg-gray-50 flex items-center justify-center min-h-[200px] p-4 mb-4"
+                                id="m_qris_box">
                             </div>
-                            <div id="m_bukti_div" class="hidden border-t border-amber-100 pt-4 mt-4">
-                                <p class="text-xs text-amber-800/70 font-bold uppercase tracking-wider mb-2">Bukti
-                                    Pembayaran (Tahap Dev)</p>
-                                <div
-                                    class="bg-white w-full h-32 rounded-lg flex items-center justify-center border-2 border-dashed border-amber-200">
+
+                            <div class="space-y-4 flex-grow">
+                                <div>
+                                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Nomor
+                                        Pembayaran :</p>
+                                    <h4 class="text-sm font-bold text-amber-950" id="m_invoice"></h4>
+                                </div>
+
+                                <div class="border-b border-gray-200 pb-4">
+                                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Status :
+                                    </p>
                                     <span
-                                        class="text-amber-900/40 font-medium italic text-xs px-4 text-center">Menunggu
-                                        Integrasi API Payment Gateway...</span>
+                                        class="inline-block px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider"
+                                        id="m_status_badge"></span>
+                                </div>
+
+                                <div>
+                                    <p class="text-xs text-amber-800 font-bold uppercase tracking-wider mb-2">Rincian
+                                        Pembayaran :</p>
+                                    <ul class="text-sm text-gray-600 font-medium space-y-1 mb-4" id="m_rincian_list">
+                                    </ul>
+                                    <h3 class="text-lg font-black text-amber-600" id="m_total_bayar"></h3>
+                                </div>
+
+                                <!-- Metode Pembayaran Terkunci -->
+                                <div class="pt-4 border-t border-gray-200 mt-auto">
+                                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Metode
+                                        Pembayaran Tamu:</p>
+                                    <div id="m_detail_display"
+                                        class="w-full border border-amber-200 rounded-lg p-2.5 text-sm bg-gray-50 font-bold text-amber-950 shadow-sm cursor-not-allowed">
+                                        <!-- Teks metode di-inject melalui JS -->
+                                    </div>
+                                    <!-- Input tersembunyi agar data tetap terkirim saat form di-submit -->
+                                    <input type="hidden" name="detail_pembayaran" id="m_detail_input">
                                 </div>
                             </div>
                         </div>
+
                     </div>
                     <div class="bg-gray-50 px-6 py-4 flex gap-3 border-t border-gray-100">
-                        <button type="submit"
-                            class="flex-1 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition">Valid
-                            & Terima</button>
-                        <button type="button" onclick="submitTolakReservasi()"
-                            class="flex-1 rounded-xl bg-white border border-red-200 px-5 py-3 text-sm font-bold text-red-600 shadow-sm hover:bg-red-50 transition">Tolak
-                            Bukti</button>
+                        <button type="button"
+                            onclick="document.getElementById('modalKonfirmasi').classList.add('hidden')"
+                            class="px-5 py-3 text-sm font-bold text-gray-600 hover:bg-gray-200 rounded-xl transition">Batal</button>
+                        <div class="flex-1 flex gap-2 justify-end">
+                            <button type="submit"
+                                class="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition">Konfirmasi
+                                Reservasi</button>
+                        </div>
                     </div>
                 </form>
                 <form id="formTolakModal" method="POST" action="" class="hidden">@csrf</form>
@@ -570,37 +596,117 @@
         }
 
         // FUNGSI INI DIUBAH UNTUK MENANGKAP PARAMETER "PESAN TAMBAHAN"
-        function bukaModalKonfirmasi(id, no_res, nama, kelas, ruangan, metode, detail, pesanTamu) {
+        function bukaModalKonfirmasi(id, no_res, nama, no_hp, kelas, ruangan, metode, pesanTamu, checkIn, checkOut,
+            ekstraArr, noInvoice, statusBayar, qrImage, totalBayar) {
+
+            // Set Data Kiri (Informasi Tamu & Pesanan)
             document.getElementById('m_no_res').innerText = '#' + no_res;
             document.getElementById('m_nama').innerText = nama;
+            document.getElementById('m_nohp').innerText = 'No. HP : ' + no_hp;
             document.getElementById('m_kelas').innerText = kelas;
-            document.getElementById('m_ruangan').innerText = 'Kamar ' + ruangan;
-            document.getElementById('m_metode').innerText = metode;
+            document.getElementById('m_ruangan').innerText = ruangan;
 
-            // Masukkan data Pesan Tamu ke dalam modal
+            // Format Tanggal
+            let cin = new Date(checkIn);
+            let cout = new Date(checkOut);
+            let options = {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            document.getElementById('m_cin').innerText = cin.toLocaleDateString('id-ID', options);
+            document.getElementById('m_cout').innerText = cout.toLocaleDateString('id-ID', options);
+
+            let diffDays = Math.ceil((cout - cin) / (1000 * 60 * 60 * 24));
+            document.getElementById('m_durasi').innerText = `Durasi : ${diffDays > 0 ? diffDays : 1} malam`;
+
+            // Ekstra
+            let exBed = ekstraArr['Extra Bed'] ?? 0;
+            let exSelimut = ekstraArr['Extra Selimut'] ?? 0;
+            document.getElementById('m_extra').innerHTML = `
+                <li>Extra Bed x${exBed}</li>
+                <li>Extra Selimut x${exSelimut}</li>
+            `;
+
             document.getElementById('m_pesan').innerText = (pesanTamu && pesanTamu !== '-' && pesanTamu !== '') ?
                 pesanTamu : 'Tidak ada pesan khusus dari tamu.';
 
-            let detailSelect = document.getElementById('m_detail');
-            let lowerDetail = detail.toLowerCase();
+            // Set Data Kanan (Pembayaran)
+            document.getElementById('m_invoice').innerText = noInvoice !== '-' ? noInvoice : 'Belum Tersedia';
 
-            if (detail === '-' || lowerDetail.includes('bayar di tempat') || lowerDetail.includes('cash') || lowerDetail
-                .includes('tunai')) {
-                detailSelect.value = 'Cash/Tunai';
-            } else if (lowerDetail.includes('q-ris') || lowerDetail.includes('qris')) {
-                detailSelect.value = 'Q-RIS';
+            // Status Badge
+            let badgeEl = document.getElementById('m_status_badge');
+            if (statusBayar === 'berhasil') {
+                badgeEl.className =
+                    "inline-block px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider bg-green-100 text-green-700 border border-green-200";
+                badgeEl.innerText = "Berhasil Lunas";
+            } else if (statusBayar === 'pending') {
+                badgeEl.className =
+                    "inline-block px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider bg-orange-100 text-orange-700 border border-orange-200";
+                badgeEl.innerText = "Pending / Menunggu";
             } else {
-                detailSelect.value = 'Transfer Bank';
+                badgeEl.className =
+                    "inline-block px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider bg-gray-100 text-gray-700 border border-gray-200";
+                badgeEl.innerText = "Bayar di Tempat";
             }
 
-            if (metode === 'Transfer') {
-                document.getElementById('m_bukti_div').classList.remove('hidden');
+            // Rincian List (GANTI BAGIAN INI)
+            document.getElementById('m_rincian_list').innerHTML = `
+                <li class="flex justify-between border-b border-dashed border-gray-200 pb-1 mb-1">
+                    <span>${kelas} (${ruangan})</span>
+                </li>
+                ${exBed > 0 ? `<li class="flex justify-between border-b border-dashed border-gray-200 pb-1 mb-1"><span>Extra Bed x${exBed}</span></li>` : ''}
+                ${exSelimut > 0 ? `<li class="flex justify-between border-b border-dashed border-gray-200 pb-1 mb-1"><span>Extra Selimut x${exSelimut}</span></li>` : ''}
+            `;
+
+            let formattedTotal = new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(totalBayar);
+            document.getElementById('m_total_bayar').innerText = `Total : ${formattedTotal}`;
+
+            // Logika Tampilan Kotak QRIS/Bukti
+            let qrisBox = document.getElementById('m_qris_box');
+            if (statusBayar === 'berhasil') {
+                qrisBox.innerHTML = `
+                    <div class="text-center">
+                        <svg class="w-16 h-16 text-green-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="font-bold text-green-700 text-sm">Pembayaran QRIS Dikonfirmasi Sistem</p>
+                    </div>`;
+            } else if (metode === 'QRIS' && qrImage) {
+                // Tampilkan QR Code jika masih pending
+                let qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrImage)}`;
+                qrisBox.innerHTML = `
+                    <div class="text-center">
+                        <img src="${qrUrl}" alt="QRIS Tamu" class="w-32 h-32 mx-auto mix-blend-multiply">
+                        <p class="text-xs text-gray-500 font-bold mt-2 uppercase tracking-wider">Menunggu Scan Tamu</p>
+                    </div>`;
             } else {
-                document.getElementById('m_bukti_div').classList.add('hidden');
+                qrisBox.innerHTML = `<span class="text-gray-400 font-medium italic text-sm">Metode: ${metode}</span>`;
             }
 
+            // Auto-select opsi konfirmasi (GANTI BAGIAN INI MENJADI LOGIKA BARU)
+            let detailInput = document.getElementById('m_detail_input');
+            let detailDisplay = document.getElementById('m_detail_display');
+
+            if (metode === 'QRIS') {
+                detailInput.value = 'Q-RIS';
+                detailDisplay.innerHTML = '🟣 Q-RIS (Dikonfirmasi Otomatis)';
+            } else if (metode === 'Transfer') {
+                detailInput.value = 'Transfer Bank';
+                detailDisplay.innerHTML = '🏦 Transfer Bank Manual';
+            } else {
+                detailInput.value = 'Cash/Tunai';
+                detailDisplay.innerHTML = '💵 Bayar di Tempat (Cash/Tunai)';
+            }
+
+            // Set Action URL
             document.getElementById('formTerimaModal').action = `/reservasi/${id}/konfirmasi`;
-            document.getElementById('formTolakModal').action = `/reservasi/${id}/batal`;
             document.getElementById('modalKonfirmasi').classList.remove('hidden');
         }
 
@@ -729,13 +835,13 @@
                 if (kelasId && checkInInput && checkOutInput) {
                     let response = await fetch(
                         `/api/kamar-tersedia?kelas_id=${kelasId}&check_in=${checkInInput}&check_out=${checkOutInput}`
-                        );
+                    );
                     let kamars = await response.json();
 
                     kamarSelect.innerHTML = '<option value="">-- Pilih Kamar --</option>';
                     if (kamars.length === 0) {
                         kamarSelect.innerHTML =
-                        '<option value="" disabled>-- Kamar Penuh di Waktu Tersebut --</option>';
+                            '<option value="" disabled>-- Kamar Penuh di Waktu Tersebut --</option>';
                     } else {
                         kamars.forEach(kmr => {
                             let option = document.createElement('option');

@@ -10,6 +10,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use App\Models\Pembayaran;
+use App\Services\PakasirPaymentService;
 
 class GuestReservationController extends Controller
 {
@@ -79,13 +81,21 @@ class GuestReservationController extends Controller
         }
 
         $user = Auth::user();
-        $pesananAktif = Reservasi::with('kamar.kelasKamar')
+        // Pastikan memuat relasi 'pembayaran' jika sudah ditambahkan di Model Reservasi
+        $pesananAktif = Reservasi::with(['kamar.kelasKamar']) // Tambahkan 'pembayaran' di dalam array with() jika ada relasinya
             ->where(function ($q) use ($user) {
                 $q->where('nama_tamu', 'like', '%' . $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
             })
             ->whereIn('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi', 'Check-In'])
             ->orderBy('created_at', 'desc')
             ->first();
+
+        // Ambil data pembayaran aktif jika metode QRIS
+        $pembayaranAktif = null;
+        if ($pesananAktif && isset($pesananAktif->ekstra['Metode Pembayaran']) && $pesananAktif->ekstra['Metode Pembayaran'] === 'QRIS') {
+            // Mencari data pembayaran berdasarkan ID reservasi yang berelasi
+            $pembayaranAktif = Pembayaran::where('reservasi_id', $pesananAktif->id)->first();
+        }
 
         $arsipReservasi = Reservasi::with('kamar.kelasKamar')
             ->where(function ($q) use ($user) {
@@ -100,12 +110,13 @@ class GuestReservationController extends Controller
         return view('landing_page.hriwayat', [
             'isLoggedIn' => true,
             'pesananAktif' => $pesananAktif,
+            'pembayaranAktif' => $pembayaranAktif,
             'arsipReservasi' => $arsipReservasi,
             'kelasKamars' => $kelasKamars
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, PakasirPaymentService $pakasirService)
     {
         $request->validate([
             'nama_tamu' => 'required|string|max:255',
@@ -114,7 +125,6 @@ class GuestReservationController extends Controller
             'kelas_kamar_id' => 'required|exists:kelas_kamars,id',
             'check_in' => 'required|date',
             'check_out' => 'required|date|after:check_in',
-            // Hapus validasi kamar_id karena alokasinya sistem otomatis
         ]);
 
         $checkIn = Carbon::parse($request->check_in)->format('Y-m-d H:i:s');
@@ -129,41 +139,134 @@ class GuestReservationController extends Controller
         $kamarBebas = Kamar::where('kelas_kamar_id', $request->kelas_kamar_id)
             ->where('status', '!=', 'Maintenance')
             ->whereNotIn('id', $reservedIds)
-            ->inRandomOrder() // Mengacak pemilihan kamar kosong
+            ->inRandomOrder()
             ->first();
 
         if (!$kamarBebas) {
             return back()->withInput()->with('error', 'Mohon maaf, seluruh ruangan di kelas ini sudah penuh pada tanggal yang Anda pilih.');
         }
 
-        $kamarId = $kamarBebas->id;
+        $noReservasi = 'RSV-' . date('Ymd') . '-' . strtoupper(Str::random(4));
+        $noInvoice = 'INV-' . date('Ymd') . '-' . strtoupper(Str::random(4));
 
-        // 2. Susun Data Ekstra Baru
+        // 2. Hitung Total Bayar
+        $diffTime = strtotime($checkOut) - strtotime($checkIn);
+        $diffDays = ceil($diffTime / (60 * 60 * 24));
+        if ($diffDays <= 0) $diffDays = 1;
+
+        $kelasKamar = KelasKamar::find($request->kelas_kamar_id);
+        $hargaKamar = $kelasKamar->harga * $diffDays;
+        $hargaEkstra = ((int)$request->extra_bed * 100000) + ((int)$request->extra_selimut * 25000);
+        $totalBayar = $hargaKamar + $hargaEkstra;
+
+        // 3. Susun Data Ekstra Baru
         $ekstra = [
             'Jumlah Anggota' => (int) $request->jumlah_anggota,
             'Extra Bed' => (int) $request->extra_bed,
             'Extra Selimut' => (int) $request->extra_selimut,
             'Pesan Tambahan' => $request->pesan_tambahan ?? '-',
             'Metode Pembayaran' => $request->metode_pembayaran,
-            'Detail Pembayaran' => $request->metode_pembayaran === 'QRIS' ? 'Menunggu Scan QRIS' : 'Bayar di Tempat'
+            'Total Bayar' => $totalBayar, // Menyimpan nominal yang harus dibayar
+            'Detail Pembayaran' => $request->metode_pembayaran === 'QRIS' ? 'Menunggu Pembayaran QRIS' : 'Bayar di Tempat'
         ];
 
-        $noReservasi = 'RSV-' . date('Ymd') . '-' . strtoupper(Str::random(4));
-
-        Reservasi::create([
+        // 4. Simpan Reservasi ke Database
+        $id = Reservasi::create([
             'no_reservasi' => $noReservasi,
             'nama_tamu' => $request->nama_tamu,
             'no_ktp' => $request->no_ktp,
             'no_hp' => $request->no_hp,
-            'kamar_id' => $kamarId,
+            'kamar_id' => $kamarBebas->id,
             'check_in' => $checkIn,
             'check_out' => $checkOut,
             'ekstra' => $ekstra,
             'tipe_reservasi' => 'Online',
             'status_reservasi' => 'Menunggu Konfirmasi'
         ]);
+        Pembayaran::create([
+            'reservasi_id' => $id->id,
+            'invoice' => $noInvoice,
+            'total' => $totalBayar,
+            'status' => 'pending'
+        ]);
 
-        return redirect()->route('riwayat.tamu')->with('success', "Reservasi $noReservasi berhasil dibuat! Silakan pantau status tiket Anda.");
+        // 5. Jika Metode Pembayaran QRIS, Proses ke Payment Gateway Pakasir
+        // if ($request->metode_pembayaran === 'QRIS') {
+        //     $customerInfo = [
+        //         'nama' => $request->nama_tamu,
+        //         'telepon' => $request->no_hp
+        //     ];
+
+        //     // Memanggil Service: Parameter harus sesuai (Nomor Invoice, Amount, Data Tamu)
+        //     $pakasirService->createQrisPayment($noReservasi, $totalBayar, $customerInfo);
+        // }
+
+        return redirect()->route('riwayat.tamu')->with('success', "Reservasi $noReservasi berhasil dibuat! Silakan cek detail reservasi untuk rincian pembayaran.");
+    }
+    // public function generateQris($id, \App\Services\PakasirPaymentService $pakasirService)
+    // {
+    //     $reservasi = Reservasi::with('kamar.kelasKamar')->findOrFail($id);
+    //     // dd($reservasi);
+
+    //     // 1. Cek apakah QRIS sudah pernah di-generate sebelumnya
+    //     $pembayaran = \App\Models\Pembayaran::where('reservasi_id', $reservasi->id)->first();
+    //     if ($pembayaran && $pembayaran->qr_image) {
+    //         return response()->json([
+    //             'success' => true,
+    //             'qr_image' => $pembayaran->qr_image,
+    //             'status' => $pembayaran->status
+    //         ]);
+    //     }
+    //     $totalBayar = $reservasi->ekstra['Total Bayar'] ?? 0;
+
+    //     $pembayaranBaru = $pakasirService->createQrisPayment($pembayaran->invoice, $totalBayar);
+    //     if ($pembayaranBaru && $pembayaranBaru->qr_image) {
+    //         return response()->json([
+    //             'success' => true,
+    //             'qr_image' => $pembayaranBaru->qr_image,
+    //             'status' => $pembayaranBaru->status
+    //         ]);
+    //     }
+
+    //     return response()->json([
+    //         'success' => false,
+    //         'message' => 'Gagal terhubung ke server Payment Gateway. Silakan coba lagi.'
+    //     ]);
+    // }
+    public function generateQris($id, \App\Services\PakasirPaymentService $pakasirService)
+    {
+        $reservasi = Reservasi::with('kamar.kelasKamar')->findOrFail($id);
+
+        $pembayaran = \App\Models\Pembayaran::where('reservasi_id', $reservasi->id)->first();
+
+        // 1. Jika sudah ada QR Image
+        if ($pembayaran && $pembayaran->qr_image) {
+            return response()->json([
+                'success'  => true,
+                'qr_image' => $pembayaran->qr_image,
+                'status'   => $pembayaran->status,
+                'invoice'  => $pembayaran->invoice // <-- Tambahan ini
+            ]);
+        }
+
+        $totalBayar = $reservasi->ekstra['Total Bayar'] ?? 0;
+
+        $pembayaranBaru = $pakasirService->createQrisPayment($pembayaran->invoice, $totalBayar);
+
+        // 2. Jika baru saja dibuat
+        if ($pembayaranBaru && $pembayaranBaru->qr_image) {
+            return response()->json([
+                'success'  => true,
+                'qr_image' => $pembayaranBaru->qr_image,
+                'status'   => $pembayaranBaru->status,
+                'invoice'  => $pembayaranBaru->invoice // <-- Tambahan ini
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal terhubung ke server Payment Gateway. Silakan coba lagi.'
+        ]);
     }
 
     public function update(Request $request, $id)

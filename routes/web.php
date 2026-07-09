@@ -1,12 +1,13 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AccountController;
-use App\Http\Middleware\UpdateLastSeen;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KamarController;
 use App\Http\Controllers\LandingProfileController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Middleware\UpdateLastSeen;
+use Illuminate\Support\Facades\Route;
 
 
 
@@ -52,6 +53,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/reservasi-online', [App\Http\Controllers\GuestReservationController::class, 'store'])->name('reservasi.tamu.store');
     Route::put('/reservasi-online/{id}/update', [App\Http\Controllers\GuestReservationController::class, 'update'])->name('reservasi.tamu.update');
     Route::put('/reservasi-online/{id}/batal', [App\Http\Controllers\GuestReservationController::class, 'batal'])->name('reservasi.tamu.batal');
+    Route::get('/reservasi-online/{id}/generate-qris', [App\Http\Controllers\GuestReservationController::class, 'generateQris'])->name('reservasi.qris.generate');
+    Route::get('/payment/check/{invoice}', [PaymentController::class, 'checkStatus']);
+    // Route::post('/reservasi-online/{id}/generate-qris', [App\Http\Controllers\GuestReservationController::class, 'generateQris'])->name('reservasi.qris.generate');
 });
 
 
@@ -88,17 +92,16 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
     Route::post('/checkinout/{id}/checkout', [App\Http\Controllers\CheckInOutController::class, 'checkout'])->name('checkinout.checkout');
     Route::get('/checkinout/{id}/print', [App\Http\Controllers\CheckInOutController::class, 'printStruk'])->name('checkinout.print');
     Route::put('/checkinout/{id}/extend', [App\Http\Controllers\CheckInOutController::class, 'extend'])->name('checkinout.extend');
+    // (Letakkan di area Route Admin)
+    Route::post('/checkinout/{id}/qris-tambahan', [App\Http\Controllers\CheckInOutController::class, 'generateQrisTambahan'])->name('checkinout.qris.tambahan');
 
     // Kelola Akun
     Route::get('/akun', [AccountController::class, 'index'])->name('akun');
     Route::post('/akun', [AccountController::class, 'store'])->name('akun.store');
     Route::put('/akun/{id}', [AccountController::class, 'update'])->name('akun.update');
 
-    Route::get('/api/cek-notifikasi', [App\Http\Controllers\ReservasiController::class, 'cekNotifikasi'])->name('api.notifikasi');
-
-    Route::get('/dtamu', function () {
-        return view('dashboard.dtamu');
-    });
+    // Letakkan di bawah rute Check-in & Check-Out yang sudah ada
+    Route::post('/checkinout/{id}/generate-qris-tambahan', [App\Http\Controllers\CheckInOutController::class, 'generateQrisTambahan'])->name('checkinout.qris.tambahan');
 
     // Pengaturan dan Laporan
     Route::get('/settings', function () {
@@ -108,9 +111,9 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
     Route::get('/settings/profil', [ProfileController::class, 'index'])->name('settings.profil');
     Route::put('/settings/profil', [ProfileController::class, 'update'])->name('settings.profil.update');
 
-    // Rute API untuk menyimpan status Maintenance ke Server
-    Route::post('/settings/maintenance', [App\Http\Controllers\ProfileController::class, 'updateMaintenance'])->name('settings.maintenance');
     //Laporan Pendapatan
     Route::get('/pendapatan', [App\Http\Controllers\PendapatanController::class, 'index'])->name('pendapatan');
     Route::get('/pendapatan/export/{format}', [App\Http\Controllers\PendapatanController::class, 'export'])->name('pendapatan.export');
+    // Rute API untuk menyimpan status Maintenance ke Server
+    Route::post('/settings/maintenance', [App\Http\Controllers\ProfileController::class, 'updateMaintenance'])->name('settings.maintenance');
 });

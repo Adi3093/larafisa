@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Pembayaran;
 
 class Reservasi extends Model
 {
@@ -25,6 +26,10 @@ class Reservasi extends Model
     public function kamar()
     {
         return $this->belongsTo(Kamar::class);
+    }
+    public function pembayaran()
+    {
+        return $this->hasOne(Pembayaran::class, 'reservasi_id');
     }
     //
 }

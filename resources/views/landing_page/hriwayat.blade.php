@@ -202,26 +202,29 @@
                             @php
                                 $f_in = \Carbon\Carbon::parse($pesananAktif->check_in)->format('Y-m-d\TH:i');
                                 $f_out = \Carbon\Carbon::parse($pesananAktif->check_out)->format('Y-m-d\TH:i');
-                                $kId = $pesananAktif->kamar_id;
-                                $klId = $pesananAktif->kamar?->kelas_kamar_id;
                                 $metodeBayarGuest = $pesananAktif->ekstra['Metode Pembayaran'] ?? 'Bayar di tempat';
                             @endphp
 
+                            <button onclick="document.getElementById('modalDetail').classList.remove('hidden')"
+                                class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow transition flex items-center gap-2">
+                                <span>🔍</span> Detail & Pembayaran
+                            </button>
+
                             @if (in_array($pesananAktif->status_reservasi, ['Menunggu Konfirmasi', 'Terkonfirmasi']))
                                 <button
-                                    onclick="bukaModalUbahJadwal('{{ $pesananAktif->id }}', '{{ $metodeBayarGuest }}', '{{ $f_in }}', '{{ $f_out }}', '{{ $klId }}', '{{ $kId }}')"
+                                    onclick="bukaModalUbahJadwal('{{ $pesananAktif->id }}', '{{ $f_in }}', '{{ $f_out }}')"
                                     class="bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold py-2.5 px-4 rounded-xl border border-gray-200 transition">
-                                    🔄 Ubah Jadwal Menginap
+                                    🔄 Ubah Jadwal
                                 </button>
                             @endif
 
                             @if ($pesananAktif->status_reservasi === 'Menunggu Konfirmasi')
                                 <form action="{{ route('reservasi.tamu.batal', $pesananAktif->id) }}" method="POST"
-                                    onsubmit="return confirm('Apakah Anda yakin ingin membatalkan permohonan reservasi ini secara permanen?')">
+                                    onsubmit="return confirm('Apakah Anda yakin ingin membatalkan permohonan reservasi ini?')">
                                     @csrf @method('PUT')
                                     <button type="submit"
                                         class="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold py-2.5 px-4 rounded-xl border border-red-200 transition">
-                                        ❌ Batalkan Reservasi
+                                        ❌ Batalkan
                                     </button>
                                 </form>
                             @endif
@@ -287,10 +290,10 @@
         aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
             <div
-                class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md">
+                class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-sm">
 
                 <div class="bg-amber-600 px-6 py-4 flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-white">Ubah Jadwal & Kamar</h3>
+                    <h3 class="text-lg font-bold text-white">Ubah Jadwal Menginap</h3>
                     <button onclick="document.getElementById('modalUbahJadwal').classList.add('hidden')"
                         class="text-amber-100 hover:text-white transition">
                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -301,68 +304,28 @@
                 </div>
 
                 <div class="bg-white px-6 pb-4 pt-5">
-
-                    <div id="lockWarning"
-                        class="hidden mb-4 bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-xl flex items-start gap-3 shadow-sm text-left">
-                        <svg class="w-5 h-5 text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
-                            </path>
-                        </svg>
-                        <div>
-                            <p class="text-[11px] leading-relaxed">Anda menggunakan metode pembayaran Transfer/QRIS.
-                                <strong>Perubahan Kelas dan Ruangan telah dikunci</strong> demi penyesuaian dana. Anda
-                                hanya diizinkan untuk memajukan/mengundurkan jadwal tanggal inap.
-                            </p>
-                        </div>
-                    </div>
-
                     <form id="formUbahJadwal" method="POST" action="">
                         @csrf @method('PUT')
 
-                        <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="grid grid-cols-1 gap-4 mb-2">
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Check-In Baru</label>
-                                <input type="datetime-local" name="check_in" id="edit_check_in"
-                                    onchange="fetchKamarEdit()" required
+                                <input type="datetime-local" name="check_in" id="edit_check_in" required
                                     class="w-full border border-gray-300 rounded-lg p-2.5 text-sm transition focus:ring-amber-500">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Check-Out Baru</label>
-                                <input type="datetime-local" name="check_out" id="edit_check_out"
-                                    onchange="fetchKamarEdit()" required
+                                <input type="datetime-local" name="check_out" id="edit_check_out" required
                                     class="w-full border border-gray-300 rounded-lg p-2.5 text-sm transition focus:ring-amber-500">
                             </div>
                         </div>
-
-                        <div
-                            class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Kelas Kamar</label>
-                                <select id="edit_kelas_kamar_id" name="kelas_kamar_id" onchange="fetchKamarEdit()"
-                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm bg-white disabled:bg-gray-200">
-                                    <option value="">-- Pilih Kelas --</option>
-                                    @foreach ($kelasKamars as $kelas)
-                                        <option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Ruangan Fisik</label>
-                                <select id="edit_kamar_id" name="kamar_id" required
-                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm bg-white disabled:bg-gray-200">
-                                    <option value="">-- Memuat Data --</option>
-                                </select>
-                            </div>
-                        </div>
-
                     </form>
                 </div>
+
                 <div class="bg-gray-50 px-6 py-4 flex flex-row-reverse border-t border-gray-100">
                     <button type="submit" form="formUbahJadwal"
                         class="rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-amber-700 ml-3 transition w-full sm:w-auto">
-                        Terapkan Perubahan
+                        Terapkan
                     </button>
                     <button type="button"
                         onclick="document.getElementById('modalUbahJadwal').classList.add('hidden')"
@@ -374,6 +337,322 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function bukaModalUbahJadwal(idRes, checkIn, checkOut) {
+            document.getElementById('formUbahJadwal').action = `/reservasi-online/${idRes}/update`;
+            document.getElementById('edit_check_in').value = checkIn;
+            document.getElementById('edit_check_out').value = checkOut;
+            document.getElementById('modalUbahJadwal').classList.remove('hidden');
+        }
+    </script>
+
+    @if ($isLoggedIn && $pesananAktif)
+        <div id="modalDetail" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-sm"
+            aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
+                <div
+                    class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-4xl border border-gray-200">
+
+                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                        <h3 class="text-xl font-bold text-gray-900">Detail dan Reservasi Tamu</h3>
+                        <button onclick="document.getElementById('modalDetail').classList.add('hidden')"
+                            class="text-gray-400 hover:text-red-500 transition">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row p-6 gap-8 bg-white">
+
+                        <div class="w-full md:w-1/2 space-y-5">
+
+                            <div>
+                                <div class="flex justify-between items-end border-b border-gray-300 pb-2 mb-3">
+                                    <h4 class="text-lg font-bold text-gray-800">Informasi Tamu</h4>
+                                    <span class="text-xs font-bold text-gray-500">Code Reservasi: <span
+                                            class="text-amber-600">#{{ $pesananAktif->no_reservasi }}</span></span>
+                                </div>
+                                <div class="space-y-1 text-sm text-gray-700 font-medium">
+                                    <p>Nama : {{ $pesananAktif->nama_tamu }}</p>
+                                    <p>No.HP : {{ $pesananAktif->no_hp }}</p>
+                                    <p>Jumlah Tamu : {{ $pesananAktif->ekstra['Jumlah Anggota'] ?? 1 }} Orang</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="border-b border-gray-300 pb-2 mb-3">
+                                    <h4 class="text-lg font-bold text-gray-800">Informasi Pesanan</h4>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 mb-3">
+                                    <div>
+                                        <span class="text-xs font-bold text-gray-500 mb-1 block">Check-In</span>
+                                        <div
+                                            class="border border-gray-300 rounded-lg p-2.5 text-center text-sm font-bold text-gray-800">
+                                            {{ \Carbon\Carbon::parse($pesananAktif->check_in)->translatedFormat('d M Y') }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span class="text-xs font-bold text-gray-500 mb-1 block">Check-Out</span>
+                                        <div
+                                            class="border border-gray-300 rounded-lg p-2.5 text-center text-sm font-bold text-gray-800">
+                                            {{ \Carbon\Carbon::parse($pesananAktif->check_out)->translatedFormat('d M Y') }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-sm font-medium text-gray-700">Kelas Kamar : <span
+                                        class="font-bold">{{ $pesananAktif->kamar?->kelasKamar?->nama_kelas ?? '-' }}</span>
+                                </p>
+                            </div>
+
+                            <div>
+                                <div class="border-b border-gray-300 pb-2 mb-3">
+                                    <h4 class="text-lg font-bold text-gray-800">Layanan Extra</h4>
+                                </div>
+                                <div class="space-y-1 text-sm text-gray-700 font-medium">
+                                    <p>Extra Bed x{{ $pesananAktif->ekstra['Extra Bed'] ?? 0 }}</p>
+                                    <p>Extra Selimut x{{ $pesananAktif->ekstra['Extra Selimut'] ?? 0 }}</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="border-b border-gray-300 pb-2 mb-3">
+                                    <h4 class="text-lg font-bold text-gray-800">Pesan dari Tamu</h4>
+                                </div>
+                                <div
+                                    class="border border-gray-300 rounded-xl p-4 min-h-[100px] text-sm text-gray-600 bg-gray-50">
+                                    {{ $pesananAktif->ekstra['Pesan Tambahan'] !== '-' ? $pesananAktif->ekstra['Pesan Tambahan'] : 'Tidak ada pesan tambahan.' }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="w-full md:w-1/2 md:border-l md:border-gray-300 md:pl-8 flex flex-col h-full">
+
+                            <div class="border-b border-gray-300 pb-2 mb-4">
+                                <h4 class="text-xl font-bold text-gray-800">Detail Pembayaran</h4>
+                            </div>
+
+                            <div class="space-y-2 text-sm text-gray-700 font-medium mb-6">
+                                <div class="flex justify-between"><span>Kelas Kamar</span>
+                                    <span>{{ $pesananAktif->kamar?->kelasKamar?->nama_kelas ?? '-' }}</span>
+                                </div>
+                                <div class="flex justify-between"><span>Tanggal Check-in</span>
+                                    <span>{{ \Carbon\Carbon::parse($pesananAktif->check_in)->translatedFormat('d M Y') }}</span>
+                                </div>
+                                <div class="flex justify-between"><span>Tanggal Check-out</span>
+                                    <span>{{ \Carbon\Carbon::parse($pesananAktif->check_out)->translatedFormat('d M Y') }}</span>
+                                </div>
+                                <div class="flex justify-between"><span>Biaya Extra Bed</span> <span>Rp
+                                        {{ number_format(($pesananAktif->ekstra['Extra Bed'] ?? 0) * 100000, 0, ',', '.') }}</span>
+                                </div>
+                                <div class="flex justify-between"><span>Biaya Extra Selimut</span> <span>Rp
+                                        {{ number_format(($pesananAktif->ekstra['Extra Selimut'] ?? 0) * 25000, 0, ',', '.') }}</span>
+                                </div>
+                                <div
+                                    class="flex justify-between font-bold text-amber-600 pt-2 border-t border-gray-100">
+                                    <span>Status Pembayaran</span>
+                                    <span
+                                        id="statusPaymentDisplay">{{ $pembayaranAktif->status ?? 'Menunggu' }}</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                @if (isset($pembayaranAktif))
+                                    <p class="text-xs text-gray-500 font-bold mb-1">
+                                        Code Pembayaran: <span
+                                            class="text-amber-600">#{{ $pembayaranAktif->invoice }}</span>
+                                    </p>
+                                @endif
+                                <h3 class="text-lg font-black text-gray-900 border-b border-gray-200 pb-4">
+                                    Total Pembayaran : Rp.
+                                    {{ number_format($pesananAktif->ekstra['Total Bayar'] ?? 0, 0, ',', '.') }}
+                                </h3>
+                            </div>
+
+                            @if (isset($pesananAktif->ekstra['Metode Pembayaran']) && $pesananAktif->ekstra['Metode Pembayaran'] === 'QRIS')
+
+                                <div class="flex flex-col flex-grow justify-end space-y-4">
+                                    <button type="button" id="btnGenerateQris"
+                                        onclick="generateQrisAction('{{ $pesananAktif->id }}')"
+                                        class="{{ isset($pembayaranAktif) && $pembayaranAktif->qr_image ? 'hidden' : 'block' }} w-full border-2 border-amber-500 text-amber-600 hover:bg-amber-50 font-bold py-3 rounded-xl transition text-center">
+                                        Generate QRIS
+                                    </button>
+
+                                    <div
+                                        class="border-2 border-gray-300 rounded-2xl flex-grow min-h-[220px] flex items-center justify-center bg-gray-50 p-4">
+                                        <div id="qrisContainer"
+                                            class="text-center w-full flex flex-col items-center justify-center">
+
+                                            @if (isset($pembayaranAktif) && $pembayaranAktif->status === 'berhasil')
+                                                <div class="text-center w-full animate-fade-in">
+                                                    <div
+                                                        class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border-4 border-white ring-2 ring-green-100">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10"
+                                                            viewBox="0 0 24 24">
+                                                            <path fill="currentColor"
+                                                                d="M10.5 15.25A.74.74 0 0 1 10 15l-3-3a.75.75 0 0 1 1-1l2.47 2.47L19 5a.75.75 0 0 1 1 1l-9 9a.74.74 0 0 1-.5.25Z" />
+                                                            <path fill="currentColor"
+                                                                d="M12 21a9 9 0 0 1-7.87-4.66a8.67 8.67 0 0 1-1.07-3.41a9 9 0 0 1 4.6-8.81a8.67 8.67 0 0 1 3.41-1.07a8.86 8.86 0 0 1 3.55.34a.75.75 0 1 1-.43 1.43a7.62 7.62 0 0 0-3-.28a7.43 7.43 0 0 0-2.84.89a7.5 7.5 0 0 0-2.2 1.84a7.42 7.42 0 0 0-1.64 5.51a7.43 7.43 0 0 0 .89 2.84a7.5 7.5 0 0 0 1.84 2.2a7.42 7.42 0 0 0 5.51 1.64a7.43 7.43 0 0 0 2.84-.89a7.5 7.5 0 0 0 2.2-1.84a7.42 7.42 0 0 0 1.64-5.51a.75.75 0 1 1 1.57-.15a9 9 0 0 1-4.61 8.81A8.67 8.67 0 0 1 12.93 21H12Z" />
+                                                        </svg>
+                                                    </div>
+                                                    <h4 class="font-black text-green-700 text-xl">Pembayaran Berhasil!
+                                                    </h4>
+                                                    <p class="text-sm text-gray-500 mt-1">Sistem telah mengkonfirmasi
+                                                        pembayaran Anda. Silakan tunjukkan detail ini saat Check-In.</p>
+                                                </div>
+                                            @elseif (isset($pembayaranAktif) && $pembayaranAktif->qr_image)
+                                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ urlencode($pembayaranAktif->qr_image) }}"
+                                                    alt="QRIS" class="w-48 h-48 object-contain">
+                                                <p class="text-xs text-gray-500 font-medium mt-3">Silakan scan kode QR
+                                                    di atas</p>
+                                            @else
+                                                <span id="qrisPlaceholder"
+                                                    class="text-3xl text-gray-300 font-black tracking-widest uppercase">QRIS</span>
+                                            @endif
+
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                <div
+                                    class="border-2 border-gray-300 rounded-2xl flex-grow min-h-[200px] flex flex-col items-center justify-center bg-gray-50 p-4">
+                                    <span class="text-4xl mb-2">🏨</span>
+                                    <h4 class="font-bold text-gray-800 text-lg">Bayar di Tempat</h4>
+                                    <p class="text-sm text-gray-500 mt-1 text-center">Silakan lakukan pelunasan di meja
+                                        resepsionis.</p>
+                                </div>
+                            @endif
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let paymentInterval = null;
+
+            function startPaymentCheck(invoice) {
+                if (paymentInterval) clearInterval(paymentInterval);
+                const statusDisplay = document.getElementById('statusPaymentDisplay');
+                const container = document.getElementById('qrisContainer');
+
+                paymentInterval = setInterval(async () => {
+                    try {
+                        const res = await fetch(`/payment/check/${invoice}`);
+                        const data = await res.json();
+                        // Jika sukses, ubah tampilan secara langsung
+                        if (data.status === "berhasil") {
+                            clearInterval(paymentInterval);
+                            if (statusDisplay) {
+                                statusDisplay.innerHTML = "BERHASIL (PAID)";
+                                statusDisplay.className = "text-green-600 font-black uppercase";
+                            }
+
+                            // Ganti gambar QR dengan notifikasi Sukses
+                            if (container) {
+                                container.innerHTML = `
+                            <div class="text-center w-full animate-fade-in">
+                                <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border-4 border-white ring-2 ring-green-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" viewBox="0 0 24 24">
+                                        <path fill="currentColor" d="M10.5 15.25A.74.74 0 0 1 10 15l-3-3a.75.75 0 0 1 1-1l2.47 2.47L19 5a.75.75 0 0 1 1 1l-9 9a.74.74 0 0 1-.5.25Z"/>
+                                        <path fill="currentColor" d="M12 21a9 9 0 0 1-7.87-4.66a8.67 8.67 0 0 1-1.07-3.41a9 9 0 0 1 4.6-8.81a8.67 8.67 0 0 1 3.41-1.07a8.86 8.86 0 0 1 3.55.34a.75.75 0 1 1-.43 1.43a7.62 7.62 0 0 0-3-.28a7.43 7.43 0 0 0-2.84.89a7.5 7.5 0 0 0-2.2 1.84a7.42 7.42 0 0 0-1.64 5.51a7.43 7.43 0 0 0 .89 2.84a7.5 7.5 0 0 0 1.84 2.2a7.42 7.42 0 0 0 5.51 1.64a7.43 7.43 0 0 0 2.84-.89a7.5 7.5 0 0 0 2.2-1.84a7.42 7.42 0 0 0 1.64-5.51a.75.75 0 1 1 1.57-.15a9 9 0 0 1-4.61 8.81A8.67 8.67 0 0 1 12.93 21H12Z"/>
+                                    </svg>
+                                </div>
+                                <h4 class="font-black text-green-700 text-xl">Pembayaran Lunas!</h4>
+                                <p class="text-sm text-gray-500 mt-1">Sistem telah mengkonfirmasi pembayaran Anda. Silakan tunjukkan detail ini saat Check-In.</p>
+                            </div>
+                        `;
+                            }
+                        }
+                    } catch (error) {
+                        console.log("Mengecek pembayaran di background...");
+                    }
+                }, 5000); //<-- fetch tiap 5 detik
+            }
+
+            // 2. Jalankan pengecekan otomatis jika halaman di-reload & status masih pending
+            @if (isset($pembayaranAktif) && $pembayaranAktif->status === 'pending') startPaymentCheck("{{ $pembayaranAktif->invoice }}"); @endif
+
+            // 3. Fungsi Tombol Generate QRIS
+            async function generateQrisAction(reservasiId) {
+                const btn = document.getElementById('btnGenerateQris');
+                const container = document.getElementById('qrisContainer');
+                const statusDisplay = document.getElementById('statusPaymentDisplay');
+
+                const originalText = btn.innerText;
+                btn.innerHTML = '<span class="animate-pulse">⏳ Memuat QRIS...</span>';
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+                try {
+                    let response = await fetch(`/reservasi-online/${reservasiId}/generate-qris`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+
+                    let data = await response.json();
+
+                    if (data.success) {
+                        btn.classList.add('hidden'); // Sembunyikan tombol
+
+                        // Konversi string ke URL Gambar QR
+                        let qrCodeUrl =
+                            `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(data.qr_image)}`;
+
+                        // Tampilkan QR
+                        container.innerHTML = `
+                    <div class="animate-fade-in text-center">
+                        <img src="${qrCodeUrl}" alt="QRIS" class="w-48 h-48 object-contain shadow-sm border border-gray-200 rounded-xl bg-white p-2 mx-auto">
+                        <p class="text-xs text-gray-500 font-medium mt-3">Silakan scan kode QR di atas menggunakan M-Banking atau E-Wallet.</p>
+                    </div>
+                `;
+
+                        statusDisplay.innerText = data.status || 'pending';
+                        statusDisplay.className = 'text-amber-600 font-bold';
+
+                        // MULAI PENGECEKAN TANPA RELOAD!
+                        startPaymentCheck(data.invoice);
+
+                    } else {
+                        alert(data.message);
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                        btn.classList.remove('opacity-50');
+                    }
+                } catch (error) {
+                    alert('Terjadi kesalahan jaringan.');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50');
+                }
+            }
+        </script>
+
+        <style>
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .animate-fade-in {
+                animation: fadeIn 0.5s ease-out forwards;
+            }
+        </style>
+    @endif
 
     <script>
         let currentKamarId = null;

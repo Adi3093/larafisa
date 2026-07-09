@@ -206,46 +206,13 @@
                             <!-- AREA REDESIGN GENERATE QRIS -->
                             <div id="qrisBox" class="hidden grid-cols-1 gap-4">
                                 <div
-                                    class="border border-amber-200 bg-amber-50/50 rounded-xl p-6 text-center flex flex-col items-center justify-center min-h-[180px]">
-
-                                    <!-- Keadaan 1: Sebelum Klik Generate -->
-                                    <div x-show="!qrisGenerated && !showQrisLoading" class="space-y-4">
+                                    class="border border-amber-200 bg-amber-50/50 rounded-xl p-6 text-center flex flex-col items-center justify-center min-h-[150px]">
+                                    <div class="space-y-4">
                                         <p class="text-sm font-bold text-amber-900">Pembayaran aman dengan Kode QRIS
                                             Otomatis</p>
-                                        <button type="button"
-                                            @click="showQrisLoading = true; setTimeout(() => { showQrisLoading = false; qrisGenerated = true; }, 1200)"
-                                            class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-black px-5 py-2.5 rounded-lg shadow transition">
-                                            Generate QR Code
-                                        </button>
+                                        <p class="text-xs text-amber-700">Rincian tagihan dan Kode QR akan muncul di
+                                            halaman Riwayat setelah Anda menekan tombol di bawah.</p>
                                     </div>
-
-                                    <!-- Keadaan 2: Efek Loading Memuat Kode -->
-                                    <div x-show="showQrisLoading" x-cloak class="flex flex-col items-center gap-2">
-                                        <div
-                                            class="w-6 h-6 border-2 border-amber-600 border-t-transparent rounded-full animate-spin">
-                                        </div>
-                                        <p class="text-xs text-amber-800 font-bold">Menghubungkan ke secure server...
-                                        </p>
-                                    </div>
-
-                                    <!-- Keadaan 3: Sesudah Klik Generate (Keterangan Pengembangan API) -->
-                                    <div x-show="qrisGenerated && !showQrisLoading" x-cloak
-                                        class="space-y-2 max-w-md animate-fade-in">
-                                        <div
-                                            class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 text-xl mx-auto mb-1">
-                                            🛠️</div>
-                                        <h4 class="text-base font-black text-amber-950">API Payment Gateway Terdeteksi
-                                        </h4>
-                                        <p class="text-xs text-amber-900/80 font-semibold leading-relaxed">
-                                            Modul QRIS saat ini berada di lingkungan Sandbox (Pengembangan Skripsi).
-                                            <br>
-                                            <span class="text-orange-700 font-black">Status: Berhasil Menghubungkan
-                                                Handler Endpoint.</span>
-                                        </p>
-                                        <p class="text-[10px] text-gray-400 italic">Sistem siap diintegrasikan dengan
-                                            Payment Gateway Midtrans / Xendit.</p>
-                                    </div>
-
                                 </div>
                             </div>
                         </div>

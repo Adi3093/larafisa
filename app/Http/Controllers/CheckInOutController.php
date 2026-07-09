@@ -6,15 +6,19 @@ use Illuminate\Http\Request;
 use App\Models\Reservasi;
 use App\Models\Kamar;
 use App\Models\KelasKamar;
+use App\Models\Pembayaran;
+use App\Services\PakasirPaymentService;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class CheckInOutController extends Controller
 {
     public function index(Request $request)
     {
+        // TAMBAHKAN 'pembayaran' PADA EAGER LOADING
         $query = Reservasi::whereIn('status_reservasi', ['Terkonfirmasi', 'Check-In'])
-            ->with(['kamar.kelasKamar']);
+            ->with(['kamar.kelasKamar', 'pembayaran']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -69,6 +73,95 @@ class CheckInOutController extends Controller
         return back()->with('success', 'Tamu berhasil Check-In! Status kamar otomatis menjadi Terpakai.');
     }
 
+    // Fungsi Checkout sekarang menangani "Simpan Perubahan" dan "Selesaikan Check-Out"
+    public function checkout(Request $request, $id)
+    {
+        $reservasi = Reservasi::findOrFail($id);
+
+        // 1. Update Tanggal Check-Out Baru
+        if ($request->filled('tanggal_checkout')) {
+            $reservasi->check_out = Carbon::parse($request->tanggal_checkout)->format('Y-m-d H:i:s');
+        }
+
+        // 2. Update Ekstra (Bed, Selimut)
+        $ekstra = is_array($reservasi->ekstra) ? $reservasi->ekstra : json_decode($reservasi->ekstra, true) ?? [];
+        if ($request->has('extra_bed_qty')) {
+            $ekstra['Extra Bed'] = (int) $request->extra_bed_qty;
+        }
+        if ($request->has('extra_selimut_qty')) {
+            $ekstra['Extra Selimut'] = (int) $request->extra_selimut_qty;
+        }
+        $reservasi->update(['ekstra' => $ekstra]);
+
+        // JIKA HANYA SIMPAN PERUBAHAN
+        if ($request->action_type === 'simpan') {
+            return back()->with('success', 'Perubahan jadwal & ekstra berhasil disimpan.');
+        }
+
+        // JIKA CHECK-OUT (SELESAI)
+        $reservasi->update(['status_reservasi' => 'Selesai']);
+
+        if ($reservasi->kamar_id) {
+            Kamar::where('id', $reservasi->kamar_id)->update(['status' => 'Tersedia']);
+        }
+
+        if ($request->has('print_struk') && $request->print_struk == '1') {
+            return redirect()->route('checkinout.print', $reservasi->id);
+        }
+
+        return back()->with('success', 'Proses Check-Out berhasil diselesaikan!');
+    }
+    // FUNGSI BARU: GENERATE QRIS UNTUK PEMBAYARAN TAMBAHAN
+    public function generateQrisTambahan(Request $request, $id, \App\Services\PakasirPaymentService $pakasirService)
+    {
+        $reservasi = Reservasi::findOrFail($id);
+        $totalTambahan = (int) $request->total_tambahan;
+
+        if ($totalTambahan <= 0) {
+            return response()->json(['success' => false, 'message' => 'Tidak ada tagihan tambahan.']);
+        }
+
+        // CEK DUPLIKASI: Cari apakah ada invoice ADD- yang sesuai dengan nominal ini
+        $pembayaranExisting = \App\Models\Pembayaran::where('reservasi_id', $reservasi->id)
+            ->where('invoice', 'like', 'ADD-%')
+            ->latest()
+            ->first();
+
+        // Jika ADA dan NOMINALNYA SAMA, kembalikan gambar QR yang lama (Jangan buat baru)
+        if ($pembayaranExisting && $pembayaranExisting->total == $totalTambahan && $pembayaranExisting->qr_image) {
+            return response()->json([
+                'success' => true,
+                'qr_image' => $pembayaranExisting->qr_image,
+                'status' => $pembayaranExisting->status,
+                'invoice' => $pembayaranExisting->invoice
+            ]);
+        }
+
+        // Jika BELUM ADA atau NOMINALNYA BERUBAH, baru kita buatkan invoice ADD- yang baru
+        $invoiceTambahan = 'ADD-' . date('Ymd') . '-' . strtoupper(Str::random(4));
+
+        $pembayaran = \App\Models\Pembayaran::create([
+            'reservasi_id' => $reservasi->id,
+            'invoice'      => $invoiceTambahan,
+            'total'        => $totalTambahan,
+            'status'       => 'pending'
+        ]);
+
+        $pembayaranBaru = $pakasirService->createQrisPayment($invoiceTambahan, $totalTambahan);
+
+        if ($pembayaranBaru && $pembayaranBaru->qr_image) {
+            return response()->json([
+                'success' => true,
+                'qr_image' => $pembayaranBaru->qr_image,
+                'status' => $pembayaranBaru->status,
+                'invoice' => $pembayaranBaru->invoice
+            ]);
+        }
+
+        $pembayaran->delete();
+        return response()->json(['success' => false, 'message' => 'Gagal terhubung ke Gateway.']);
+    }
+
     // FUNGSI BARU: PERPANJANG DURASI INAP
     public function extend(Request $request, $id)
     {
@@ -101,34 +194,6 @@ class CheckInOutController extends Controller
 
         $reservasi->update(['check_out' => $newCheckOut]);
         return back()->with('success', 'Berhasil memperpanjang durasi inap. Sistem telah menyesuaikan kalkulasi total biaya.');
-    }
-
-    public function checkout(Request $request, $id)
-    {
-        $reservasi = Reservasi::findOrFail($id);
-
-        // JIKA RESEPSIONIS MENGUBAH TANGGAL CHECK-OUT DI DALAM MODAL DETAIL
-        if ($request->filled('tanggal_checkout')) {
-            $reservasi->check_out = \Carbon\Carbon::parse($request->tanggal_checkout)->format('Y-m-d H:i:s');
-        }
-
-        if ($request->has('detail_pembayaran')) {
-            $ekstra = is_array($reservasi->ekstra) ? $reservasi->ekstra : json_decode($reservasi->ekstra, true);
-            $ekstra['Detail Pembayaran'] = $request->detail_pembayaran;
-            $reservasi->update(['ekstra' => $ekstra]);
-        }
-
-        $reservasi->update(['status_reservasi' => 'Selesai']);
-
-        if ($reservasi->kamar_id) {
-            Kamar::where('id', $reservasi->kamar_id)->update(['status' => 'Tersedia']);
-        }
-
-        if ($request->has('print_struk') && $request->print_struk == '1') {
-            return redirect()->route('checkinout.print', $reservasi->id);
-        }
-
-        return back()->with('success', 'Proses Check-Out berhasil! Perubahan durasi menginap dan riwayat transaksi telah diperbarui.');
     }
 
     public function printStruk($id)

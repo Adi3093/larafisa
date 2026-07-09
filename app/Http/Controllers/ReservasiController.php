@@ -15,7 +15,7 @@ class ReservasiController extends Controller
     public function index(Request $request)
     {
         $tab = $request->tab ?? 'aktif';
-        $query = Reservasi::query()->with(['kamar.kelasKamar']);
+        $query = Reservasi::query()->with(['kamar.kelasKamar', 'pembayaran']);
 
         if ($tab === 'aktif') {
             $query->whereIn('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi', 'Check-In']);
