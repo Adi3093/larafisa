@@ -12,12 +12,10 @@
 
     <div class="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12">
         <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl lg:shadow-none lg:p-0 lg:bg-transparent">
-
             <div class="mb-8 text-center lg:text-left">
                 <h2 class="text-3xl font-bold text-gray-900 mb-2">Selamat Datang Kembali</h2>
                 <p class="text-gray-500 text-sm">Silakan masuk untuk mengelola reservasi kamar Anda.</p>
             </div>
-
             @if ($errors->any())
                 <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
                     <ul class="list-disc pl-5 text-sm text-red-700 font-medium">
@@ -30,7 +28,6 @@
 
             <form method="POST" action="{{ route('login') }}" class="space-y-5">
                 @csrf
-
                 <div>
                     <label for="login" class="block text-sm font-bold text-gray-700 mb-1">Username atau Email</label>
                     <div class="relative">
@@ -61,7 +58,6 @@
                             class="pl-10 w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition shadow-sm text-sm">
                     </div>
                 </div>
-
                 <button type="submit"
                     class="w-full bg-amber-600 text-white font-bold rounded-xl py-3.5 hover:bg-amber-700 focus:ring-4 focus:ring-indigo-200 transition shadow-lg transform hover:-translate-y-0.5 mt-2">
                     Masuk Sekarang
@@ -85,7 +81,6 @@
                     Kembali ke Beranda
                 </a>
             </div>
-
         </div>
     </div>
 

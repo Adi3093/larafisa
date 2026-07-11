@@ -117,4 +117,23 @@ class PakasirPaymentService
             ]);
         }
     }
+
+    public function cancelPayment($invoice)
+    {
+        $pembayaran = Pembayaran::where('invoice', $invoice)->first();
+        if (!$pembayaran) return null;
+
+        // Paksa menjadi integer murni seperti saat pembuatan
+        $amountInt = (int) $pembayaran->total;
+
+        // Tembak endpoint transactioncancel milik Pakasir
+        $response = Http::post($this->apiUrl . 'transactioncancel', [
+            'project'  => env('PAKASIR_PROJECT'),
+            'api_key'  => env('PAKASIR_API_KEY'),
+            'order_id' => $pembayaran->invoice,
+            'amount'   => $amountInt
+        ]);
+
+        return $response->json();
+    }
 }

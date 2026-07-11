@@ -13,12 +13,13 @@ class Pembayaran extends Model
         'total',
         'qr_image',
         'raw_response',
-        'status'
+        'status',
+        'expired_at',
     ];
-    // Casting raw_response agar otomatis menjadi array/JSON di Laravel
     protected $casts = [
         'raw_response' => 'array',
         'total' => 'decimal:2',
+        'expired_at' => "datetime",
     ];
 
     public function riwayat()

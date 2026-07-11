@@ -13,12 +13,13 @@ return new class extends Migration
     {
         Schema::create('pembayarans', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('reservasi_id')->constrained()->cascadeOnDelete(); // Opsional: relasi ke tabel reservasi hotel
+            $table->foreignId('reservasi_id')->constrained()->cascadeOnDelete();
             $table->string('invoice')->unique();
             $table->decimal('total', 10, 2);
-            $table->text('qr_image')->nullable(); // Menyimpan URL atau Base64 gambar QRIS
-            $table->json('raw_response')->nullable(); // Menyimpan respon asli dari Pakasir
+            $table->text('qr_image')->nullable();
+            $table->json('raw_response')->nullable();
             $table->enum('status', ['pending', 'berhasil', 'gagal', 'dibatalkan'])->default('pending');
+            $table->timestamps('expired_at')->nullable;
             $table->timestamps();
         });
     }

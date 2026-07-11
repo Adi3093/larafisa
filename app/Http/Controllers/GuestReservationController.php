@@ -187,52 +187,18 @@ class GuestReservationController extends Controller
             'reservasi_id' => $id->id,
             'invoice' => $noInvoice,
             'total' => $totalBayar,
-            'status' => 'pending'
+            'status' => 'pending',
+            'expired_at' => $checkIn,
         ]);
 
-        // 5. Jika Metode Pembayaran QRIS, Proses ke Payment Gateway Pakasir
-        // if ($request->metode_pembayaran === 'QRIS') {
-        //     $customerInfo = [
-        //         'nama' => $request->nama_tamu,
-        //         'telepon' => $request->no_hp
-        //     ];
-
-        //     // Memanggil Service: Parameter harus sesuai (Nomor Invoice, Amount, Data Tamu)
-        //     $pakasirService->createQrisPayment($noReservasi, $totalBayar, $customerInfo);
-        // }
+        // Generate QRIS Code
+        if ($request->metode_pembayaran === 'QRIS') {
+            $pakasirService->createQrisPayment($noInvoice, $totalBayar);
+        }
 
         return redirect()->route('riwayat.tamu')->with('success', "Reservasi $noReservasi berhasil dibuat! Silakan cek detail reservasi untuk rincian pembayaran.");
     }
-    // public function generateQris($id, \App\Services\PakasirPaymentService $pakasirService)
-    // {
-    //     $reservasi = Reservasi::with('kamar.kelasKamar')->findOrFail($id);
-    //     // dd($reservasi);
 
-    //     // 1. Cek apakah QRIS sudah pernah di-generate sebelumnya
-    //     $pembayaran = \App\Models\Pembayaran::where('reservasi_id', $reservasi->id)->first();
-    //     if ($pembayaran && $pembayaran->qr_image) {
-    //         return response()->json([
-    //             'success' => true,
-    //             'qr_image' => $pembayaran->qr_image,
-    //             'status' => $pembayaran->status
-    //         ]);
-    //     }
-    //     $totalBayar = $reservasi->ekstra['Total Bayar'] ?? 0;
-
-    //     $pembayaranBaru = $pakasirService->createQrisPayment($pembayaran->invoice, $totalBayar);
-    //     if ($pembayaranBaru && $pembayaranBaru->qr_image) {
-    //         return response()->json([
-    //             'success' => true,
-    //             'qr_image' => $pembayaranBaru->qr_image,
-    //             'status' => $pembayaranBaru->status
-    //         ]);
-    //     }
-
-    //     return response()->json([
-    //         'success' => false,
-    //         'message' => 'Gagal terhubung ke server Payment Gateway. Silakan coba lagi.'
-    //     ]);
-    // }
     public function generateQris($id, \App\Services\PakasirPaymentService $pakasirService)
     {
         $reservasi = Reservasi::with('kamar.kelasKamar')->findOrFail($id);
@@ -245,7 +211,8 @@ class GuestReservationController extends Controller
                 'success'  => true,
                 'qr_image' => $pembayaran->qr_image,
                 'status'   => $pembayaran->status,
-                'invoice'  => $pembayaran->invoice // <-- Tambahan ini
+                'invoice'  => $pembayaran->invoice, // <-- Tambahan ini
+                'expired_at' => $pembayaran->expired_at,
             ]);
         }
 
@@ -259,7 +226,8 @@ class GuestReservationController extends Controller
                 'success'  => true,
                 'qr_image' => $pembayaranBaru->qr_image,
                 'status'   => $pembayaranBaru->status,
-                'invoice'  => $pembayaranBaru->invoice // <-- Tambahan ini
+                'invoice'  => $pembayaranBaru->invoice, // <-- Tambahan ini
+                'expired_at' => $reservasi->check_in,
             ]);
         }
 

@@ -9,27 +9,6 @@ use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
-    // public function checkStatus($invoice, PakasirPaymentService $service)
-    // {
-    //     $result = $service->checkPayment($invoice);
-    //     $pembayaran = Pembayaran::where('invoice', $invoice)->first();
-
-    //     if (!$pembayaran) {
-    //         return response()->json(['status' => 'error', 'message' => 'Pembayaran tidak ditemukan'], 404);
-    //     }
-
-    //     // Gunakan isset untuk memastikan data aman dibaca sebelum diakses
-    //     if (isset($result['transaction']['status']) && strtolower($result['transaction']['status']) === "completed") {
-
-    //         // Cek agar tidak update berulang kali jika sudah berhasil
-    //         if ($pembayaran->status !== 'berhasil') {
-    //             $pembayaran->update(['status' => 'berhasil']);
-    //             $service->recordHistory($pembayaran->id, 'berhasil', 'Pembayaran berhasil dikonfirmasi sistem');
-    //         }
-    //     }
-
-    //     return response()->json(['status' => $pembayaran->status]);
-    // }
     public function checkStatus($invoice, PakasirPaymentService $service)
     {
         $pembayaran = Pembayaran::where('invoice', $invoice)->first();
@@ -37,6 +16,21 @@ class PaymentController extends Controller
         // Keamanan: Jika invoice tidak ada di database kita, hentikan
         if (!$pembayaran) {
             return response()->json(['status' => 'error', 'message' => 'Invoice tidak ditemukan'], 404);
+        }
+
+        if ($pembayaran->status === 'pending' && $pembayaran->expired_at && now()->greaterThan($pembayaran->expired_at)) {
+
+            // 1. Tembak API Cancel ke Pakasir agar tagihan benar-benar HANGUS di sistem mereka
+            $service->cancelPayment($invoice);
+
+            // 2. Update status di database kita menjadi gagal
+            $pembayaran->update(['status' => 'gagal']);
+            $service->recordHistory($pembayaran->id, 'gagal', 'Waktu batas check-in terlampaui. Tagihan dibatalkan otomatis dari sistem dan Gateway.');
+
+            // 3. UBAH STATUS RESERVASI MENJADI DIBATALKAN (Ini yang membuatnya pindah ke arsip)
+            $pembayaran->reservasi()->update(['status_reservasi' => 'Dibatalkan']);
+
+            return response()->json(['status' => 'gagal']);
         }
 
         // 1. Tembak API Pakasir untuk cek status terbaru
