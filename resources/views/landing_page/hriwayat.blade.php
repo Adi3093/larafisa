@@ -3,23 +3,24 @@
 
     <div class="relative z-10 min-h-screen pt-24 lg:pt-32 pb-24 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
 
+        <!-- Header Title -->
         <div class="mb-8">
             <h1 class="text-white text-3xl font-extrabold tracking-tight">Riwayat & Status Perjalanan</h1>
             <p class="text-amber-100 mt-1">Pantau perkembangan reservasi kamar Anda secara real-time.</p>
         </div>
 
+        <!-- Flash Messages -->
         @if (session('success'))
             <div
                 class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl shadow-sm font-bold">
-                ✅ {{ session('success') }}
-            </div>
+                ✅ {{ session('success') }}</div>
         @endif
         @if (session('error'))
-            <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-sm font-bold">
-                ⚠️ {{ session('error') }}
-            </div>
+            <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-sm font-bold">⚠️
+                {{ session('error') }}</div>
         @endif
 
+        <!-- Logika Progress Bar -->
         @php
             $currentStep = 1;
             if ($isLoggedIn && $pesananAktif) {
@@ -38,14 +39,15 @@
             }
         @endphp
 
+        <!-- Tampilan Progress Bar -->
         <div class="bg-white rounded-3xl shadow-xl border border-amber-100 p-6 sm:px-10 pt-12 mb-8 overflow-hidden">
             <h2 class="sr-only">Steps</h2>
-
             <div class="relative flex items-center justify-between w-full">
                 <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1.5 bg-gray-100 rounded-lg z-0"></div>
                 <div class="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 bg-amber-500 rounded-lg z-0 transition-all duration-700 ease-in-out"
                     style="width: {{ (($currentStep - 1) / 4) * 100 }}%"></div>
 
+                <!-- Step 1 -->
                 <div class="relative z-10 flex justify-center items-center">
                     <span
                         class="absolute -top-8 sm:-start-2 text-[10px] sm:text-xs font-bold {{ $currentStep >= 1 ? 'text-amber-600' : 'text-gray-400' }} whitespace-nowrap">Reservasi</span>
@@ -62,7 +64,7 @@
                         @endif
                     </div>
                 </div>
-
+                <!-- Step 2 -->
                 <div class="relative z-10 flex justify-center items-center">
                     <span
                         class="absolute -top-8 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-bold {{ $currentStep >= 2 ? 'text-amber-600' : 'text-gray-400' }} whitespace-nowrap">Pembayaran</span>
@@ -79,7 +81,7 @@
                         @endif
                     </div>
                 </div>
-
+                <!-- Step 3 -->
                 <div class="relative z-10 flex justify-center items-center">
                     <span
                         class="absolute -top-8 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-bold {{ $currentStep >= 3 ? 'text-amber-600' : 'text-gray-400' }} whitespace-nowrap">Konfirmasi</span>
@@ -96,7 +98,7 @@
                         @endif
                     </div>
                 </div>
-
+                <!-- Step 4 -->
                 <div class="relative z-10 flex justify-center items-center">
                     <span
                         class="absolute -top-8 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-bold {{ $currentStep >= 4 ? 'text-amber-600' : 'text-gray-400' }} whitespace-nowrap">Check-In</span>
@@ -113,7 +115,7 @@
                         @endif
                     </div>
                 </div>
-
+                <!-- Step 5 -->
                 <div class="relative z-10 flex justify-center items-center">
                     <span
                         class="absolute -top-8 right-0 sm:auto sm:-end-2 text-[10px] sm:text-xs font-bold {{ $currentStep >= 5 ? 'text-amber-600' : 'text-gray-400' }} whitespace-nowrap">Check-Out</span>
@@ -133,15 +135,13 @@
             </div>
         </div>
 
+        <!-- Pesanan Aktif -->
         <h2 class="font-bold text-amber-950 text-xl mb-4 px-1">Pesanan Aktif Saat Ini</h2>
-
         <div class="bg-white rounded-3xl shadow-md border border-amber-100 p-6 sm:p-8 mb-10">
             @if (!$isLoggedIn)
                 <div class="text-center py-6">
                     <span class="text-5xl block mb-4">🔒</span>
                     <h3 class="text-lg font-extrabold text-amber-950">Akses Riwayat Terkunci</h3>
-                    <p class="text-sm text-gray-500 max-w-sm mx-auto mt-2 leading-relaxed">Silakan masuk ke dalam akun
-                        Anda atau daftarkan diri terlebih dahulu untuk melihat perkembangan riwayat reservasi.</p>
                     <div class="mt-6 flex justify-center gap-3">
                         <a href="{{ route('login') }}"
                             class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 px-6 rounded-xl text-sm transition">Log
@@ -155,8 +155,6 @@
                 <div class="text-center py-8">
                     <span class="text-5xl block mb-4">📭</span>
                     <h3 class="text-lg font-extrabold text-amber-950">Tidak Ada Pesanan yang Berjalan</h3>
-                    <p class="text-sm text-gray-500 max-w-md mx-auto mt-2 leading-relaxed">Lakukan reservasi sekarang
-                        dan pilih tipe kamar impian Anda untuk menikmati pelayanan terbaik dari kami.</p>
                     <div class="mt-6">
                         <a href="{{ route('reservasi.tamu') }}"
                             class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-8 rounded-xl text-sm transition shadow-md shadow-amber-600/20">Mulai
@@ -209,6 +207,7 @@
             @endif
         </div>
 
+        <!-- Arsip Riwayat -->
         <h2 class="font-bold text-amber-950 text-xl mb-4 px-1">Arsip Riwayat Reservasi</h2>
         <div class="bg-white rounded-3xl shadow-sm border border-amber-200 overflow-hidden">
             <div class="overflow-x-auto">
@@ -237,16 +236,9 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    @php
-                                        $color =
-                                            $history->status_reservasi === 'Selesai'
-                                                ? 'bg-gray-100 text-gray-700 border-gray-200'
-                                                : 'bg-red-50 text-red-700 border-red-100';
-                                    @endphp
+                                    @php $color = $history->status_reservasi === 'Selesai' ? 'bg-gray-100 text-gray-700 border-gray-200' : 'bg-red-50 text-red-700 border-red-100'; @endphp
                                     <span
-                                        class="inline-block px-2.5 py-1 text-[10px] font-bold rounded-lg {{ $color }} border uppercase tracking-wider">
-                                        {{ $history->status_reservasi }}
-                                    </span>
+                                        class="inline-block px-2.5 py-1 text-[10px] font-bold rounded-lg {{ $color }} border uppercase tracking-wider">{{ $history->status_reservasi }}</span>
                                 </td>
                             </tr>
                         @empty
@@ -261,74 +253,13 @@
         </div>
     </div>
 
-    <div id="modalUbahJadwal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-sm"
-        aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
-            <div
-                class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-sm">
-
-                <div class="bg-amber-600 px-6 py-4 flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-white">Ubah Jadwal Menginap</h3>
-                    <button onclick="document.getElementById('modalUbahJadwal').classList.add('hidden')"
-                        class="text-amber-100 hover:text-white transition">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="bg-white px-6 pb-4 pt-5">
-                    <form id="formUbahJadwal" method="POST" action="">
-                        @csrf @method('PUT')
-
-                        <div class="grid grid-cols-1 gap-4 mb-2">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Check-In Baru</label>
-                                <input type="datetime-local" name="check_in" id="edit_check_in" required
-                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm transition focus:ring-amber-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Check-Out Baru</label>
-                                <input type="datetime-local" name="check_out" id="edit_check_out" required
-                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm transition focus:ring-amber-500">
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="bg-gray-50 px-6 py-4 flex flex-row-reverse border-t border-gray-100">
-                    <button type="submit" form="formUbahJadwal"
-                        class="rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-amber-700 ml-3 transition w-full sm:w-auto">
-                        Terapkan
-                    </button>
-                    <button type="button"
-                        onclick="document.getElementById('modalUbahJadwal').classList.add('hidden')"
-                        class="rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-gray-900 shadow-sm border border-gray-300 hover:bg-gray-50 transition w-full sm:w-auto mt-3 sm:mt-0">
-                        Batal
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function bukaModalUbahJadwal(idRes, checkIn, checkOut) {
-            document.getElementById('formUbahJadwal').action = `/reservasi-online/${idRes}/update`;
-            document.getElementById('edit_check_in').value = checkIn;
-            document.getElementById('edit_check_out').value = checkOut;
-            document.getElementById('modalUbahJadwal').classList.remove('hidden');
-        }
-    </script>
-
+    <!-- Modal Detail Pembayaran -->
     @if ($isLoggedIn && $pesananAktif)
         <div id="modalDetail" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-sm"
             aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
                 <div
                     class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-4xl border border-gray-200">
-
                     <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                         <h3 class="text-xl font-bold text-gray-900">Detail dan Reservasi Tamu</h3>
                         <button onclick="handleCloseModal()" class="text-gray-400 hover:text-red-500 transition">
@@ -340,9 +271,7 @@
                     </div>
 
                     <div class="flex flex-col md:flex-row p-6 gap-8 bg-white">
-
                         <div class="w-full md:w-1/2 space-y-5">
-
                             <div>
                                 <div class="flex justify-between items-end border-b border-gray-300 pb-2 mb-3">
                                     <h4 class="text-lg font-bold text-gray-800">Informasi Tamu</h4>
@@ -355,7 +284,6 @@
                                     <p>Jumlah Tamu : {{ $pesananAktif->ekstra['Jumlah Anggota'] ?? 1 }} Orang</p>
                                 </div>
                             </div>
-
                             <div>
                                 <div class="border-b border-gray-300 pb-2 mb-3">
                                     <h4 class="text-lg font-bold text-gray-800">Informasi Pesanan</h4>
@@ -380,7 +308,6 @@
                                         class="font-bold">{{ $pesananAktif->kamar?->kelasKamar?->nama_kelas ?? '-' }}</span>
                                 </p>
                             </div>
-
                             <div>
                                 <div class="border-b border-gray-300 pb-2 mb-3">
                                     <h4 class="text-lg font-bold text-gray-800">Layanan Extra</h4>
@@ -390,39 +317,20 @@
                                     <p>Extra Selimut x{{ $pesananAktif->ekstra['Extra Selimut'] ?? 0 }}</p>
                                 </div>
                             </div>
-
-                            <div>
-                                <div class="border-b border-gray-300 pb-2 mb-3">
-                                    <h4 class="text-lg font-bold text-gray-800">Pesan dari Tamu</h4>
-                                </div>
-                                <div
-                                    class="border border-gray-300 rounded-xl p-4 min-h-[100px] text-sm text-gray-600 bg-gray-50">
-                                    {{ $pesananAktif->ekstra['Pesan Tambahan'] !== '-' ? $pesananAktif->ekstra['Pesan Tambahan'] : 'Tidak ada pesan tambahan.' }}
-                                </div>
-                            </div>
                         </div>
 
+                        <!-- Area Pembayaran Sisi Kanan -->
                         <div class="w-full md:w-1/2 md:border-l md:border-gray-300 md:pl-8 flex flex-col h-full">
-
                             <div class="border-b border-gray-300 pb-2 mb-4">
                                 <h4 class="text-xl font-bold text-gray-800">Detail Pembayaran</h4>
                             </div>
 
                             <div class="space-y-2 text-sm text-gray-700 font-medium mb-6">
-                                <div class="flex justify-between"><span>Kelas Kamar</span>
-                                    <span>{{ $pesananAktif->kamar?->kelasKamar?->nama_kelas ?? '-' }}</span>
+                                <div class="flex justify-between"><span>Kelas
+                                        Kamar</span><span>{{ $pesananAktif->kamar?->kelasKamar?->nama_kelas ?? '-' }}</span>
                                 </div>
-                                <div class="flex justify-between"><span>Tanggal Check-in</span>
-                                    <span>{{ \Carbon\Carbon::parse($pesananAktif->check_in)->translatedFormat('d M Y') }}</span>
-                                </div>
-                                <div class="flex justify-between"><span>Tanggal Check-out</span>
-                                    <span>{{ \Carbon\Carbon::parse($pesananAktif->check_out)->translatedFormat('d M Y') }}</span>
-                                </div>
-                                <div class="flex justify-between"><span>Biaya Extra Bed</span> <span>Rp
-                                        {{ number_format(($pesananAktif->ekstra['Extra Bed'] ?? 0) * 100000, 0, ',', '.') }}</span>
-                                </div>
-                                <div class="flex justify-between"><span>Biaya Extra Selimut</span> <span>Rp
-                                        {{ number_format(($pesananAktif->ekstra['Extra Selimut'] ?? 0) * 25000, 0, ',', '.') }}</span>
+                                <div class="flex justify-between"><span>Tanggal
+                                        Check-in</span><span>{{ \Carbon\Carbon::parse($pesananAktif->check_in)->translatedFormat('d M Y') }}</span>
                                 </div>
                                 <div
                                     class="flex justify-between font-bold text-amber-600 pt-2 border-t border-gray-100">
@@ -434,25 +342,20 @@
 
                             <div class="mb-4">
                                 @if (isset($pembayaranAktif))
-                                    <p class="text-xs text-gray-500 font-bold mb-1">
-                                        Code Pembayaran: <span
-                                            class="text-amber-600">#{{ $pembayaranAktif->invoice }}</span>
-                                    </p>
+                                    <p class="text-xs text-gray-500 font-bold mb-1">Code Pembayaran: <span
+                                            class="text-amber-600">#{{ $pembayaranAktif->invoice }}</span></p>
                                 @endif
-                                <h3 class="text-lg font-black text-gray-900 border-b border-gray-200 pb-4">
-                                    Total Pembayaran : Rp.
-                                    {{ number_format($pesananAktif->ekstra['Total Bayar'] ?? 0, 0, ',', '.') }}
-                                </h3>
+                                <h3 class="text-lg font-black text-gray-900 border-b border-gray-200 pb-4">Total
+                                    Pembayaran : Rp.
+                                    {{ number_format($pesananAktif->ekstra['Total Bayar'] ?? 0, 0, ',', '.') }}</h3>
                             </div>
 
                             @if (isset($pesananAktif->ekstra['Metode Pembayaran']) && $pesananAktif->ekstra['Metode Pembayaran'] === 'QRIS')
-
                                 <div class="flex flex-col flex-grow justify-end space-y-4">
                                     <div
                                         class="border-2 border-gray-300 rounded-2xl flex-grow min-h-[220px] flex items-center justify-center bg-gray-50 p-4">
                                         <div id="qrisContainer"
                                             class="text-center w-full flex flex-col items-center justify-center">
-
                                             @if (isset($pembayaranAktif) && $pembayaranAktif->status === 'berhasil')
                                                 <div class="text-center w-full animate-fade-in">
                                                     <div
@@ -467,15 +370,9 @@
                                                     </div>
                                                     <h4 class="font-black text-green-700 text-xl">Pembayaran Berhasil!
                                                     </h4>
-                                                    <p class="text-sm text-gray-500 mt-1">Sistem telah mengkonfirmasi
-                                                        pembayaran Anda. Silakan tunjukkan detail ini saat Check-In.</p>
                                                 </div>
                                             @elseif (isset($pembayaranAktif) && $pembayaranAktif->qr_image)
-                                                @php
-                                                    $qrUrl =
-                                                        'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' .
-                                                        urlencode($pembayaranAktif->qr_image);
-                                                @endphp
+                                                @php $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' . urlencode($pembayaranAktif->qr_image); @endphp
                                                 <div class="animate-fade-in flex flex-col items-center w-full">
                                                     <div class="mb-3 text-center w-full">
                                                         <p
@@ -487,7 +384,6 @@
                                                     </div>
                                                     <img src="{{ $qrUrl }}" alt="QRIS"
                                                         class="w-44 h-44 object-contain shadow-sm border border-gray-200 rounded-xl bg-white p-2 mx-auto">
-
                                                     <button type="button"
                                                         onclick="downloadQR('{{ $qrUrl }}', '{{ $pembayaranAktif->invoice }}')"
                                                         class="mt-4 w-full bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-300 font-bold py-2 px-4 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-2">
@@ -501,11 +397,7 @@
                                                         Download Gambar QRIS
                                                     </button>
                                                 </div>
-                                            @else
-                                                <span id="qrisPlaceholder"
-                                                    class="text-3xl text-gray-300 font-black tracking-widest uppercase">QRIS</span>
                                             @endif
-
                                         </div>
                                     </div>
                                 </div>
@@ -518,159 +410,11 @@
                                         resepsionis.</p>
                                 </div>
                             @endif
-
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <script>
-            let paymentInterval = null;
-            let timerInterval = null;
-            let paymentIsExpired = false; // Flag untuk menandai status expired
-
-            // 1. FUNGSI CLOSE MODAL CERDAS
-            function handleCloseModal() {
-                const modal = document.getElementById('modalDetail');
-
-                // Jika waktu habis (expired), tutup modal lalu refresh halaman
-                if (paymentIsExpired) {
-                    modal.classList.add('hidden');
-                    window.location.reload(); // Refresh agar reservasi pindah ke arsip
-                } else {
-                    // Jika belum expired, tutup biasa saja
-                    modal.classList.add('hidden');
-                }
-            }
-
-            // 2. FUNGSI COUNTDOWN TIMER
-            function startCountdown(expiredAtStr) {
-                if (timerInterval) clearInterval(timerInterval);
-
-                const safeDateStr = expiredAtStr.replace(' ', 'T');
-                const countDownDate = new Date(safeDateStr).getTime();
-                const timerDisplay = document.getElementById("qrisTimer");
-
-                if (!timerDisplay) return;
-
-                timerInterval = setInterval(function() {
-                    const now = new Date().getTime();
-                    const distance = countDownDate - now;
-
-                    if (distance > 3600000) {
-                        timerDisplay.innerHTML = "⏳ Menunggu Jendela Pembayaran (Aktif H-1 Jam)";
-                        timerDisplay.className =
-                            "text-[11px] font-bold text-amber-800 border border-amber-200 bg-amber-50 rounded-lg py-1 px-3 inline-block";
-                    } else if (distance >= 0) {
-                        timerDisplay.className =
-                            "text-xl font-black text-red-600 tracking-widest border border-red-200 bg-red-50 rounded-lg py-1 px-3 inline-block animate-pulse";
-
-                        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                        timerDisplay.innerHTML =
-                            (hours < 10 ? "0" + hours : hours) + ":" +
-                            (minutes < 10 ? "0" + minutes : minutes) + ":" +
-                            (seconds < 10 ? "0" + seconds : seconds);
-                    } else {
-                        // KONDISI EXPIRED (WAKTU HABIS)
-                        clearInterval(timerInterval);
-                        paymentIsExpired = true; // Set flag menjadi true
-
-                        timerDisplay.innerHTML = "❌ KEDALUWARSA / WAKTU HABIS";
-                        timerDisplay.className =
-                            "text-xs font-black text-gray-500 tracking-wider border border-gray-200 bg-gray-100 rounded-lg py-1 px-3 inline-block";
-
-                        // Hapus QRIS dan tombol download agar tamu tahu tidak bisa bayar lagi
-                        const container = document.getElementById('qrisContainer');
-                        if (container) {
-                            container.innerHTML = `
-                                <div class="text-center w-full animate-fade-in p-6 bg-red-50 rounded-2xl border border-red-200">
-                                    <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                                        <span class="text-2xl">❌</span>
-                                    </div>
-                                    <h4 class="font-black text-red-700 text-lg mb-1">Pembayaran Kedaluwarsa</h4>
-                                    <p class="text-xs text-red-600/80 font-medium">Waktu batas check-in telah terlampaui. Reservasi ini otomatis dibatalkan.</p>
-                                    <p class="text-[10px] text-gray-400 mt-3 italic">Silakan tutup menu ini untuk memperbarui riwayat Anda.</p>
-                                </div>
-                            `;
-                        }
-
-                        const displayStatus = document.getElementById('statusPaymentDisplay');
-                        if (displayStatus) {
-                            displayStatus.innerText = "GAGAL / KEDALUWARSA";
-                            displayStatus.className = "text-red-600 font-bold uppercase";
-                        }
-                    }
-                }, 1000);
-            }
-
-            // 3. FUNGSI DOWNLOAD GAMBAR
-            async function downloadQR(imageUrl, invoiceNo) {
-                try {
-                    const response = await fetch(imageUrl);
-                    const blob = await response.blob();
-                    const blobUrl = window.URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = blobUrl;
-                    link.download = `QRIS-${invoiceNo}.png`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    window.URL.revokeObjectURL(blobUrl);
-                } catch (e) {
-                    alert('Gagal mengunduh gambar.');
-                }
-            }
-
-            // 4. FUNGSI CEK STATUS REALTIME
-            function startPaymentCheck(invoice) {
-                if (paymentInterval) clearInterval(paymentInterval);
-                const statusDisplay = document.getElementById('statusPaymentDisplay');
-                const container = document.getElementById('qrisContainer');
-
-                paymentInterval = setInterval(async () => {
-                    try {
-                        const res = await fetch(`/payment/check/${invoice}`);
-                        const data = await res.json();
-
-                        if (data.status === "berhasil") {
-                            clearInterval(paymentInterval);
-                            if (timerInterval) clearInterval(timerInterval);
-
-                            if (statusDisplay) {
-                                statusDisplay.innerHTML = "BERHASIL (PAID)";
-                                statusDisplay.className = "text-green-600 font-black uppercase";
-                            }
-
-                            if (container) {
-                                container.innerHTML = `
-                                    <div class="text-center w-full animate-fade-in">
-                                        <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border-4 border-white ring-2 ring-green-100">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" viewBox="0 0 24 24">
-                                                <path fill="currentColor" d="M10.5 15.25A.74.74 0 0 1 10 15l-3-3a.75.75 0 0 1 1-1l2.47 2.47L19 5a.75.75 0 0 1 1 1l-9 9a.74.74 0 0 1-.5.25Z"/><path fill="currentColor" d="M12 21a9 9 0 0 1-7.87-4.66a8.67 8.67 0 0 1-1.07-3.41a9 9 0 0 1 4.6-8.81a8.67 8.67 0 0 1 3.41-1.07a8.86 8.86 0 0 1 3.55.34a.75.75 0 1 1-.43 1.43a7.62 7.62 0 0 0-3-.28a7.43 7.43 0 0 0-2.84.89a7.5 7.5 0 0 0-2.2 1.84a7.42 7.42 0 0 0-1.64 5.51a7.43 7.43 0 0 0 .89 2.84a7.5 7.5 0 0 0 1.84 2.2a7.42 7.42 0 0 0 5.51 1.64a7.43 7.43 0 0 0 2.84-.89a7.5 7.5 0 0 0 2.2-1.84a7.42 7.42 0 0 0 1.64-5.51a.75.75 0 1 1 1.57-.15a9 9 0 0 1-4.61 8.81A8.67 8.67 0 0 1 12.93 21H12Z"/></svg>
-                                        </div>
-                                        <h4 class="font-black text-green-700 text-xl">Pembayaran Lunas!</h4>
-                                        <p class="text-sm text-gray-500 mt-1">Sistem telah mengkonfirmasi pembayaran Anda. Silakan tunjukkan detail ini saat Check-In.</p>
-                                    </div>
-                                `;
-                            }
-                        } else if (data.status === "gagal") {
-                            // Jika controller menyatakan gagal (expired di backend), set flag true
-                            paymentIsExpired = true;
-                        }
-                    } catch (error) {}
-                }, 5000);
-            }
-
-            // TRIGGER ENGINE SAAT HALAMAN DI-RELOAD
-            @if (isset($pembayaranAktif) && $pembayaranAktif->status === 'pending' && $pembayaranAktif->qr_image)
-                startPaymentCheck("{{ $pembayaranAktif->invoice }}");
-                startCountdown("{{ $pembayaranAktif->expired_at }}");
-            @endif
-        </script>
 
         <style>
             @keyframes fadeIn {
@@ -689,64 +433,18 @@
                 animation: fadeIn 0.5s ease-out forwards;
             }
         </style>
-    @endif
 
-    <script>
-        let currentKamarId = null;
+        <!-- Pemanggilan File JS Eksternal (DIJAMIN BERSIH) -->
+        <script src="{{ asset('js/landingpage/hriwayat.js') }}?v={{ time() }}"></script>
 
-        function bukaModalUbahJadwal(idRes, metode, checkIn, checkOut, kelasId, kamarId) {
-            document.getElementById('formUbahJadwal').action = `/reservasi-online/${idRes}/update`;
-            document.getElementById('edit_check_in').value = checkIn;
-            document.getElementById('edit_check_out').value = checkOut;
-            let kelasEl = document.getElementById('edit_kelas_kamar_id');
-            let kamarEl = document.getElementById('edit_kamar_id');
-
-            kelasEl.value = kelasId;
-            currentKamarId = kamarId;
-            if (metode === 'Transfer' || metode === 'Q-RIS') {
-                kelasEl.disabled = true;
-                kamarEl.disabled = true;
-                document.getElementById('lockWarning').classList.remove('hidden');
-            } else {
-                kelasEl.disabled = false;
-                kamarEl.disabled = false;
-                document.getElementById('lockWarning').classList.add('hidden');
-            }
-
-            fetchKamarEdit();
-            document.getElementById('modalUbahJadwal').classList.remove('hidden');
-        }
-
-        async function fetchKamarEdit() {
-            const kelasId = document.getElementById('edit_kelas_kamar_id').value;
-            const checkIn = document.getElementById('edit_check_in').value;
-            const checkOut = document.getElementById('edit_check_out').value;
-            const kamarSelect = document.getElementById('edit_kamar_id');
-
-            if (!kelasId || !checkIn || !checkOut) return;
-
-            kamarSelect.innerHTML = '<option value="">Sedang memuat ruangan...</option>';
-            try {
-                let response = await fetch(
-                    `/api/kamar-tersedia?kelas_id=${kelasId}&check_in=${checkIn}&check_out=${checkOut}`);
-                let kamars = await response.json();
-
-                kamarSelect.innerHTML = '<option value="">-- Pilih Kamar --</option>';
-                kamars.forEach(kmr => {
-                    let opt = document.createElement('option');
-                    opt.value = kmr.id;
-                    opt.text = 'Kamar ' + kmr.nomor_ruangan;
-                    if (kmr.id == currentKamarId) opt.selected = true;
-                    kamarSelect.appendChild(opt);
+        <!-- Pemicu Engine JS Khusus Saat Halaman Baru Dimuat -->
+        @if (isset($pembayaranAktif) && $pembayaranAktif->status === 'pending' && $pembayaranAktif->qr_image)
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    startPaymentCheck("{{ $pembayaranAktif->invoice }}");
+                    startCountdown("{{ $pembayaranAktif->expired_at }}");
                 });
-                if (kamarSelect.selectedIndex === 0 && currentKamarId !== null) {
-                    kamarSelect.innerHTML +=
-                        `<option value="" disabled class="text-red-500">Ruangan lama Anda (#${currentKamarId}) penuh di jadwal ini</option>`;
-                }
-
-            } catch (error) {
-                kamarSelect.innerHTML = '<option value="">Gagal memuat sistem kamar</option>';
-            }
-        }
-    </script>
+            </script>
+        @endif
+    @endif
 </x-lplayout>

@@ -67,7 +67,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 border-b border-amber-100 pb-4">
                 <div class="md:col-span-1">
-                    <select name="periode" onchange="document.getElementById('formPendapatan').submit()"
+                    <select name="periode" id="filterPeriode"
                         class="w-full border border-amber-200 rounded-xl shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm bg-amber-50 text-amber-950 font-bold transition">
                         <option value="mingguan" {{ $periode == 'mingguan' ? 'selected' : '' }}>Mingguan</option>
                         <option value="bulanan" {{ $periode == 'bulanan' ? 'selected' : '' }}>Bulanan</option>
@@ -82,7 +82,7 @@
                         class="flex items-center gap-2 px-5 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl font-bold text-sm hover:bg-emerald-100 transition shadow-sm">
                         📊 CSV
                     </a>
-                    <button type="button" onclick="window.print()"
+                    <button type="button" id="btnPrintLaporan"
                         class="flex items-center gap-2 px-6 py-2.5 bg-gray-800 text-white rounded-xl font-bold text-sm hover:bg-gray-900 transition shadow-md">
                         🖨️ Print Laporan
                     </button>
@@ -205,7 +205,7 @@
                         <input type="hidden" name="end_date" value="{{ request('end_date') }}">
                     @endif
 
-                    <select name="per_page" onchange="document.getElementById('formPerPage').submit()"
+                    <select name="per_page" id="filterPerPage"
                         class="border border-amber-200 rounded-lg text-sm bg-amber-50 focus:ring-amber-500 focus:border-amber-500 font-bold text-amber-800 py-2 px-3 shadow-sm">
                         <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10 Baris</option>
                         <option value="15" {{ $perPage == 15 ? 'selected' : '' }}>15 Baris</option>
@@ -218,4 +218,6 @@
             </div>
         </div>
     @endif
+
+    <script src="{{ asset('js/dashboard/pendapatan.js') }}?v={{ time() }}"></script>
 </x-dblayout>

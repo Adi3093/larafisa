@@ -20,17 +20,13 @@
 
         <div class="flex flex-col lg:flex-row gap-8 items-start" x-data="{ qrisGenerated: false, showQrisLoading: false }">
 
-            <!-- BAGIAN KIRI: FORMULIR -->
             <div class="flex-1 w-full bg-white rounded-3xl shadow-xl border border-amber-100 p-6 sm:p-8">
-
                 @if (!$isLoggedIn)
                     <div class="text-center py-16">
                         <span class="text-6xl block mb-6">🔐</span>
                         <h3 class="text-2xl font-black text-amber-950 mb-2">Login Diperlukan</h3>
-                        <p class="text-base text-gray-500 max-w-md mx-auto leading-relaxed mb-8">
-                            Untuk melanjutkan proses pemesanan kamar hotel, silakan masuk ke dalam akun Anda atau
-                            daftarkan diri terlebih dahulu jika belum memiliki akun.
-                        </p>
+                        <p class="text-base text-gray-500 max-w-md mx-auto leading-relaxed mb-8">Untuk melanjutkan
+                            proses pemesanan kamar hotel, silakan masuk ke dalam akun Anda.</p>
                         <div class="flex flex-col sm:flex-row justify-center gap-3">
                             <a href="{{ route('login') }}"
                                 class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-8 rounded-xl transition shadow-md shadow-amber-600/30">Log
@@ -43,8 +39,6 @@
                 @else
                     <form action="{{ route('reservasi.tamu.store') }}" method="POST" id="formReservasi">
                         @csrf
-
-                        <!-- 1. PILIH KAMAR & ANGGOTA -->
                         <div class="border border-amber-200 rounded-2xl p-5 mb-6">
                             <h3 class="font-bold text-amber-950 mb-4 border-b border-amber-100 pb-2 text-lg">1. Pilih
                                 Kamar</h3>
@@ -62,8 +56,6 @@
                                         <button type="button" onclick="adjustAnggota(1)"
                                             class="px-4 py-2.5 font-bold text-gray-600 hover:bg-amber-50 text-lg leading-none transition">&plus;</button>
                                     </div>
-                                    <p class="text-[10px] text-gray-400 mt-1">*Jika membawa lebih dari 2 orang, sistem
-                                        akan otomatis mencocokkan kamar berkapasitas 2 orang.</p>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-gray-700 mb-2">Pilih Kelas Kamar</label>
@@ -88,7 +80,6 @@
                             </div>
                         </div>
 
-                        <!-- 2. DURASI MENGINAP -->
                         <div class="border border-amber-200 rounded-2xl p-5 mb-6">
                             <h3 class="font-bold text-amber-950 mb-4 border-b border-amber-100 pb-2 text-lg">2. Durasi
                                 Menginap</h3>
@@ -99,57 +90,42 @@
                                     <option value="1">1 Malam dari sekarang</option>
                                     <option value="2">2 Malam dari sekarang</option>
                                     <option value="3">3 Malam dari sekarang</option>
-                                    <option value="7">1 Minggu dari sekarang</option>
                                     <option value="custom" selected>Atur Manual di bawah</option>
                                 </select>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1">Check-in</label>
-                                    <input type="datetime-local" name="check_in" id="check_in"
+                                <div><label class="block text-xs font-bold text-gray-700 mb-1">Check-in</label><input
+                                        type="datetime-local" name="check_in" id="check_in"
                                         value="{{ $checkin }}" onchange="resetShortcut(); hitungTotal()" required
-                                        class="w-full border border-gray-300 rounded-xl p-3 shadow-sm focus:ring-amber-500 font-medium">
+                                        class="w-full border border-gray-300 rounded-xl p-3 shadow-sm focus:ring-amber-500">
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1">Check-out</label>
-                                    <input type="datetime-local" name="check_out" id="check_out"
+                                <div><label class="block text-xs font-bold text-gray-700 mb-1">Check-out</label><input
+                                        type="datetime-local" name="check_out" id="check_out"
                                         value="{{ $checkout }}" onchange="resetShortcut(); hitungTotal()" required
-                                        class="w-full border border-gray-300 rounded-xl p-3 shadow-sm focus:ring-amber-500 font-medium">
+                                        class="w-full border border-gray-300 rounded-xl p-3 shadow-sm focus:ring-amber-500">
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 3. IDENTITAS PEMESAN -->
                         <div class="border border-amber-200 rounded-2xl p-5 mb-6">
                             <h3 class="font-bold text-amber-950 mb-4 border-b border-amber-100 pb-2 text-lg">3.
-                                Identitas Pemesan Utama</h3>
+                                Identitas Pemesan</h3>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1">No. KTP (NIK)</label>
-                                    <input type="text" name="no_ktp" value="{{ $user->no_ktp ?? '' }}" required
-                                        maxlength="16" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                        class="w-full border border-gray-300 rounded-xl p-3 text-gray-900 shadow-sm focus:ring-amber-500 focus:border-amber-500">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1">No. HP / WhatsApp</label>
-                                    <input type="text" name="no_hp" required maxlength="15"
+                                <div><label class="block text-xs font-bold text-gray-700 mb-1">No. KTP
+                                        (NIK)</label><input type="text" name="no_ktp"
+                                        value="{{ $user->no_ktp ?? '' }}" required maxlength="16"
                                         oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                        placeholder="Cth: 0812345678"
-                                        class="w-full border border-gray-300 rounded-xl p-3 text-gray-900 shadow-sm focus:ring-amber-500 focus:border-amber-500">
-                                </div>
+                                        class="w-full border border-gray-300 rounded-xl p-3 shadow-sm"></div>
+                                <div><label class="block text-xs font-bold text-gray-700 mb-1">No. HP /
+                                        WhatsApp</label><input type="text" name="no_hp" required maxlength="15"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                        class="w-full border border-gray-300 rounded-xl p-3 shadow-sm"></div>
                             </div>
-                            <div class="grid grid-cols-1 gap-5">
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1">Nama Lengkap Sesuai
-                                        KTP</label>
-                                    <input type="text" name="nama_tamu" value="{{ $user->name ?? '' }}" required
-                                        placeholder="Nama Anda..."
-                                        class="w-full border border-gray-300 rounded-xl p-3 text-gray-900 shadow-sm focus:ring-amber-500 focus:border-amber-500">
-                                </div>
-                            </div>
+                            <div><label class="block text-xs font-bold text-gray-700 mb-1">Nama Lengkap</label><input
+                                    type="text" name="nama_tamu" value="{{ $user->name ?? '' }}" required
+                                    class="w-full border border-gray-300 rounded-xl p-3 shadow-sm"></div>
                         </div>
 
-                        <!-- 4. LAYANAN EKSTRA -->
                         <div class="border border-amber-200 rounded-2xl p-5 mb-6">
                             <h3 class="font-bold text-amber-950 mb-4 border-b border-amber-100 pb-2 text-lg">4. Layanan
                                 Ekstra</h3>
@@ -157,404 +133,113 @@
                                 <div
                                     class="flex items-center justify-between p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
                                     <p class="text-sm font-bold text-gray-800">Ekstra Bed (+Rp 100k)</p>
-                                    <div class="flex items-center border border-gray-300 rounded-lg bg-gray-50">
-                                        <button type="button" onclick="adjustEkstra('extra_bed', -1)"
-                                            class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200 transition">&minus;</button>
-                                        <input type="number" name="extra_bed" id="extra_bed" value="0"
-                                            readonly
-                                            class="w-10 text-center bg-transparent border-none text-sm font-bold p-0 focus:ring-0">
-                                        <button type="button" onclick="adjustEkstra('extra_bed', 1)"
-                                            class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200 transition">&plus;</button>
+                                    <div class="flex items-center border border-gray-300 rounded-lg bg-gray-50"><button
+                                            type="button" onclick="adjustEkstra('extra_bed', -1)"
+                                            class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200">&minus;</button><input
+                                            type="number" name="extra_bed" id="extra_bed" value="0" readonly
+                                            class="w-10 text-center bg-transparent border-none text-sm font-bold p-0 focus:ring-0"><button
+                                            type="button" onclick="adjustEkstra('extra_bed', 1)"
+                                            class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200">&plus;</button>
                                     </div>
                                 </div>
                                 <div
                                     class="flex items-center justify-between p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
                                     <p class="text-sm font-bold text-gray-800">Extra Selimut (+Rp 25k)</p>
-                                    <div class="flex items-center border border-gray-300 rounded-lg bg-gray-50">
-                                        <button type="button" onclick="adjustEkstra('extra_selimut', -1)"
-                                            class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200 transition">&minus;</button>
-                                        <input type="number" name="extra_selimut" id="extra_selimut" value="0"
+                                    <div class="flex items-center border border-gray-300 rounded-lg bg-gray-50"><button
+                                            type="button" onclick="adjustEkstra('extra_selimut', -1)"
+                                            class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200">&minus;</button><input
+                                            type="number" name="extra_selimut" id="extra_selimut" value="0"
                                             readonly
-                                            class="w-10 text-center bg-transparent border-none text-sm font-bold p-0 focus:ring-0">
-                                        <button type="button" onclick="adjustEkstra('extra_selimut', 1)"
-                                            class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200 transition">&plus;</button>
+                                            class="w-10 text-center bg-transparent border-none text-sm font-bold p-0 focus:ring-0"><button
+                                            type="button" onclick="adjustEkstra('extra_selimut', 1)"
+                                            class="px-3 py-1 font-bold text-gray-600 hover:bg-gray-200">&plus;</button>
                                     </div>
                                 </div>
                             </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-2">Pesan Tambahan
-                                    (Opsional)</label>
-                                <textarea name="pesan_tambahan" rows="3" placeholder="Tuliskan permintaan khusus atau catatan Anda disini..."
-                                    class="w-full border border-gray-300 rounded-xl p-3 shadow-sm focus:border-amber-500 focus:ring-amber-500 text-sm resize-none"></textarea>
-                            </div>
+                            <textarea name="pesan_tambahan" rows="3" placeholder="Pesan tambahan..."
+                                class="w-full border border-gray-300 rounded-xl p-3 text-sm resize-none"></textarea>
                         </div>
 
-                        <!-- 5. PEMBAYARAN -->
                         <div class="border border-amber-200 rounded-2xl p-5 mb-8">
                             <h3 class="font-bold text-amber-950 mb-4 border-b border-amber-100 pb-2 text-lg">5.
                                 Pembayaran</h3>
                             <div class="mb-5">
-                                <label class="block text-xs font-bold text-gray-700 mb-2">Metode Pembayaran</label>
-                                <select name="metode_pembayaran" id="metode_pembayaran"
-                                    onchange="toggleMetode(); qrisGenerated = false" required
-                                    class="w-full sm:w-1/2 border border-gray-300 rounded-xl p-3 bg-white text-gray-900 shadow-sm focus:ring-amber-500 font-bold">
+                                <select name="metode_pembayaran" id="metode_pembayaran" onchange="toggleMetode()"
+                                    required
+                                    class="w-full sm:w-1/2 border border-gray-300 rounded-xl p-3 bg-white font-bold">
                                     <option value="Bayar di tempat">Bayar di Tempat</option>
                                     <option value="QRIS">Transfer QRIS</option>
                                 </select>
                             </div>
-
-                            <!-- AREA REDESIGN GENERATE QRIS -->
                             <div id="qrisBox" class="hidden grid-cols-1 gap-4">
-                                <div
-                                    class="border border-amber-200 bg-amber-50/50 rounded-xl p-6 text-center flex flex-col items-center justify-center min-h-[150px]">
-                                    <div class="space-y-4">
-                                        <p class="text-sm font-bold text-amber-900">Pembayaran aman dengan Kode QRIS
-                                            Otomatis</p>
-                                        <p class="text-xs text-amber-700">Rincian tagihan dan Kode QR akan muncul di
-                                            halaman Riwayat setelah Anda menekan tombol di bawah.</p>
-                                    </div>
+                                <div class="border border-amber-200 bg-amber-50/50 rounded-xl p-6 text-center">
+                                    <p class="text-sm font-bold text-amber-900">Pembayaran aman dengan Kode QRIS
+                                        Otomatis</p>
+                                    <p class="text-xs text-amber-700 mt-2">Kode QR akan otomatis muncul di halaman
+                                        Riwayat setelah Anda melakukan reservasi.</p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- TOTAL & SUBMIT -->
                         <div
                             class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-amber-200">
-                            <div class="w-full sm:w-auto text-center sm:text-left">
+                            <div class="text-center sm:text-left">
                                 <p class="text-sm font-bold text-gray-500 uppercase tracking-wider">Total Pembayaran
                                 </p>
                                 <h2 class="text-3xl font-black text-amber-600" id="totalDisplay">Rp 0</h2>
                                 <p class="text-xs font-bold text-gray-400 mt-1" id="durasiDisplay">0 Malam Menginap
                                 </p>
                             </div>
-
-                            @if ($isMaintenance)
-                                <button type="button" disabled
-                                    class="w-full sm:w-auto bg-gray-400 text-white font-bold text-lg py-4 px-10 rounded-xl cursor-not-allowed">Sistem
-                                    Sedang Perbaikan</button>
-                            @else
-                                <button type="submit" id="btnSubmit"
-                                    class="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-bold text-lg py-4 px-10 rounded-xl transition shadow-lg shadow-amber-600/30">
-                                    Reservasi Sekarang
-                                </button>
-                            @endif
+                            <button type="submit" id="btnSubmit"
+                                class="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-bold text-lg py-4 px-10 rounded-xl transition shadow-lg shadow-amber-600/30">Reservasi
+                                Sekarang</button>
                         </div>
                     </form>
                 @endif
             </div>
 
-            <!-- BAGIAN KANAN: PREVIEW KAMAR -->
             <div class="w-full lg:w-[350px] shrink-0 lg:sticky lg:top-24">
                 <div class="bg-white rounded-3xl shadow-xl border border-amber-100 p-6">
-                    @if ($isMaintenance)
-                        <div
-                            class="mb-4 bg-red-50 border border-red-200 rounded-2xl p-4 shadow-sm text-center animate-pulse">
-                            <span class="text-3xl block mb-2">🚧</span>
-                            <h4 class="font-bold text-red-800 text-sm">Dalam Perbaikan</h4>
-                            <p class="text-xs text-red-600 mt-1 leading-relaxed">Fitur pemesanan sedang dinonaktifkan
-                                sementara.</p>
-                        </div>
-                    @endif
-
                     <div id="placeholderPreview" class="text-center py-16">
                         <span class="text-5xl block mb-4 opacity-50">🛏️</span>
                         <p class="text-sm text-gray-400 font-medium px-4">Pilih kelas kamar dan jumlah anggota untuk
                             melihat preview informasi.</p>
                     </div>
-
                     <div id="contentPreview" class="hidden">
-                        <!-- Thumbnail Area -->
                         <img id="prevImg" src=""
-                            class="w-full h-48 object-cover rounded-2xl mb-3 bg-gray-100 border border-gray-200 shadow-sm transition-all duration-300">
+                            class="w-full h-48 object-cover rounded-2xl mb-3 bg-gray-100 border border-gray-200 shadow-sm">
                         <div id="prevThumbnails" class="grid grid-cols-3 gap-2 mb-5"></div>
-
-                        <!-- Class Info -->
                         <p class="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-1">Tipe Kamar</p>
                         <h4 id="prevNama"
                             class="text-2xl font-black text-gray-900 leading-tight mb-4 border-b border-gray-100 pb-3">
                         </h4>
-
-                        <!-- Facilities Grid -->
                         <div class="mb-5">
-                            <p class="text-xs font-bold text-gray-700 mb-2">Fasilitas Kamar:</p>
                             <ul id="prevFasilitas"
                                 class="grid grid-cols-2 gap-y-2 gap-x-2 text-xs font-medium text-gray-600"></ul>
                         </div>
-
-                        <!-- Room Availability Status Box -->
                         <div id="boxKamarKosong"
                             class="w-full py-3 rounded-xl border border-emerald-300 bg-emerald-50 text-center shadow-sm">
                             <p class="text-sm font-black text-emerald-700" id="sisaKamarCount">Memuat ketersediaan...
                             </p>
                         </div>
-
-                        <!-- NOTIFIKASI PINTAR REKOMENDASI EXTRA BED (Dinamis via JS) -->
                         <div id="boxRekomendasiBed"
-                            class="hidden mt-3 p-3.5 rounded-xl border border-orange-200 bg-orange-50 text-left shadow-sm animate-fade-in">
-                            <div class="flex gap-2">
-                                <span class="text-base">💡</span>
-                                <div>
-                                    <h5 class="text-xs font-black text-orange-950">Rekomendasi Kenyamanan</h5>
-                                    <p class="text-[10.5px] text-orange-900/90 font-medium mt-0.5 leading-relaxed">Anda
-                                        membawa <span id="txtJumlahAnggota" class="font-bold text-orange-700"></span>
-                                        anggota. Agar tidur lebih nyaman di kamar berkapasitas 2 orang ini, disarankan
-                                        menambah layanan <span class="font-bold underline">Extra Bed</span> di panel
-                                        sebelah kiri.</p>
-                                </div>
+                            class="hidden mt-3 p-3.5 rounded-xl border border-orange-200 bg-orange-50 text-left shadow-sm">
+                            <div class="flex gap-2"><span class="text-base">💡</span>
+                                <p class="text-[10.5px] text-orange-900/90 font-medium leading-relaxed">Anda membawa
+                                    <span id="txtJumlahAnggota" class="font-bold text-orange-700"></span> anggota.
+                                    Disarankan menambah layanan Extra Bed.
+                                </p>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 
     <script>
-        const kelasData = @json($kelasKamars);
-        let currentHarga = 0;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            filterKelasByAnggota();
-            if (document.getElementById('kelas_kamar_id').value !== "") updatePreviewKamar();
-        });
-
-        // 1. Logika Jumlah Anggota (Dibatasi Maksimal 4)
-        function adjustAnggota(val) {
-            let input = document.getElementById('jumlah_anggota');
-            let current = parseInt(input.value) || 1;
-            let target = current + val;
-
-            if (target >= 1 && target <= 4) { // Batasi 1 s.d 4 orang saja
-                input.value = target;
-                filterKelasByAnggota();
-            }
-        }
-
-        function filterKelasByAnggota() {
-            let jumlahTamu = parseInt(document.getElementById('jumlah_anggota').value) || 1;
-            let selectKelas = document.getElementById('kelas_kamar_id');
-
-            // Aturan Baru: Jika tamu >= 3, filter agar hanya menampilkan kamar berkapasitas 2 orang
-            let targetKapasitasYgDicari = (jumlahTamu >= 3) ? 2 : jumlahTamu;
-
-            Array.from(selectKelas.options).forEach(opt => {
-                if (opt.value === "") return;
-                let kapasitas = parseInt(opt.getAttribute('data-kapasitas')) || 1;
-
-                // Menyaring agar tipe kamar yang kapasitasnya lebih kecil dari target disembunyikan
-                if (kapasitas < targetKapasitasYgDicari) {
-                    opt.style.display = 'none';
-                    opt.disabled = true;
-                    if (opt.selected) selectKelas.value = "";
-                } else {
-                    opt.style.display = 'block';
-                    opt.disabled = false;
-                }
-            });
-            updatePreviewKamar();
-        }
-
-        // 2. Logika Shortcut Durasi Waktu
-        function updateCheckOutShortcut(selectObj) {
-            let val = selectObj.value;
-            if (val === 'custom') return;
-
-            let checkInInput = document.getElementById('check_in').value;
-            let cin = new Date(checkInInput);
-
-            if (!isNaN(cin)) {
-                let days = parseInt(val);
-                cin.setDate(cin.getDate() + days);
-                cin.setMinutes(cin.getMinutes() - cin.getTimezoneOffset());
-                document.getElementById('check_out').value = cin.toISOString().slice(0, 16);
-
-                hitungTotal();
-                updatePreviewKamar();
-            }
-        }
-
-        function resetShortcut() {
-            document.getElementById('shortcut_durasi').value = 'custom';
-        }
-
-        // 3. Logika Metode Pembayaran
-        function toggleMetode() {
-            let metode = document.getElementById('metode_pembayaran').value;
-            let box = document.getElementById('qrisBox');
-            if (metode === 'QRIS') {
-                box.classList.remove('hidden');
-                box.classList.add('grid');
-            } else {
-                box.classList.add('hidden');
-                box.classList.remove('grid');
-            }
-        }
-
-        // 4. Hitungan Harga
-        function adjustEkstra(id, val) {
-            let input = document.getElementById(id);
-            let current = parseInt(input.value) || 0;
-            if (current + val >= 0) {
-                input.value = current + val;
-                hitungTotal();
-            }
-        }
-
-        function hitungTotal() {
-            let checkIn = new Date(document.getElementById('check_in').value);
-            let checkOut = new Date(document.getElementById('check_out').value);
-            let diffDays = 1;
-
-            if (!isNaN(checkIn) && !isNaN(checkOut)) {
-                let diffTime = checkOut - checkIn;
-                diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                if (diffDays <= 0) diffDays = 1;
-            }
-
-            let qtyBed = parseInt(document.getElementById('extra_bed').value) || 0;
-            let qtySelimut = parseInt(document.getElementById('extra_selimut').value) || 0;
-            let totalBiaya = (currentHarga * diffDays) + (qtyBed * 100000) + (qtySelimut * 25000);
-
-            document.getElementById('durasiDisplay').innerText = diffDays + ' Malam Menginap';
-            document.getElementById('totalDisplay').innerText = new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0
-            }).format(totalBiaya);
-        }
-
-        // 5. Logika Panel Kanan (Preview Visual & Smart Recommendation)
-        async function updatePreviewKamar() {
-            const select = document.getElementById('kelas_kamar_id');
-            const kelasId = select.value;
-            const placeholder = document.getElementById('placeholderPreview');
-            const content = document.getElementById('contentPreview');
-            const btnSubmit = document.getElementById('btnSubmit');
-
-            if (!kelasId) {
-                currentHarga = 0;
-                placeholder.classList.remove('hidden');
-                content.classList.add('hidden');
-                if (btnSubmit) {
-                    btnSubmit.disabled = true;
-                    btnSubmit.classList.add('opacity-50', 'cursor-not-allowed');
-                }
-                hitungTotal();
-                return;
-            }
-
-            const option = select.options[select.selectedIndex];
-            currentHarga = parseInt(option.getAttribute('data-harga')) || 0;
-            document.getElementById('prevNama').innerText = option.text.split(' (')[0];
-
-            const mainImgUrl = option.getAttribute('data-thumb');
-            document.getElementById('prevImg').src = mainImgUrl;
-            const arrayFoto = [...new Set([mainImgUrl, option.getAttribute('data-foto1'), option.getAttribute(
-                'data-foto2'), option.getAttribute('data-foto3')].filter(f => f))];
-
-            let galeriHTML = '';
-            arrayFoto.forEach(url => {
-                galeriHTML +=
-                    `<div class="h-14 sm:h-16 rounded-xl overflow-hidden shadow-sm border border-gray-200 hover:border-amber-500 cursor-pointer transition" onclick="document.getElementById('prevImg').src='${url}'"><img src="${url}" class="w-full h-full object-cover"></div>`;
-            });
-            document.getElementById('prevThumbnails').innerHTML = galeriHTML;
-
-            let fasText = option.getAttribute('data-fasilitas');
-            let fasHtml = '';
-            try {
-                let parsed = JSON.parse(fasText);
-                if (Array.isArray(parsed)) {
-                    parsed.forEach(f => {
-                        fasHtml +=
-                            `<li class="flex items-center gap-1.5"><span class="text-amber-500">✔</span> ${f}</li>`;
-                    });
-                }
-            } catch (e) {}
-            document.getElementById('prevFasilitas').innerHTML = fasHtml;
-
-            // LOGIKA DINAMIS NOTIFIKASI PINTAR EXTRA BED
-            let jlhAnggota = parseInt(document.getElementById('jumlah_anggota').value) || 1;
-            let boxBed = document.getElementById('boxRekomendasiBed');
-            if (jlhAnggota >= 3) {
-                document.getElementById('txtJumlahAnggota').innerText = jlhAnggota;
-                boxBed.classList.remove('hidden');
-            } else {
-                boxBed.classList.add('hidden');
-            }
-
-            placeholder.classList.add('hidden');
-            content.classList.remove('hidden');
-            hitungTotal();
-
-            // Cek Kamar Kosong Ke API Server
-            const checkIn = document.getElementById('check_in').value;
-            const checkOut = document.getElementById('check_out').value;
-            const boxKosong = document.getElementById('boxKamarKosong');
-            const countText = document.getElementById('sisaKamarCount');
-
-            countText.innerText = "Mengecek ketersediaan...";
-            boxKosong.className = "w-full py-3 rounded-xl border border-amber-300 bg-amber-50 text-center shadow-sm";
-
-            try {
-                let response = await fetch(
-                    `/api/kamar-tersedia?kelas_id=${kelasId}&check_in=${checkIn}&check_out=${checkOut}`);
-                let kamars = await response.json();
-
-                if (kamars.length > 0) {
-                    countText.innerText = `🔥 Tersisa ${kamars.length} Kamar Kosong!`;
-                    boxKosong.className =
-                        "w-full py-3 rounded-xl border border-emerald-300 bg-emerald-50 text-center shadow-sm text-emerald-700";
-                    if (btnSubmit) {
-                        btnSubmit.disabled = false;
-                        btnSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
-                    }
-                } else {
-                    countText.innerText = "❌ Penuh di Tanggal Ini";
-                    boxKosong.className =
-                        "w-full py-3 rounded-xl border border-red-300 bg-red-50 text-center shadow-sm text-red-700 animate-pulse";
-                    if (btnSubmit) {
-                        btnSubmit.disabled = true;
-                        btnSubmit.classList.add('opacity-50', 'cursor-not-allowed');
-                    }
-                }
-            } catch (error) {
-                countText.innerText = "Gagal memuat info ketersediaan.";
-                if (btnSubmit) {
-                    btnSubmit.disabled = false;
-                    btnSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
-                }
-            }
-        }
-
-        document.getElementById('formReservasi').addEventListener('submit', function(e) {
-            if (!document.getElementById('kelas_kamar_id').value) {
-                e.preventDefault();
-                alert('Silakan pilih kelas kamar yang tersedia terlebih dahulu.');
-            }
-        });
+        // Mengirim data kelas dari Blade ke file JavaScript eksternal via window object
+        window.kelasData = @json($kelasKamars);
     </script>
-
-    <style>
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(6px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .animate-fade-in {
-            animation: fadeIn 0.4s ease-out forwards;
-        }
-
-        [x-cloak] {
-            display: none !important;
-        }
-    </style>
+    <script src="{{ asset('js/landingpage/hreservasi.js') }}?v={{ time() }}"></script>
 </x-lplayout>

@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Fisa Hotel</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -42,13 +43,10 @@
             <el-popover-group class="hidden lg:flex lg:gap-x-12">
                 <a href="{{ url('/') }}"
                     class="text-sm font-semibold {{ request()->is('/') ? ($isSolidBg ? 'text-white border-b-2 border-white pb-1' : 'text-amber-700 border-b-2 border-amber-600 pb-1') : $textColor }} tracking-wide transition-all">Beranda</a>
-
                 <a href="{{ route('reservasi.tamu') }}"
                     class="text-sm font-semibold {{ $isReservasi ? 'text-white border-b-2 border-white pb-1' : $textColor }} {{ $hoverColor }} tracking-wide transition-all">Reservasi</a>
-
                 <a href="{{ route('riwayat.tamu') }}"
                     class="text-sm font-semibold {{ $isRiwayat ? 'text-white border-b-2 border-white pb-1' : $textColor }} {{ $hoverColor }} tracking-wide transition-all">Riwayat</a>
-
                 <a href="{{ route('profil.tamu') }}"
                     class="text-sm font-semibold {{ $isProfile ? 'text-white border-b-2 border-white pb-1' : $textColor }} {{ $hoverColor }} tracking-wide transition-all">Profil</a>
             </el-popover-group>

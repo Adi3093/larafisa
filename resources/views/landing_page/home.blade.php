@@ -128,7 +128,7 @@
                 <div>
                     <button type="submit"
                         class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-lg transition shadow-md shadow-amber-600/30 text-sm sm:text-base border-none">
-                        Cek Ketersediaan Kamar
+                        Cek Ketersediaan
                     </button>
                 </div>
             </form>
@@ -146,8 +146,7 @@
                         class="text-sm text-amber-700 font-medium bg-amber-50 inline-block px-4 py-1.5 rounded-full border border-amber-200">
                         Kamar tersedia:
                         <strong>{{ \Carbon\Carbon::parse(request('filter_checkin'))->translatedFormat('d M Y - H:i') }}
-                            WIB</strong>
-                        s/d
+                            WIB</strong> s/d
                         <strong>{{ \Carbon\Carbon::parse(request('filter_checkout'))->translatedFormat('d M Y - H:i') }}
                             WIB</strong>
                     </p>
@@ -166,6 +165,7 @@
             $checkinDate = \Carbon\Carbon::parse($checkinReq);
             $checkoutDate = \Carbon\Carbon::parse($checkoutReq);
             $filteredKelas = collect();
+
             foreach ($kelasKamars as $kelas) {
                 $fasilitasArray = is_array($kelas->fasilitas)
                     ? $kelas->fasilitas
@@ -173,6 +173,7 @@
                 $teksPencarian = strtolower($kelas->nama_kelas . ' ' . implode(' ', $fasilitasArray));
                 $isSingle = preg_match('/single/i', $teksPencarian);
                 $isDouble = preg_match('/(double|twin|queen|king|besar)/i', $teksPencarian);
+
                 if (request()->has('filter_checkin')) {
                     if ($tamuReq == 1) {
                         if (!$isSingle) {
@@ -184,6 +185,7 @@
                         }
                     }
                 }
+
                 $totalKamarFisik = $kelas->kamars()->where('status', '!=', 'Maintenance')->count();
                 $terpakai = \App\Models\Reservasi::whereIn('status_reservasi', ['Terkonfirmasi', 'Check-In'])
                     ->whereHas('kamar', function ($q) use ($kelas) {
@@ -231,11 +233,8 @@
                 <div
                     class="flex overflow-x-auto gap-4 sm:gap-6 pb-8 pt-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     @foreach ($filteredKelas as $kelas)
-                        @php
-                            $jumlahTersedia = $kelas->sisa_kamar_riil;
-                        @endphp
-                        <div class="kamar-card w-[85vw] sm:w-[320px] lg:w-[360px] flex-none snap-center bg-white rounded-2xl shadow-md shadow-stone-200/50 border border-stone-100 overflow-hidden hover:shadow-xl hover:shadow-amber-900/10 transition duration-300 flex flex-col"
-                            data-jumlah-tersedia="{{ $jumlahTersedia }}">
+                        <div
+                            class="kamar-card w-[85vw] sm:w-[320px] lg:w-[360px] flex-none snap-center bg-white rounded-2xl shadow-md shadow-stone-200/50 border border-stone-100 overflow-hidden hover:shadow-xl hover:shadow-amber-900/10 transition duration-300 flex flex-col">
                             <div class="relative h-48 sm:h-56 overflow-hidden bg-amber-100">
                                 <img src="{{ asset('storage/' . $kelas->thumbnail) }}"
                                     alt="{{ $kelas->nama_kelas }}"
@@ -244,17 +243,14 @@
 
                             <div class="p-5 flex flex-col flex-grow">
                                 <h3 class="text-xl sm:text-2xl font-black text-amber-950 mb-1">
-                                    {{ $kelas->nama_kelas }}
-                                </h3>
-
+                                    {{ $kelas->nama_kelas }}</h3>
                                 <div class="text-xs text-amber-800/70 mb-1 mt-auto pt-3">Mulai dari</div>
                                 <div class="text-xl sm:text-2xl font-black text-amber-600 mb-4">Rp
                                     {{ number_format($kelas->harga, 0, ',', '.') }}<span
-                                        class="text-xs font-normal text-amber-800/70">/malam</span>
-                                </div>
+                                        class="text-xs font-normal text-amber-800/70">/malam</span></div>
 
                                 <button
-                                    onclick="bukaDetailKelas('{{ $kelas->nama_kelas }}', '{{ number_format($kelas->harga, 0, ',', '.') }}', {{ json_encode($kelas->fasilitas) }}, '{{ asset('storage/' . $kelas->thumbnail) }}', '{{ $kelas->foto_1 ? asset('storage/' . $kelas->foto_1) : '' }}', '{{ $kelas->foto_2 ? asset('storage/' . $kelas->foto_2) : '' }}', '{{ $kelas->foto_3 ? asset('storage/' . $kelas->foto_3) : '' }}', {{ $jumlahTersedia }})"
+                                    onclick="bukaDetailKelas('{{ $kelas->id }}', '{{ $kelas->nama_kelas }}', '{{ number_format($kelas->harga, 0, ',', '.') }}', {{ json_encode($kelas->fasilitas) }}, '{{ asset('storage/' . $kelas->thumbnail) }}', '{{ $kelas->foto_1 ? asset('storage/' . $kelas->foto_1) : '' }}', '{{ $kelas->foto_2 ? asset('storage/' . $kelas->foto_2) : '' }}', '{{ $kelas->foto_3 ? asset('storage/' . $kelas->foto_3) : '' }}', {{ $kelas->sisa_kamar_riil }})"
                                     class="w-full bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-700 font-bold border border-amber-200 py-2.5 rounded-xl transition duration-200 text-sm">
                                     Detail & Pesan
                                 </button>
@@ -544,8 +540,7 @@
                                     stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M5 13l4 4L19 7" />
-                                </svg>
-                                Fasilitas Ruangan:
+                                </svg> Fasilitas Ruangan:
                             </h4>
                             <ul id="modal_fasilitas"
                                 class="grid grid-cols-2 gap-y-3 gap-x-4 text-amber-900/80 text-xs sm:text-sm mb-8 font-medium">
@@ -562,64 +557,5 @@
         </div>
     </div>
 
-    <script>
-        function bukaDetailKelas(namaKelas, harga, fasilitas, thumb, f1, f2, f3, jumlahTersedia) {
-            document.getElementById('modal_nama_kelas').innerText = namaKelas;
-            document.getElementById('modal_harga').innerText = harga;
-            document.getElementById('modal_foto_utama').src = thumb;
-            const ketersediaanElem = document.getElementById('modal_ketersediaan');
-            const btnPesan = document.getElementById('modal_btn_pesan');
-
-            if (jumlahTersedia > 0) {
-                ketersediaanElem.innerHTML =
-                    `<span class="bg-green-500/90 text-white text-sm font-bold px-4 py-2 rounded-full shadow-sm backdrop-blur-sm border border-green-400">Tersedia ${jumlahTersedia} Ruangan</span>`;
-                btnPesan.disabled = false;
-                btnPesan.className =
-                    "w-full bg-amber-600 text-white font-bold text-base sm:text-lg py-3 sm:py-4 rounded-xl shadow-lg shadow-amber-600/30 hover:bg-amber-700 transition transform hover:-translate-y-0.5 border-none cursor-pointer";
-                btnPesan.innerText = "Lanjut Reservasi";
-            } else {
-                ketersediaanElem.innerHTML =
-                    `<span class="bg-red-500/90 text-white text-sm font-bold px-4 py-2 rounded-full shadow-sm backdrop-blur-sm border border-red-400">Kamar Penuh</span>`;
-                btnPesan.disabled = true;
-                btnPesan.className =
-                    "w-full bg-gray-400 text-white font-bold text-base sm:text-lg py-3 sm:py-4 rounded-xl shadow-none cursor-not-allowed border-none";
-                btnPesan.innerText = "Saat Ini Tidak Tersedia";
-            }
-
-            let galeriHTML = '';
-            let arrayFoto = [thumb, f1, f2, f3].filter(foto => foto !== '');
-            arrayFoto.forEach(fotoUrl => {
-                galeriHTML += `
-                    <div class="h-16 sm:h-24 rounded-xl overflow-hidden shadow-sm border-2 border-transparent hover:border-amber-400 cursor-pointer transition" onclick="document.getElementById('modal_foto_utama').src='${fotoUrl}'">
-                        <img src="${fotoUrl}" class="w-full h-full object-cover">
-                    </div>
-                `;
-            });
-            document.getElementById('galeri_tambahan').innerHTML = galeriHTML;
-            let fasHTML = '';
-            fasilitas.forEach(item => {
-                fasHTML +=
-                    `<li class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0"></span>${item}</li>`;
-            });
-            document.getElementById('modal_fasilitas').innerHTML = fasHTML;
-            document.body.classList.add('overflow-hidden');
-            document.getElementById('modalDetail').classList.remove('hidden');
-        }
-
-        function lanjutReservasi() {
-            let checkin = document.getElementById('filter_checkin').value;
-            let checkout = document.getElementById('filter_checkout').value;
-            window.location.href =
-                `/reservasi-online?kelas_id=${kelasIdAktif}&filter_checkin=${checkin}&filter_checkout=${checkout}`;
-        }
-
-        function tutupDetailKelas() {
-            document.body.classList.remove('overflow-hidden');
-            document.getElementById('modalDetail').classList.add('hidden');
-        }
-
-        function resetFilter() {
-            window.location.href = "{{ url('/') }}#kamar";
-        }
-    </script>
+    <script src="{{ asset('js/landingpage/home.js') }}?v={{ time() }}"></script>
 </x-lplayout>
