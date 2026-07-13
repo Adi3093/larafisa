@@ -3,17 +3,20 @@
 
     <div class="relative z-10 min-h-screen pt-24 lg:pt-32 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
 
-        <div class="mb-8">
+        <div class="mb-8 flex items-center gap-4">
             <a href="javascript:history.back()"
-                class="inline-flex items-center gap-2 text-amber-100 hover:text-white font-bold text-sm mb-4 transition">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                class="shrink-0 inline-flex items-center justify-center p-2.5 sm:p-3 border-2 border-white/30 rounded-xl text-white hover:bg-white/20 transition backdrop-blur-sm">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                         d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                Kembali
             </a>
-            <h1 class="text-white text-3xl font-extrabold tracking-tight block">Pusat Notifikasi</h1>
-            <p class="text-amber-100 mt-1">Pemberitahuan resmi mengenai reservasi dan akun Anda.</p>
+
+            <div>
+                <h1 class="text-white text-2xl sm:text-3xl font-extrabold tracking-tight">Pusat Notifikasi</h1>
+                <p class="text-amber-100 text-sm mt-1 hidden sm:block">Pemberitahuan resmi mengenai reservasi dan akun
+                    Anda.</p>
+            </div>
         </div>
 
         @if (session('success'))

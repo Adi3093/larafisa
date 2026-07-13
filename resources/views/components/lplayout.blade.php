@@ -13,18 +13,17 @@
 <body class="bg-amber-50/50 antialiased pb-20 lg:pb-0 relative">
 
     @php
-        $isProfile = request()->routeIs('profil.tamu*');
-        $isReservasi = request()->routeIs('reservasi.tamu*');
-        $isRiwayat = request()->routeIs('riwayat.tamu*');
-        // TAMBAHAN: Mendaftarkan rute notifikasi agar navbarnya menjadi warna Amber
-        $isNotif = request()->routeIs('notif.tamu*');
+        $isProfile = request()->is('*profil*');
+        $isReservasi = request()->is('*reservasi*');
+        $isRiwayat = request()->is('*riwayat*');
+        $isNotif = request()->is('*pusat-notifikasi*');
 
-        // TAMBAHAN: Memasukkan $isNotif ke dalam logika Solid Background
         $isSolidBg = $isProfile || $isReservasi || $isRiwayat || $isNotif;
 
         $navBgClass = $isSolidBg
             ? 'bg-amber-600 border-none'
             : 'bg-white/80 backdrop-blur-md border-b border-amber-200/60 shadow-sm';
+
         $textColor = $isSolidBg ? 'text-white' : 'text-amber-950';
         $hoverColor = $isSolidBg ? 'hover:text-amber-100' : 'hover:text-amber-600';
     @endphp
@@ -58,83 +57,87 @@
             </el-popover-group>
 
             <div class="flex lg:flex-1 justify-end items-center">
-                @if (!$isSolidBg)
-                    @auth
-                        <div class="flex items-center gap-4 sm:gap-5">
+                @auth
+                    <div class="flex items-center gap-3 sm:gap-4">
 
-                            <div class="relative" x-data="{ openNotif: false }" @click.outside="openNotif = false">
-                                <button @click="openNotif = !openNotif"
-                                    class="relative p-1.5 rounded-full transition focus:outline-none hover:bg-black/10">
-                                    <svg class="w-6 h-6 {{ $textColor }} transition-colors" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                    </svg>
-
-                                    @php $unreadCount = auth()->user()->unreadNotifications->count(); @endphp
-                                    @if ($unreadCount > 0)
-                                        <span
-                                            class="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold text-white bg-red-500 border-2 border-white rounded-full translate-x-1 -translate-y-1">
-                                            {{ $unreadCount > 99 ? '99+' : $unreadCount }}
-                                        </span>
-                                    @endif
-                                </button>
-
-                                <div x-show="openNotif" x-transition.opacity x-cloak
-                                    class="absolute right-0 mt-4 w-[300px] sm:w-[380px] bg-white rounded-2xl shadow-2xl border border-amber-100 overflow-hidden z-50 origin-top-right">
-                                    <div
-                                        class="bg-amber-50 px-5 py-4 border-b border-amber-100 flex justify-between items-center">
-                                        <h3 class="font-bold text-amber-950 text-sm">Notifikasi Terbaru</h3>
-                                        <span
-                                            class="text-[10px] font-bold bg-amber-200 text-amber-800 px-2.5 py-1 rounded-full">{{ $unreadCount }}
-                                            Baru</span>
-                                    </div>
-                                    <div class="max-h-[350px] overflow-y-auto">
-                                        @forelse(auth()->user()->unreadNotifications->take(5) as $notif)
-                                            <a href="{{ route('notif.tamu') }}?id={{ $notif->id }}"
-                                                class="block px-5 py-4 border-b border-gray-50 hover:bg-amber-50/50 transition">
-                                                <p class="text-sm font-bold text-gray-900 mb-1">
-                                                    {{ $notif->data['title'] ?? 'Pemberitahuan Baru' }}</p>
-                                                <p class="text-xs text-gray-500 line-clamp-2 leading-relaxed">
-                                                    {{ $notif->data['message'] ?? '' }}</p>
-                                                <p class="text-[10px] font-bold text-amber-600 mt-2">
-                                                    {{ $notif->created_at->diffForHumans() }}</p>
-                                            </a>
-                                        @empty
-                                            <div class="px-5 py-10 text-center">
-                                                <span class="text-4xl opacity-30 block mb-3">📭</span>
-                                                <p class="text-sm font-medium text-gray-400">Belum ada notifikasi baru.</p>
-                                            </div>
-                                        @endforelse
-                                    </div>
-                                    <div class="bg-gray-50 p-3 border-t border-gray-100 text-center">
-                                        <a href="{{ route('notif.tamu') }}"
-                                            class="text-sm font-bold text-amber-600 hover:text-amber-700 hover:underline">
-                                            Lihat Semua Notifikasi &rarr;
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="hidden sm:flex items-center gap-3 border-l border-amber-200/50 pl-4 sm:pl-5">
+                        @if (!$isProfile)
+                            <div class="hidden sm:flex items-center gap-3">
                                 <span
                                     class="text-sm font-bold {{ $textColor }}">{{ explode(' ', trim(auth()->user()->name))[0] }}</span>
                                 <img src="{{ auth()->user()->avatar ? asset('storage/' . auth()->user()->avatar) : 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) . '&background=FDE68A&color=92400E&size=40' }}"
                                     alt="Avatar"
-                                    class="size-9 rounded-full object-cover border-2 border-amber-300 shadow-sm">
+                                    class="size-9 rounded-full object-cover border-2 {{ $isSolidBg ? 'border-white/50' : 'border-amber-300' }} shadow-sm">
+                            </div>
+                            <div class="sm:hidden block">
+                                <img src="{{ auth()->user()->avatar ? asset('storage/' . auth()->user()->avatar) : 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) . '&background=FDE68A&color=92400E&size=40' }}"
+                                    alt="Avatar"
+                                    class="size-8 rounded-full object-cover shadow-sm border {{ $isSolidBg ? 'border-white/50' : 'border-amber-200' }}">
+                            </div>
+                        @endif
+
+                        <div class="relative" x-data="{ openNotif: false }" @click.outside="openNotif = false">
+                            <button @click="openNotif = !openNotif"
+                                class="relative p-1.5 rounded-full transition focus:outline-none {{ $isSolidBg ? 'hover:bg-white/20' : 'hover:bg-black/10' }}">
+                                <svg class="w-6 h-6 {{ $textColor }} transition-colors" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+
+                                @php $unreadCount = auth()->user()->unreadNotifications->count(); @endphp
+                                @if ($unreadCount > 0)
+                                    <span
+                                        class="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold text-white bg-red-500 border-2 border-white rounded-full translate-x-1 -translate-y-1">
+                                        {{ $unreadCount > 99 ? '99+' : $unreadCount }}
+                                    </span>
+                                @endif
+                            </button>
+
+                            <div x-show="openNotif" x-transition.opacity x-cloak
+                                class="absolute right-0 mt-4 w-[300px] sm:w-[380px] bg-white rounded-2xl shadow-2xl border border-amber-100 overflow-hidden z-50 origin-top-right">
+                                <div
+                                    class="bg-amber-50 px-5 py-4 border-b border-amber-100 flex justify-between items-center">
+                                    <h3 class="font-bold text-amber-950 text-sm">Notifikasi Terbaru</h3>
+                                    <span
+                                        class="text-[10px] font-bold bg-amber-200 text-amber-800 px-2.5 py-1 rounded-full">{{ $unreadCount }}
+                                        Baru</span>
+                                </div>
+                                <div class="max-h-[350px] overflow-y-auto">
+                                    @forelse(auth()->user()->unreadNotifications->take(5) as $notif)
+                                        <a href="{{ route('notif.tamu') }}?id={{ $notif->id }}"
+                                            class="block px-5 py-4 border-b border-gray-50 hover:bg-amber-50/50 transition">
+                                            <p class="text-sm font-bold text-gray-900 mb-1">
+                                                {{ $notif->data['title'] ?? 'Pemberitahuan Baru' }}</p>
+                                            <p class="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+                                                {{ $notif->data['message'] ?? '' }}</p>
+                                            <p class="text-[10px] font-bold text-amber-600 mt-2">
+                                                {{ $notif->created_at->diffForHumans() }}</p>
+                                        </a>
+                                    @empty
+                                        <div class="px-5 py-10 text-center">
+                                            <span class="text-4xl opacity-30 block mb-3">📭</span>
+                                            <p class="text-sm font-medium text-gray-400">Belum ada notifikasi baru.</p>
+                                        </div>
+                                    @endforelse
+                                </div>
+                                <div class="bg-gray-50 p-3 border-t border-gray-100 text-center">
+                                    <a href="{{ route('notif.tamu') }}"
+                                        class="text-sm font-bold text-amber-600 hover:text-amber-700 hover:underline">
+                                        Lihat Semua Notifikasi &rarr;
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                        <div class="sm:hidden block ml-3">
-                            <img src="{{ auth()->user()->avatar ? asset('storage/' . auth()->user()->avatar) : 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) . '&background=FDE68A&color=92400E&size=40' }}"
-                                alt="Avatar" class="size-8 rounded-full object-cover shadow-sm border border-amber-200">
-                        </div>
-                    @else
+
+                    </div>
+                @else
+                    @if (!$isProfile)
                         <a href="{{ route('login') }}"
-                            class="text-sm font-bold bg-amber-600 text-white px-5 py-2.5 rounded-lg hover:bg-amber-700 transition shadow-md shadow-amber-600/20">
+                            class="text-sm font-bold {{ $isSolidBg ? 'bg-white text-amber-700 hover:bg-amber-50' : 'bg-amber-600 text-white hover:bg-amber-700' }} px-5 py-2.5 rounded-lg transition shadow-md shadow-amber-600/20">
                             Masuk
                         </a>
-                    @endauth
-                @endif
+                    @endif
+                @endauth
             </div>
         </nav>
     </header>
