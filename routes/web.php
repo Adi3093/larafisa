@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\HomeNotifController;
 use App\Http\Controllers\KamarController;
 use App\Http\Controllers\LandingProfileController;
 use App\Http\Controllers\PaymentController;
@@ -40,7 +41,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register_store'])->name('register.store');
 });
 
-// Auth Area
+// Tamu Area
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -55,9 +56,14 @@ Route::middleware('auth')->group(function () {
     Route::put('/reservasi-online/{id}/batal', [App\Http\Controllers\GuestReservationController::class, 'batal'])->name('reservasi.tamu.batal');
     Route::get('/reservasi-online/{id}/generate-qris', [App\Http\Controllers\GuestReservationController::class, 'generateQris'])->name('reservasi.qris.generate');
     Route::get('/payment/check/{invoice}', [PaymentController::class, 'checkStatus']);
-    // Route::post('/reservasi-online/{id}/generate-qris', [App\Http\Controllers\GuestReservationController::class, 'generateQris'])->name('reservasi.qris.generate');
-});
 
+    // Rute Modul Notifikasi
+    Route::get('/pusat-notifikasi', [HomeNotifController::class, 'index'])->name('notif.tamu');
+    Route::get('/pusat-notifikasi/{id}', [HomeNotifController::class, 'show']);
+    Route::post('/pusat-notifikasi/read-all', [HomeNotifController::class, 'markAllRead'])->name('notif.tamu.readAll');
+    Route::delete('/pusat-notifikasi/delete-all', [HomeNotifController::class, 'deleteAll'])->name('notif.tamu.deleteAll');
+    Route::delete('/pusat-notifikasi/delete-read', [HomeNotifController::class, 'deleteRead'])->name('notif.tamu.deleteRead');
+});
 
 // ADMIN AREA
 Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function () {

@@ -416,28 +416,8 @@
             </div>
         </div>
 
-        <style>
-            @keyframes fadeIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(10px);
-                }
-
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-
-            .animate-fade-in {
-                animation: fadeIn 0.5s ease-out forwards;
-            }
-        </style>
-
-        <!-- Pemanggilan File JS Eksternal (DIJAMIN BERSIH) -->
+        <link rel="stylesheet" href="{{ asset('css/landingpage/hriwayat.css') }}?v={{ time() }}">
         <script src="{{ asset('js/landingpage/hriwayat.js') }}?v={{ time() }}"></script>
-
-        <!-- Pemicu Engine JS Khusus Saat Halaman Baru Dimuat -->
         @if (isset($pembayaranAktif) && $pembayaranAktif->status === 'pending' && $pembayaranAktif->qr_image)
             <script>
                 document.addEventListener('DOMContentLoaded', function() {

@@ -451,7 +451,6 @@
     </div>
 
     <script>
-        // Export Token CSRF ke Global Window untuk digunakan saat API Post (Generate QRIS Tambahan)
         window.LaravelCSRFToken = '{{ csrf_token() }}';
     </script>
     <script src="{{ asset('js/dashboard/checkinout.js') }}?v={{ time() }}"></script>

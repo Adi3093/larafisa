@@ -1,4 +1,3 @@
-
 // MODULE 1: GLOBAL STATE VARIABLES
 // Menyimpan ID kelas kamar yang sedang dilihat di modal
 let kelasIdAktif = null;

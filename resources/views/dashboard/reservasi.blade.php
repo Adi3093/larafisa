@@ -566,7 +566,6 @@
     </div>
 
     <script>
-        // Mengirim koleksi data kamar ke Global Window agar kalkulator JS bisa membacanya
         window.kelasDataWalkin = @json($kelasKamars);
     </script>
     <script src="{{ asset('js/dashboard/reservasi.js') }}?v={{ time() }}"></script>

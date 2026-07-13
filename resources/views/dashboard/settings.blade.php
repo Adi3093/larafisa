@@ -407,27 +407,7 @@
         </div>
     </div>
 
-    <style>
-        .toast-slide-in {
-            animation: slideInRight 0.4s ease-out forwards;
-        }
-
-        .toast-fade-out {
-            animation: fadeOut 0.4s ease-out forwards;
-        }
-
-        .fc .fc-daygrid-day-number {
-            cursor: pointer;
-            color: #1f2937;
-            font-weight: bold;
-        }
-
-        .fc .fc-daygrid-day:hover {
-            background-color: #fef3c7;
-            cursor: pointer;
-        }
-    </style>
-
+    <link rel="stylesheet" href="{{ asset('css/landingpage/settings.css') }}?v={{ time() }}">
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
     <script>
         // Mengirim data dari Server (Blade/PHP) ke Global Window JS
