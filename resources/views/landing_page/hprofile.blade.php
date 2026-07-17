@@ -131,7 +131,10 @@
             </a>
 
             @auth
-                <form method="POST" action="{{ route('logout') }}" class="m-0">
+                <!-- Trik Atribut Konfirmasi dipasang di sini -->
+                <form method="POST" action="{{ route('logout') }}" class="m-0"
+                    data-confirm="Yakin mau keluar?|Sesi login Anda akan diakhiri dan harus masuk kembali untuk melihat riwayat."
+                    data-theme="danger" data-btn="Ya, Keluar Akun">
                     @csrf
                     <button type="submit"
                         class="w-full flex items-center justify-between p-5 lg:p-6 hover:bg-red-50/50 transition text-left group">

@@ -37,7 +37,10 @@
                         </div>
                     </div>
                 @else
-                    <form action="{{ route('reservasi.tamu.store') }}" method="POST" id="formReservasi">
+                    <!-- Trik Atribut Konfirmasi dipasang di sini -->
+                    <form action="{{ route('reservasi.tamu.store') }}" method="POST" id="formReservasi"
+                        data-confirm="Konfirmasi Pesanan?|Pastikan data pemesan dan jadwal check-in Anda sudah benar sebelum melanjutkan."
+                        data-theme="amber" data-btn="Ya, Buat Reservasi">
                         @csrf
                         <div class="border border-amber-200 rounded-2xl p-5 mb-6">
                             <h3 class="font-bold text-amber-950 mb-4 border-b border-amber-100 pb-2 text-lg">1. Pilih

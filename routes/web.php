@@ -63,6 +63,24 @@ Route::middleware('auth')->group(function () {
     Route::post('/pusat-notifikasi/read-all', [HomeNotifController::class, 'markAllRead'])->name('notif.tamu.readAll');
     Route::delete('/pusat-notifikasi/delete-all', [HomeNotifController::class, 'deleteAll'])->name('notif.tamu.deleteAll');
     Route::delete('/pusat-notifikasi/delete-read', [HomeNotifController::class, 'deleteRead'])->name('notif.tamu.deleteRead');
+
+    // Rute API untuk mengambil data notifikasi terbaru secara real-time
+    Route::get('/api/notifikasi-terbaru', function () {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $notifData = $user->unreadNotifications->take(5)->map(function ($notif) {
+            return [
+                'id' => $notif->id,
+                'title' => $notif->data['title'] ?? 'Pemberitahuan Baru',
+                'message' => $notif->data['message'] ?? '',
+                'time' => $notif->created_at->diffForHumans(),
+            ];
+        });
+
+        return response()->json([
+            'unreadCount' => $user->unreadNotifications->count(),
+            'notifications' => $notifData
+        ]);
+    })->name('api.notifikasi.terbaru');
 });
 
 // ADMIN AREA

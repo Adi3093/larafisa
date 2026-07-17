@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Pembayaran;
 use App\Services\PakasirPaymentService;
+use App\Notifications\ReservasiBerhasil;
 
 class GuestReservationController extends Controller
 {
@@ -166,7 +167,7 @@ class GuestReservationController extends Controller
             'Extra Selimut' => (int) $request->extra_selimut,
             'Pesan Tambahan' => $request->pesan_tambahan ?? '-',
             'Metode Pembayaran' => $request->metode_pembayaran,
-            'Total Bayar' => $totalBayar, // Menyimpan nominal yang harus dibayar
+            'Total Bayar' => $totalBayar,
             'Detail Pembayaran' => $request->metode_pembayaran === 'QRIS' ? 'Menunggu Pembayaran QRIS' : 'Bayar di Tempat'
         ];
 
@@ -191,9 +192,18 @@ class GuestReservationController extends Controller
             'expired_at' => $checkIn,
         ]);
 
-        // Generate QRIS Code
+        // QRIS Code
         if ($request->metode_pembayaran === 'QRIS') {
             $pakasirService->createQrisPayment($noInvoice, $totalBayar);
+        }
+
+        $userSaatIni = Auth::user();
+        if ($userSaatIni) {
+            $userSaatIni->notify(new ReservasiBerhasil(
+                $noReservasi,
+                $kelasKamar->nama_kelas,
+                $request->jumlah_anggota
+            ));
         }
 
         return redirect()->route('riwayat.tamu')->with('success', "Reservasi $noReservasi berhasil dibuat! Silakan cek detail reservasi untuk rincian pembayaran.");

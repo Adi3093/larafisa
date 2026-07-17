@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Fisa Hotel</title>
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
@@ -75,7 +80,24 @@
                             </div>
                         @endif
 
-                        <div class="relative" x-data="{ openNotif: false }" @click.outside="openNotif = false">
+                        <div class="relative" x-data="{
+                            openNotif: false,
+                            unreadCount: {{ auth()->user()->unreadNotifications->count() }},
+                            notifications: [],
+                            async fetchNotif() {
+                                try {
+                                    let response = await fetch('/api/notifikasi-terbaru');
+                                    let data = await response.json();
+                                    this.unreadCount = data.unreadCount;
+                                    this.notifications = data.notifications;
+                                } catch (e) {
+                                    console.error('Gagal mengambil data notifikasi:', e);
+                                }
+                            }
+                        }" x-init="fetchNotif();
+                        setInterval(() => fetchNotif(), 10000)"
+                            @click.outside="openNotif = false">
+
                             <button @click="openNotif = !openNotif"
                                 class="relative p-1.5 rounded-full transition focus:outline-none {{ $isSolidBg ? 'hover:bg-white/20' : 'hover:bg-black/10' }}">
                                 <svg class="w-6 h-6 {{ $textColor }} transition-colors" fill="none"
@@ -84,13 +106,11 @@
                                         d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                                 </svg>
 
-                                @php $unreadCount = auth()->user()->unreadNotifications->count(); @endphp
-                                @if ($unreadCount > 0)
-                                    <span
+                                <template x-if="unreadCount > 0">
+                                    <span x-text="unreadCount > 99 ? '99+' : unreadCount"
                                         class="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold text-white bg-red-500 border-2 border-white rounded-full translate-x-1 -translate-y-1">
-                                        {{ $unreadCount > 99 ? '99+' : $unreadCount }}
                                     </span>
-                                @endif
+                                </template>
                             </button>
 
                             <div x-show="openNotif" x-transition.opacity x-cloak
@@ -98,28 +118,29 @@
                                 <div
                                     class="bg-amber-50 px-5 py-4 border-b border-amber-100 flex justify-between items-center">
                                     <h3 class="font-bold text-amber-950 text-sm">Notifikasi Terbaru</h3>
-                                    <span
-                                        class="text-[10px] font-bold bg-amber-200 text-amber-800 px-2.5 py-1 rounded-full">{{ $unreadCount }}
-                                        Baru</span>
+                                    <span x-text="unreadCount + ' Baru'"
+                                        class="text-[10px] font-bold bg-amber-200 text-amber-800 px-2.5 py-1 rounded-full"></span>
                                 </div>
+
                                 <div class="max-h-[350px] overflow-y-auto">
-                                    @forelse(auth()->user()->unreadNotifications->take(5) as $notif)
-                                        <a href="{{ route('notif.tamu') }}?id={{ $notif->id }}"
+                                    <template x-for="notif in notifications" :key="notif.id">
+                                        <a :href="'/pusat-notifikasi?id=' + notif.id"
                                             class="block px-5 py-4 border-b border-gray-50 hover:bg-amber-50/50 transition">
-                                            <p class="text-sm font-bold text-gray-900 mb-1">
-                                                {{ $notif->data['title'] ?? 'Pemberitahuan Baru' }}</p>
-                                            <p class="text-xs text-gray-500 line-clamp-2 leading-relaxed">
-                                                {{ $notif->data['message'] ?? '' }}</p>
-                                            <p class="text-[10px] font-bold text-amber-600 mt-2">
-                                                {{ $notif->created_at->diffForHumans() }}</p>
+                                            <p class="text-sm font-bold text-gray-900 mb-1" x-text="notif.title"></p>
+                                            <p class="text-xs text-gray-500 line-clamp-2 leading-relaxed"
+                                                x-text="notif.message"></p>
+                                            <p class="text-[10px] font-bold text-amber-600 mt-2" x-text="notif.time"></p>
                                         </a>
-                                    @empty
+                                    </template>
+
+                                    <template x-if="notifications.length === 0">
                                         <div class="px-5 py-10 text-center">
                                             <span class="text-4xl opacity-30 block mb-3">📭</span>
                                             <p class="text-sm font-medium text-gray-400">Belum ada notifikasi baru.</p>
                                         </div>
-                                    @endforelse
+                                    </template>
                                 </div>
+
                                 <div class="bg-gray-50 p-3 border-t border-gray-100 text-center">
                                     <a href="{{ route('notif.tamu') }}"
                                         class="text-sm font-bold text-amber-600 hover:text-amber-700 hover:underline">
@@ -197,6 +218,30 @@
             </a>
         </div>
     </div>
+
+    <x-confirm />
+
+    <script>
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
+            if (form.hasAttribute('data-confirm')) {
+                e.preventDefault();
+                const dataRaw = form.getAttribute('data-confirm').split('|');
+
+                if (!form.id) form.id = 'auto-id-' + Math.random().toString(36).substring(2, 9);
+
+                window.dispatchEvent(new CustomEvent('open-confirm', {
+                    detail: {
+                        title: dataRaw[0],
+                        message: dataRaw[1],
+                        confirmText: form.getAttribute('data-btn') || 'Ya, Lanjutkan',
+                        target: form.id,
+                        theme: form.getAttribute('data-theme') || 'amber'
+                    }
+                }));
+            }
+        });
+    </script>
 </body>
 
 </html>

@@ -74,14 +74,17 @@
 
                     <div class="grid grid-cols-2 gap-2">
                         <form action="{{ route('notif.tamu.deleteRead') }}" method="POST" class="w-full"
-                            onsubmit="return confirm('Hapus semua pesan yang sudah dibaca?');">
+                            data-confirm="Hapus Pesan Terbaca?|Apakah Anda yakin ingin menghapus semua pesan yang sudah dibaca? Tindakan ini tidak dapat dibatalkan."
+                            data-theme="danger" data-btn="Ya, Hapus">
                             @csrf @method('DELETE')
                             <button type="submit"
                                 class="w-full bg-orange-50 text-orange-700 text-[10px] sm:text-xs font-bold py-2.5 rounded-lg hover:bg-orange-100 transition border border-orange-200">Hapus
                                 Terbaca</button>
                         </form>
+
                         <form action="{{ route('notif.tamu.deleteAll') }}" method="POST" class="w-full"
-                            onsubmit="return confirm('Hapus SEMUA pesan secara permanen?');">
+                            data-confirm="Hapus SEMUA Pesan?|Peringatan: Ini akan menghapus seluruh riwayat notifikasi Anda secara permanen. Yakin ingin melanjutkan?"
+                            data-theme="danger" data-btn="Ya, Hapus Semua">
                             @csrf @method('DELETE')
                             <button type="submit"
                                 class="w-full bg-red-50 text-red-700 text-[10px] sm:text-xs font-bold py-2.5 rounded-lg hover:bg-red-100 transition border border-red-200">Hapus

@@ -410,11 +410,14 @@
                                     <div class="flex gap-2 w-full md:w-auto">
                                         <button type="button" onclick="closeWalkInModal()"
                                             class="flex-1 md:flex-none rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-gray-700 shadow-sm border border-gray-200 hover:bg-gray-50 transition">Batal</button>
-                                        <button type="submit" name="action_type" value="simpan_checkin"
-                                            class="flex-1 md:flex-none rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition"
-                                            onclick="return confirm('Apakah Anda yakin tamu akan langsung Check-In sekarang?')">Simpan
+
+                                        <button type="button"
+                                            onclick="openCustomConfirm('Langsung Check-In?', 'Pastikan tamu sudah siap untuk menempati kamar sekarang juga.', 'emerald', 'Ya, Check-In', 'walkInForm', 'action_type', 'simpan_checkin')"
+                                            class="flex-1 md:flex-none rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition">Simpan
                                             & Check-in</button>
-                                        <button type="submit" name="action_type" value="simpan"
+
+                                        <button type="button"
+                                            onclick="openCustomConfirm('Simpan Reservasi?', 'Data pesanan tamu akan disimpan ke dalam sistem.', 'amber', 'Ya, Simpan', 'walkInForm', 'action_type', 'simpan')"
                                             class="flex-1 md:flex-none rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-amber-700 transition">Simpan</button>
                                     </div>
                                 </div>
@@ -554,7 +557,8 @@
                             onclick="document.getElementById('modalKonfirmasi').classList.add('hidden')"
                             class="px-5 py-3 text-sm font-bold text-gray-600 hover:bg-gray-200 rounded-xl transition">Batal</button>
                         <div class="flex-1 flex gap-2 justify-end">
-                            <button type="submit"
+                            <button type="button"
+                                onclick="openCustomConfirm('Setujui Reservasi?', 'Status pesanan tamu ini akan diubah menjadi Terkonfirmasi.', 'emerald', 'Ya, Setujui', 'formTerimaModal')"
                                 class="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition">Konfirmasi
                                 Reservasi</button>
                         </div>

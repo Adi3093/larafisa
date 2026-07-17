@@ -190,14 +190,17 @@
 
                 <div class="p-4 bg-gray-50 border-t border-gray-100 flex gap-2">
                     @if ($res->status_reservasi === 'Terkonfirmasi')
+                        <!-- TOMBOL DETAIL (HANYA ALERT KUSTOM, TIDAK SUBMIT FORM) -->
                         <button type="button"
                             class="flex-1 bg-white border border-gray-300 text-gray-700 px-3 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-100 transition text-center"
-                            onclick="alert('Silakan Proses Check-In terlebih dahulu untuk mengelola pembayaran.')">Detail</button>
-                        <form method="POST" action="{{ route('checkinout.checkin', $res->id) }}"
-                            class="flex-1 m-0">
+                            onclick="showMyConfirm('Belum Check-In', 'Silakan Proses Check-In terlebih dahulu untuk mengelola pembayaran.', 'amber', 'OK, Mengerti', null, null)">Detail</button>
+
+                        <!-- TOMBOL CHECK-IN DENGAN MODAL KUSTOM LOKAL -->
+                        <form id="formCheckin-{{ $res->id }}" method="POST"
+                            action="{{ route('checkinout.checkin', $res->id) }}" class="flex-1 m-0">
                             @csrf
-                            <button type="submit"
-                                onclick="return confirm('Serahkan kunci dan proses Check-In tamu ini?')"
+                            <button type="button"
+                                onclick="showMyConfirm('Proses Check-In?', 'Serahkan kunci dan proses Check-In tamu ini.', 'emerald', 'Ya, Check-In', 'formCheckin-{{ $res->id }}', null)"
                                 class="w-full bg-amber-600 hover:bg-amber-700 text-white px-3 py-2.5 rounded-xl text-xs font-bold transition shadow-sm shadow-amber-600/20 text-center">Check-In</button>
                         </form>
                     @elseif($res->status_reservasi === 'Check-In')
@@ -269,7 +272,8 @@
         </div>
     @endif
 
-    <div id="modalCheckout" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-sm"
+    <!-- Z-INDEX 40 AGAR MODAL CONFIRM DI DEPANNYA -->
+    <div id="modalCheckout" class="fixed inset-0 z-40 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-sm"
         aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
             <div
@@ -287,6 +291,9 @@
 
                 <form id="formCheckoutModal" method="POST" action="">
                     @csrf
+                    <!-- INPUT HIDDEN UNTUK MENAMPUNG AKSI TOMBOL -->
+                    <input type="hidden" id="co_action_type" name="action_type" value="">
+
                     <div class="flex flex-col md:flex-row p-6 gap-6">
                         <div class="w-full md:w-1/2 space-y-4">
                             <div class="flex justify-between items-end border-b border-gray-200 pb-2">
@@ -403,11 +410,9 @@
                                         QRIS Tambahan</button>
                                     <div
                                         class="border border-gray-300 bg-gray-50 rounded-xl flex-grow min-h-[180px] flex items-center justify-center p-3">
-                                        <div id="qris_container_tambahan" class="text-center w-full">
-                                            <span
+                                        <div id="qris_container_tambahan" class="text-center w-full"><span
                                                 class="text-xl text-gray-300 font-black tracking-widest uppercase">QRIS
-                                                CODE</span>
-                                        </div>
+                                                CODE</span></div>
                                     </div>
                                     <p class="text-center text-[10px] font-bold text-gray-500"
                                         id="txt_invoice_tambahan"></p>
@@ -436,19 +441,167 @@
                             <label for="print_struk" class="text-sm font-bold text-gray-800 cursor-pointer">Cetak
                                 Struk Pembayaran</label>
                         </div>
+
                         <div class="flex gap-2 w-full sm:w-auto">
-                            <button type="submit" name="action_type" value="simpan"
+                            <!-- TOMBOL SIMPAN (MEMANGGIL FUNGSI NATIVE JS LOCAL) -->
+                            <button type="button"
+                                onclick="showMyConfirm('Simpan Perubahan?', 'Perubahan data biaya dan jadwal akan disimpan ke sistem.', 'amber', 'Ya, Simpan', 'formCheckoutModal', 'simpan')"
                                 class="flex-1 sm:flex-none rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-gray-700 shadow-sm border border-gray-300 hover:bg-gray-100 transition">Simpan
                                 Perubahan</button>
-                            <button type="submit" name="action_type" value="checkout"
-                                onclick="return confirm('Selesaikan reservasi dan cetak struk final?')"
-                                class="flex-1 sm:flex-none rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-amber-700 transition">Check-Out</button>
+
+                            <!-- TOMBOL CHECK-OUT (MEMANGGIL FUNGSI NATIVE JS LOCAL) -->
+                            <button type="button"
+                                onclick="showMyConfirm('Selesaikan Reservasi?', 'Proses Check-out tamu akan dilakukan dan struk final akan dicetak.', 'emerald', 'Ya, Check-Out', 'formCheckoutModal', 'checkout')"
+                                class="flex-1 sm:flex-none rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition">Check-Out</button>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+    <!-- INI ADALAH MODAL KONFIRMASI LOKAL YANG KEBAL ERROR DAN PASTI BERADA DI DEPAN -->
+    <div id="localConfirmModal"
+        class="fixed inset-0 z-[999999] hidden items-center justify-center bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div id="localConfirmContent"
+            class="relative p-4 w-full max-w-md transform scale-95 transition-transform duration-300">
+            <div
+                class="relative bg-white border border-gray-200 rounded-3xl shadow-2xl p-6 md:p-8 text-center overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gray-50 rounded-bl-full -z-10"></div>
+
+                <button type="button" onclick="closeLocalConfirm()"
+                    class="absolute top-4 right-4 text-gray-400 bg-transparent hover:bg-gray-100 hover:text-gray-900 rounded-xl text-sm w-8 h-8 ms-auto inline-flex justify-center items-center transition">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18 17.94 6M18 18 6.06 6" />
+                    </svg>
+                </button>
+
+                <div class="relative w-20 h-20 mx-auto mb-5 flex items-center justify-center">
+                    <div id="localIconContainer"
+                        class="w-16 h-16 rounded-full flex items-center justify-center border-4 border-white shadow-sm ring-2">
+                        <svg id="localIconSvg" class="w-10 h-10" aria-hidden="true"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="2" d="M12 13V8m0 8h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                    </div>
+                </div>
+
+                <h3 id="localConfirmTitle" class="mb-2 text-xl font-bold text-gray-900"></h3>
+                <p id="localConfirmMessage" class="mb-6 text-sm text-gray-500 font-medium"></p>
+
+                <div class="flex justify-center gap-3">
+                    <button type="button" onclick="closeLocalConfirm()"
+                        class="text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-bold rounded-xl text-sm px-5 py-2.5 transition">Batal</button>
+                    <button type="button" id="localConfirmBtn"
+                        class="text-white font-bold rounded-xl text-sm px-5 py-2.5 transition"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // LOGIKA MODAL LOKAL (KEBAL ERROR & MENUMPANG TINDIH)
+        let formToSubmitLocal = null;
+        let actionValLocal = null;
+
+        function showMyConfirm(title, message, theme, btnText, formId, actionVal = null) {
+            formToSubmitLocal = formId ? document.getElementById(formId) : null;
+            actionValLocal = actionVal;
+
+            // Validasi Bawaan Browser agar Peringatan Merah Tetap Muncul
+            if (formToSubmitLocal && typeof formToSubmitLocal.checkValidity === 'function') {
+                if (!formToSubmitLocal.checkValidity()) {
+                    formToSubmitLocal.reportValidity();
+                    return;
+                }
+            }
+
+            document.getElementById('localConfirmTitle').innerText = title;
+            document.getElementById('localConfirmMessage').innerText = message;
+
+            let btn = document.getElementById('localConfirmBtn');
+            btn.innerText = btnText;
+            btn.disabled = false;
+
+            let iconContainer = document.getElementById('localIconContainer');
+            let iconSvg = document.getElementById('localIconSvg');
+
+            // Set Tema Warna
+            if (theme === 'emerald') {
+                btn.className =
+                    'text-white font-bold rounded-xl text-sm px-5 py-2.5 transition bg-emerald-600 hover:bg-emerald-700';
+                iconContainer.className =
+                    'w-16 h-16 rounded-full flex items-center justify-center border-4 border-white shadow-sm ring-2 bg-emerald-50 ring-emerald-100 mx-auto mb-4';
+                iconSvg.className = 'w-10 h-10 text-emerald-500';
+                iconSvg.innerHTML =
+                    '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 13V8m0 8h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>';
+            } else {
+                btn.className =
+                    'text-white font-bold rounded-xl text-sm px-5 py-2.5 transition bg-amber-600 hover:bg-amber-700';
+                iconContainer.className =
+                    'w-16 h-16 rounded-full flex items-center justify-center border-4 border-white shadow-sm ring-2 bg-amber-50 ring-amber-100 mx-auto mb-4';
+                iconSvg.className = 'w-10 h-10 text-amber-500';
+                iconSvg.innerHTML =
+                    '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 13V8m0 8h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>';
+            }
+
+            let modal = document.getElementById('localConfirmModal');
+            let content = document.getElementById('localConfirmContent');
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.classList.add('opacity-100');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeLocalConfirm() {
+            let modal = document.getElementById('localConfirmModal');
+            let content = document.getElementById('localConfirmContent');
+
+            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+        }
+
+        document.getElementById('localConfirmBtn').addEventListener('click', function() {
+            if (!formToSubmitLocal) {
+                closeLocalConfirm();
+                return;
+            }
+
+            // Animasi Proses
+            this.innerText = 'Memproses...';
+            this.disabled = true;
+
+            // Ubah Ikon menjadi Centang Hijau
+            let iconContainer = document.getElementById('localIconContainer');
+            iconContainer.className =
+                'w-16 h-16 rounded-full flex items-center justify-center border-4 border-white shadow-sm ring-2 bg-green-100 ring-green-100 mx-auto mb-4 animate-pulse';
+            document.getElementById('localIconSvg').innerHTML =
+                '<path fill="currentColor" class="text-green-600" d="M10.5 15.25A.74.74 0 0 1 10 15l-3-3a.75.75 0 0 1 1-1l2.47 2.47L19 5a.75.75 0 0 1 1-1l-9 9a.74.74 0 0 1-.5.25Z" /><path fill="currentColor" class="text-green-600" d="M12 21a9 9 0 0 1-7.87-4.66a8.67 8.67 0 0 1-1.07-3.41a9 9 0 0 1 4.6-8.81a8.67 8.67 0 0 1 3.41-1.07a8.86 8.86 0 0 1 3.55.34a.75.75 0 1 1-.43 1.43a7.62 7.62 0 0 0-3-.28a7.43 7.43 0 0 0-2.84.89a7.5 7.5 0 0 0-2.2 1.84a7.42 7.42 0 0 0-1.64 5.51a7.43 7.43 0 0 0 .89 2.84a7.5 7.5 0 0 0 1.84 2.2a7.42 7.42 0 0 0 5.51 1.64a7.43 7.43 0 0 0 2.84-.89a7.5 7.5 0 0 0 2.2-1.84a7.42 7.42 0 0 0 1.64-5.51a.75.75 0 1 1 1.57-.15a9 9 0 0 1-4.61 8.81A8.67 8.67 0 0 1 12.93 21H12Z" />';
+
+            setTimeout(() => {
+                if (actionValLocal) {
+                    let hiddenInput = document.getElementById('co_action_type');
+                    if (hiddenInput) {
+                        hiddenInput.value = actionValLocal;
+                    }
+                }
+                formToSubmitLocal.submit();
+            }, 600); // Tunggu sebentar agar centang hijaunya terlihat
+        });
+    </script>
 
     <script>
         window.LaravelCSRFToken = '{{ csrf_token() }}';
