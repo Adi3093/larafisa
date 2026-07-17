@@ -127,48 +127,112 @@
                 <thead
                     class="bg-amber-50/50 border-b border-amber-200 text-amber-950 font-bold uppercase tracking-wider text-[11px]">
                     <tr>
-                        <th class="px-6 py-4 whitespace-nowrap">ID Reservasi</th>
-                        <th class="px-6 py-4 whitespace-nowrap">Tgl Selesai / Out</th>
-                        <th class="px-6 py-4 whitespace-nowrap">Nama Tamu</th>
-                        <th class="px-6 py-4 whitespace-nowrap">Tipe Kamar & Durasi</th>
-                        <th class="px-6 py-4 whitespace-nowrap text-right">Total Pemasukan</th>
+                        <th class="px-5 py-4 whitespace-nowrap">Reservasi</th>
+                        <th class="px-5 py-4 whitespace-nowrap">Data Tamu</th>
+                        <th class="px-5 py-4 whitespace-nowrap">Tipe Kamar & Durasi</th>
+                        <th class="px-5 py-4 whitespace-nowrap text-right">Biaya Kamar</th>
+                        <th class="px-5 py-4 whitespace-nowrap text-right">Biaya Ekstra</th>
+                        <th class="px-5 py-4 whitespace-nowrap text-right">Total Biaya</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-amber-50 text-gray-800">
                     @forelse($reservasis as $res)
                         @php
-                            $in = \Carbon\Carbon::parse($res->check_in);
-                            $out = \Carbon\Carbon::parse($res->check_out);
-                            $diffDays = max(1, $in->diffInDays($out));
+                            $in = \Carbon\Carbon::parse($res->check_in)->startOfDay();
+                            $out = \Carbon\Carbon::parse($res->check_out)->startOfDay();
+                            $diffDays = max(1, (int) $in->diffInDays($out));
+
+                            // Hitungan Uang
                             $hargaKamar = $res->kamar->kelasKamar->harga ?? 0;
+                            $kamarTotal = $hargaKamar * $diffDays;
 
                             $ekstra = is_array($res->ekstra) ? $res->ekstra : json_decode($res->ekstra, true) ?? [];
                             $bed = ($ekstra['Extra Bed'] ?? 0) * 100000;
                             $selimut = ($ekstra['Extra Selimut'] ?? 0) * 25000;
+                            $ekstraTotal = $bed + $selimut;
 
-                            $totalBaris = $hargaKamar * $diffDays + $bed + $selimut;
-                            $metode = $ekstra['Detail Pembayaran'] ?? '-';
+                            $totalBaris = $kamarTotal + $ekstraTotal;
+
+                            // Tarik database pembayaran
+                            $pembayaranUtama = \App\Models\Pembayaran::where('reservasi_id', $res->id)
+                                ->where('invoice', 'not like', 'ADD-%')
+                                ->first();
+
+                            $pembayaranTambahan = \App\Models\Pembayaran::where('reservasi_id', $res->id)
+                                ->where('invoice', 'like', 'ADD-%')
+                                ->latest()
+                                ->first();
+
+                            // Metode Kamar
+                            if ($pembayaranUtama) {
+                                $metodeKamar = 'QRIS: ' . $pembayaranUtama->invoice;
+                            } else {
+                                $metodeKamar = 'TUNAI / CASH';
+                            }
+
+                            // Metode Ekstra
+                            $metodeEkstra = '-';
+                            if ($ekstraTotal > 0) {
+                                if ($pembayaranTambahan) {
+                                    $metodeEkstra = 'QRIS: ' . $pembayaranTambahan->invoice;
+                                } else {
+                                    $metodeEkstra = 'TUNAI / CASH';
+                                }
+                            }
+
+                            $tglSelesai = \Carbon\Carbon::parse($res->updated_at);
                         @endphp
                         <tr class="hover:bg-amber-50/30 transition">
-                            <td class="px-6 py-4 font-bold text-amber-600">#{{ $res->no_reservasi }}</td>
-                            <td class="px-6 py-4 font-semibold">{{ $out->translatedFormat('d M Y') }}</td>
-                            <td class="px-6 py-4 font-bold text-gray-900">{{ $res->nama_tamu }}</td>
-                            <td class="px-6 py-4">
-                                <div class="font-bold">{{ $res->kamar->kelasKamar->nama_kelas ?? 'Kamar Dihapus' }}
-                                </div>
-                                <div class="text-xs text-gray-500">{{ $diffDays }} Malam | Ekstra: Rp
-                                    {{ number_format($bed + $selimut, 0, ',', '.') }}</div>
+                            <!-- Kolom 1: Reservasi (ID & Tanggal) -->
+                            <td class="px-5 py-4">
+                                <div class="font-bold text-amber-600">#{{ $res->no_reservasi }}</div>
+                                <div class="text-xs font-semibold text-gray-500 mt-0.5">
+                                    {{ $tglSelesai->translatedFormat('d M Y') }}</div>
                             </td>
-                            <td class="px-6 py-4 text-right">
-                                <div class="font-black text-emerald-600 text-base">Rp
+
+                            <!-- Kolom 2: Data Tamu (Nama & NIK dipisah) -->
+                            <td class="px-5 py-4">
+                                <div class="font-bold text-gray-900">{{ $res->nama_tamu }}</div>
+                                <div class="text-[11px] font-medium text-gray-500 mt-0.5">NIK:
+                                    {{ $res->no_ktp ?? '-' }}</div>
+                            </td>
+
+                            <!-- Kolom 3: Tipe Kamar & Durasi -->
+                            <td class="px-5 py-4">
+                                <div class="font-bold text-gray-800 text-xs">
+                                    {{ $res->kamar->kelasKamar->nama_kelas ?? 'Kamar Dihapus' }}</div>
+                                <div class="text-[11px] text-gray-500 mt-0.5">{{ $diffDays }} Malam</div>
+                            </td>
+
+                            <!-- Kolom 4: Biaya Kamar -->
+                            <td class="px-5 py-4 text-right align-top">
+                                <div class="font-bold text-gray-800 text-sm">Rp
+                                    {{ number_format($kamarTotal, 0, ',', '.') }}</div>
+                                <div class="text-[9px] font-bold text-emerald-600 uppercase tracking-wider mt-1">
+                                    {{ $metodeKamar }}</div>
+                            </td>
+
+                            <!-- Kolom 5: Biaya Tambahan -->
+                            <td class="px-5 py-4 text-right align-top">
+                                @if ($ekstraTotal > 0)
+                                    <div class="font-bold text-gray-800 text-sm">Rp
+                                        {{ number_format($ekstraTotal, 0, ',', '.') }}</div>
+                                    <div class="text-[9px] font-bold text-amber-600 uppercase tracking-wider mt-1">
+                                        {{ $metodeEkstra }}</div>
+                                @else
+                                    <div class="font-bold text-gray-300">-</div>
+                                @endif
+                            </td>
+
+                            <!-- Kolom 6: Total Keseluruhan Biaya -->
+                            <td class="px-5 py-4 text-right align-top bg-amber-50/30">
+                                <div class="font-black text-blue-700 text-base">Rp
                                     {{ number_format($totalBaris, 0, ',', '.') }}</div>
-                                <div class="text-[10px] font-bold text-gray-400 uppercase mt-0.5">{{ $metode }}
-                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-12 text-center">
+                            <td colspan="6" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center justify-center text-amber-900/40">
                                     <svg class="w-12 h-12 mb-3 text-amber-200" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor">

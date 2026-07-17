@@ -107,7 +107,9 @@
             @php
                 $checkInDate = \Carbon\Carbon::parse($res->check_in);
                 $checkOutDate = \Carbon\Carbon::parse($res->check_out);
-                $diffDays = max(1, $checkInDate->diffInDays($checkOutDate));
+                $inStart = $checkInDate->copy()->startOfDay();
+                $outStart = $checkOutDate->copy()->startOfDay();
+                $diffDays = max(1, (int) $inStart->diffInDays($outStart));
 
                 $hargaKamar = $res->kamar->kelasKamar->harga ?? 0;
                 $ekstra = is_array($res->ekstra) ? $res->ekstra : json_decode($res->ekstra, true) ?? [];

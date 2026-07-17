@@ -10,33 +10,29 @@ class PendapatanController extends Controller
 {
     public function index(Request $request)
     {
-        // 1. Ambil Parameter Filter
         $periode = $request->input('periode', 'mingguan');
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
         $search = $request->input('search');
         $perPage = $request->input('per_page', 10);
 
-        // 2. Query Dasar: Hanya ambil reservasi yang sudah "Selesai" (Lunas & Check-Out)
-        $query = Reservasi::with('kamar.kelasKamar')->where('status_reservasi', 'Selesai');
+        $query = Reservasi::with(['kamar.kelasKamar', 'pembayaran'])->where('status_reservasi', 'Selesai');
 
-        // 3. Logika Filter Waktu
         if ($startDate && $endDate) {
-            $query->whereDate('check_out', '>=', $startDate)
-                ->whereDate('check_out', '<=', $endDate);
+            $query->whereDate('updated_at', '>=', $startDate)
+                ->whereDate('updated_at', '<=', $endDate);
             $teksPeriode = "Kustom (" . Carbon::parse($startDate)->format('d M') . " - " . Carbon::parse($endDate)->format('d M') . ")";
         } else {
             if ($periode === 'bulanan') {
-                $query->whereMonth('check_out', Carbon::now()->month)
-                    ->whereYear('check_out', Carbon::now()->year);
+                $query->whereMonth('updated_at', Carbon::now()->month)
+                    ->whereYear('updated_at', Carbon::now()->year);
                 $teksPeriode = "Bulan Ini (" . Carbon::now()->translatedFormat('F Y') . ")";
             } else {
-                $query->whereBetween('check_out', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                $query->whereBetween('updated_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
                 $teksPeriode = "Minggu Ini";
             }
         }
 
-        // 4. Logika Pencarian
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama_tamu', 'like', "%{$search}%")
@@ -44,14 +40,14 @@ class PendapatanController extends Controller
             });
         }
 
-        // 5. Kalkulasi Rekapan (Tanpa Paginasi untuk Card Atas)
         $allData = $query->get();
         $totalPendapatan = 0;
 
         foreach ($allData as $res) {
-            $in = Carbon::parse($res->check_in);
-            $out = Carbon::parse($res->check_out);
-            $diffDays = max(1, $in->diffInDays($out));
+            $in = Carbon::parse($res->check_in)->startOfDay();
+            $out = Carbon::parse($res->check_out)->startOfDay();
+            $diffDays = max(1, (int) $in->diffInDays($out));
+
             $hargaKamar = $res->kamar->kelasKamar->harga ?? 0;
 
             $ekstra = is_string($res->ekstra) ? json_decode($res->ekstra, true) : $res->ekstra;
@@ -62,12 +58,9 @@ class PendapatanController extends Controller
         }
 
         $totalTamu = $allData->count();
-
-        // Simulasi Persentase Kunjungan (Bisa dikembangkan membandingkan data bulan lalu)
         $persentaseKunjungan = $totalTamu > 0 ? "+12.5%" : "0%";
 
-        // 6. Eksekusi Paginasi untuk Tabel
-        $reservasis = $query->orderBy('check_out', 'desc')->paginate($perPage)->appends($request->query());
+        $reservasis = $query->orderBy('updated_at', 'desc')->paginate($perPage)->appends($request->query());
 
         return view('dashboard.pendapatan', compact(
             'reservasis',
@@ -82,23 +75,22 @@ class PendapatanController extends Controller
 
     public function export(Request $request, $format)
     {
-        // 1. Ambil ulang filter yang sedang aktif agar data export sama dengan tabel
         $periode = $request->input('periode', 'mingguan');
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
         $search = $request->input('search');
 
-        $query = Reservasi::with('kamar.kelasKamar')->where('status_reservasi', 'Selesai');
+        $query = Reservasi::with(['kamar.kelasKamar', 'pembayaran'])->where('status_reservasi', 'Selesai');
 
         if ($startDate && $endDate) {
-            $query->whereDate('check_out', '>=', $startDate)->whereDate('check_out', '<=', $endDate);
+            $query->whereDate('updated_at', '>=', $startDate)->whereDate('updated_at', '<=', $endDate);
             $teksPeriode = "Kustom (" . Carbon::parse($startDate)->format('d-M-Y') . " s.d " . Carbon::parse($endDate)->format('d-M-Y') . ")";
         } else {
             if ($periode === 'bulanan') {
-                $query->whereMonth('check_out', Carbon::now()->month)->whereYear('check_out', Carbon::now()->year);
+                $query->whereMonth('updated_at', Carbon::now()->month)->whereYear('updated_at', Carbon::now()->year);
                 $teksPeriode = "Bulan Ini (" . Carbon::now()->translatedFormat('F Y') . ")";
             } else {
-                $query->whereBetween('check_out', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                $query->whereBetween('updated_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
                 $teksPeriode = "Minggu Ini";
             }
         }
@@ -109,14 +101,14 @@ class PendapatanController extends Controller
             });
         }
 
-        // Ambil semua data (tanpa paginasi)
-        $reservasis = $query->orderBy('check_out', 'desc')->get();
+        $reservasis = $query->orderBy('updated_at', 'desc')->get();
 
         $totalPendapatan = 0;
         foreach ($reservasis as $res) {
-            $in = Carbon::parse($res->check_in);
-            $out = Carbon::parse($res->check_out);
-            $diffDays = max(1, $in->diffInDays($out));
+            $in = Carbon::parse($res->check_in)->startOfDay();
+            $out = Carbon::parse($res->check_out)->startOfDay();
+            $diffDays = max(1, (int) $in->diffInDays($out));
+
             $hargaKamar = $res->kamar->kelasKamar->harga ?? 0;
 
             $ekstra = is_array($res->ekstra) ? $res->ekstra : (json_decode($res->ekstra, true) ?? []);
@@ -126,15 +118,10 @@ class PendapatanController extends Controller
             $totalPendapatan += ($hargaKamar * $diffDays) + $bed + $selimut;
         }
 
-        // 2. LOGIKA EXPORT PDF
         if ($format === 'pdf') {
-            // Kita panggil facade dompdf secara mutlak agar tidak perlu 'use' di atas
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('dashboard.pendapatanpdf', compact('reservasis', 'totalPendapatan', 'teksPeriode'));
             return $pdf->download('Laporan_Pendapatan_FisaHotel.pdf');
-        }
-
-        // 3. LOGIKA EXPORT CSV (EXCEL)
-        elseif ($format === 'csv') {
+        } elseif ($format === 'csv') {
             $fileName = 'Laporan_Pendapatan_FisaHotel.csv';
             $headers = [
                 "Content-type"        => "text/csv",
@@ -144,35 +131,69 @@ class PendapatanController extends Controller
                 "Expires"             => "0"
             ];
 
-            // Penamaan Kolom Header CSV
-            $columns = ['ID Reservasi', 'Tanggal Keluar', 'Nama Tamu', 'Kamar', 'Durasi Inap (Malam)', 'Total Pemasukan', 'Metode Pembayaran'];
+            // Header yang sudah dipisah rapi untuk Microsoft Excel
+            $columns = [
+                'ID Reservasi',
+                'Tanggal Pelunasan',
+                'Nama Tamu',
+                'Tipe Kamar',
+                'Durasi (Malam)',
+                'Biaya Kamar',
+                'Metode Bayar Kamar',
+                'Biaya Ekstra',
+                'Metode Bayar Ekstra',
+                'Total Pemasukan'
+            ];
 
             $callback = function () use ($reservasis, $columns) {
                 $file = fopen('php://output', 'w');
-                fputcsv($file, $columns); // Tulis Header
+                fputcsv($file, $columns);
 
                 foreach ($reservasis as $res) {
-                    $in = Carbon::parse($res->check_in);
-                    $out = Carbon::parse($res->check_out);
-                    $diffDays = max(1, $in->diffInDays($out));
+                    $in = Carbon::parse($res->check_in)->startOfDay();
+                    $out = Carbon::parse($res->check_out)->startOfDay();
+                    $diffDays = max(1, (int) $in->diffInDays($out));
+
                     $hargaKamar = $res->kamar->kelasKamar->harga ?? 0;
+                    $kamarTotal = $hargaKamar * $diffDays;
 
                     $ekstra = is_array($res->ekstra) ? $res->ekstra : (json_decode($res->ekstra, true) ?? []);
                     $bed = ($ekstra['Extra Bed'] ?? 0) * 100000;
                     $selimut = ($ekstra['Extra Selimut'] ?? 0) * 25000;
+                    $ekstraTotal = $bed + $selimut;
 
-                    $totalBaris = ($hargaKamar * $diffDays) + $bed + $selimut;
-                    $metode = $ekstra['Detail Pembayaran'] ?? '-';
+                    $totalBaris = $kamarTotal + $ekstraTotal;
+
+                    // CARI PEMBAYARAN
+                    $pembayaranUtama = \App\Models\Pembayaran::where('reservasi_id', $res->id)
+                        ->where('invoice', 'not like', 'ADD-%')
+                        ->first();
+
+                    $pembayaranTambahan = \App\Models\Pembayaran::where('reservasi_id', $res->id)
+                        ->where('invoice', 'like', 'ADD-%')
+                        ->latest()
+                        ->first();
+
+                    $metodeKamar = $pembayaranUtama ? 'QRIS (' . $pembayaranUtama->invoice . ')' : 'Tunai';
+
+                    $metodeEkstra = '-';
+                    if ($ekstraTotal > 0) {
+                        $metodeEkstra = $pembayaranTambahan ? 'QRIS (' . $pembayaranTambahan->invoice . ')' : 'Tunai';
+                    }
+
                     $kamarText = 'Kamar ' . ($res->kamar->nomor_ruangan ?? '-') . ' (' . ($res->kamar->kelasKamar->nama_kelas ?? 'Dihapus') . ')';
 
                     fputcsv($file, [
                         $res->no_reservasi,
-                        $out->format('Y-m-d'),
+                        \Carbon\Carbon::parse($res->updated_at)->format('Y-m-d'),
                         $res->nama_tamu,
                         $kamarText,
                         $diffDays,
-                        $totalBaris,
-                        $metode
+                        $kamarTotal,
+                        $metodeKamar,
+                        $ekstraTotal,
+                        $metodeEkstra,
+                        $totalBaris
                     ]);
                 }
                 fclose($file);
@@ -183,5 +204,4 @@ class PendapatanController extends Controller
 
         return back()->with('error', 'Format ekspor tidak dikenali.');
     }
-    //
 }

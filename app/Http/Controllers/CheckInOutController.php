@@ -16,7 +16,6 @@ class CheckInOutController extends Controller
 {
     public function index(Request $request)
     {
-        // TAMBAHKAN 'pembayaran' PADA EAGER LOADING
         $query = Reservasi::whereIn('status_reservasi', ['Terkonfirmasi', 'Check-In'])
             ->with(['kamar.kelasKamar', 'pembayaran']);
 
@@ -64,26 +63,25 @@ class CheckInOutController extends Controller
     public function checkin($id)
     {
         $reservasi = Reservasi::findOrFail($id);
-        $reservasi->update(['status_reservasi' => 'Check-In']);
+
+        // PERBAIKAN: Selalu rekam waktu nyata saat tombol Check-In ditekan!
+        $reservasi->update([
+            'status_reservasi' => 'Check-In',
+            'check_in' => Carbon::now()
+        ]);
 
         if ($reservasi->kamar_id) {
             Kamar::where('id', $reservasi->kamar_id)->update(['status' => 'Terpakai']);
         }
 
-        return back()->with('success', 'Tamu berhasil Check-In! Status kamar otomatis menjadi Terpakai.');
+        return back()->with('success', 'Tamu berhasil Check-In! Waktu kedatangan aktual tercatat: ' . Carbon::now()->format('H:i') . ' WIB.');
     }
 
-    // Fungsi Checkout sekarang menangani "Simpan Perubahan" dan "Selesaikan Check-Out"
     public function checkout(Request $request, $id)
     {
         $reservasi = Reservasi::findOrFail($id);
 
-        // 1. Update Tanggal Check-Out Baru
-        if ($request->filled('tanggal_checkout')) {
-            $reservasi->check_out = Carbon::parse($request->tanggal_checkout)->format('Y-m-d H:i:s');
-        }
-
-        // 2. Update Ekstra (Bed, Selimut)
+        // Update Ekstra (Bed, Selimut)
         $ekstra = is_array($reservasi->ekstra) ? $reservasi->ekstra : json_decode($reservasi->ekstra, true) ?? [];
         if ($request->has('extra_bed_qty')) {
             $ekstra['Extra Bed'] = (int) $request->extra_bed_qty;
@@ -91,15 +89,28 @@ class CheckInOutController extends Controller
         if ($request->has('extra_selimut_qty')) {
             $ekstra['Extra Selimut'] = (int) $request->extra_selimut_qty;
         }
-        $reservasi->update(['ekstra' => $ekstra]);
 
-        // JIKA HANYA SIMPAN PERUBAHAN
+        // JIKA HANYA SIMPAN PERUBAHAN TANGGAL / EKSTRA (Bukan Selesai)
         if ($request->action_type === 'simpan') {
+            $newCheckOut = $reservasi->check_out;
+            if ($request->filled('tanggal_checkout')) {
+                $newCheckOut = Carbon::parse($request->tanggal_checkout)->format('Y-m-d H:i:s');
+            }
+
+            $reservasi->update([
+                'check_out' => $newCheckOut,
+                'ekstra' => $ekstra
+            ]);
             return back()->with('success', 'Perubahan jadwal & ekstra berhasil disimpan.');
         }
 
-        // JIKA CHECK-OUT (SELESAI)
-        $reservasi->update(['status_reservasi' => 'Selesai']);
+        // JIKA CHECK-OUT SELESAI
+        // PERBAIKAN: Selalu rekam waktu nyata saat tombol Check-Out ditekan!
+        $reservasi->update([
+            'status_reservasi' => 'Selesai',
+            'check_out' => Carbon::now(),
+            'ekstra' => $ekstra
+        ]);
 
         if ($reservasi->kamar_id) {
             Kamar::where('id', $reservasi->kamar_id)->update(['status' => 'Tersedia']);
@@ -109,9 +120,9 @@ class CheckInOutController extends Controller
             return redirect()->route('checkinout.print', $reservasi->id);
         }
 
-        return back()->with('success', 'Proses Check-Out berhasil diselesaikan!');
+        return back()->with('success', 'Proses Check-Out berhasil! Waktu pulang aktual tercatat: ' . Carbon::now()->format('d M Y H:i') . ' WIB.');
     }
-    // FUNGSI BARU: GENERATE QRIS UNTUK PEMBAYARAN TAMBAHAN
+
     public function generateQrisTambahan(Request $request, $id, \App\Services\PakasirPaymentService $pakasirService)
     {
         $reservasi = Reservasi::findOrFail($id);
@@ -121,13 +132,11 @@ class CheckInOutController extends Controller
             return response()->json(['success' => false, 'message' => 'Tidak ada tagihan tambahan.']);
         }
 
-        // CEK DUPLIKASI: Cari apakah ada invoice ADD- yang sesuai dengan nominal ini
         $pembayaranExisting = \App\Models\Pembayaran::where('reservasi_id', $reservasi->id)
             ->where('invoice', 'like', 'ADD-%')
             ->latest()
             ->first();
 
-        // Jika ADA dan NOMINALNYA SAMA, kembalikan gambar QR yang lama (Jangan buat baru)
         if ($pembayaranExisting && $pembayaranExisting->total == $totalTambahan && $pembayaranExisting->qr_image) {
             return response()->json([
                 'success' => true,
@@ -137,7 +146,6 @@ class CheckInOutController extends Controller
             ]);
         }
 
-        // Jika BELUM ADA atau NOMINALNYA BERUBAH, baru kita buatkan invoice ADD- yang baru
         $invoiceTambahan = 'ADD-' . date('Ymd') . '-' . strtoupper(Str::random(4));
 
         $pembayaran = \App\Models\Pembayaran::create([
@@ -162,7 +170,6 @@ class CheckInOutController extends Controller
         return response()->json(['success' => false, 'message' => 'Gagal terhubung ke Gateway.']);
     }
 
-    // FUNGSI BARU: PERPANJANG DURASI INAP
     public function extend(Request $request, $id)
     {
         $request->validate([
@@ -174,12 +181,10 @@ class CheckInOutController extends Controller
         $newCheckOut = Carbon::parse($request->new_check_out)->format('Y-m-d H:i:s');
         $checkIn = Carbon::parse($reservasi->check_in);
 
-        // Pastikan tgl baru tidak lebih kecil dari tgl check-in
         if (Carbon::parse($newCheckOut)->lt($checkIn)) {
             return back()->with('error', 'Gagal memperpanjang! Tanggal Check-Out baru tidak boleh lebih awal dari waktu Check-In.');
         }
 
-        // Pastikan tidak tabrakan dengan pesanan tamu lain di kamar yang sama
         $isTabrakan = Reservasi::where('kamar_id', $reservasi->kamar_id)
             ->where('id', '!=', $id)
             ->whereIn('status_reservasi', ['Terkonfirmasi', 'Check-In'])
@@ -200,10 +205,10 @@ class CheckInOutController extends Controller
     {
         $reservasi = Reservasi::with('kamar.kelasKamar')->findOrFail($id);
 
-        $checkIn = Carbon::parse($reservasi->check_in);
-        $checkOut = Carbon::parse($reservasi->check_out);
-        $diffDays = $checkIn->diffInDays($checkOut);
-        if ($diffDays == 0) $diffDays = 1;
+        // PERBAIKAN KALKULASI HARI: Basis kalender (bukan hitungan desimal 24 jam)
+        $checkIn = Carbon::parse($reservasi->check_in)->startOfDay();
+        $checkOut = Carbon::parse($reservasi->check_out)->startOfDay();
+        $diffDays = max(1, (int) $checkIn->diffInDays($checkOut)); // Minimal 1 Malam
 
         $hargaKamar = $reservasi->kamar->kelasKamar->harga ?? 0;
         $totalKamar = $hargaKamar * $diffDays;
