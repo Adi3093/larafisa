@@ -70,7 +70,7 @@ class GuestReservationController extends Controller
         ]);
     }
 
-    public function riwayat()
+    public function riwayat(Request $request)
     {
         if (!Auth::check()) {
             return view('landing_page.hriwayat', [
@@ -82,8 +82,8 @@ class GuestReservationController extends Controller
         }
 
         $user = Auth::user();
-        // Pastikan memuat relasi 'pembayaran' jika sudah ditambahkan di Model Reservasi
-        $pesananAktif = Reservasi::with(['kamar.kelasKamar']) // Tambahkan 'pembayaran' di dalam array with() jika ada relasinya
+
+        $pesananAktif = Reservasi::with(['kamar.kelasKamar'])
             ->where(function ($q) use ($user) {
                 $q->where('nama_tamu', 'like', '%' . $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
             })
@@ -91,20 +91,22 @@ class GuestReservationController extends Controller
             ->orderBy('created_at', 'desc')
             ->first();
 
-        // Ambil data pembayaran aktif jika metode QRIS
         $pembayaranAktif = null;
         if ($pesananAktif && isset($pesananAktif->ekstra['Metode Pembayaran']) && $pesananAktif->ekstra['Metode Pembayaran'] === 'QRIS') {
-            // Mencari data pembayaran berdasarkan ID reservasi yang berelasi
             $pembayaranAktif = Pembayaran::where('reservasi_id', $pesananAktif->id)->first();
         }
 
+        // AMBIL PARAMETER PER_PAGE DARI REQUEST, DEFAULT 10
+        $perPage = $request->input('per_page', 10);
+
+        // UBAH GET() MENJADI PAGINATE()
         $arsipReservasi = Reservasi::with('kamar.kelasKamar')
             ->where(function ($q) use ($user) {
                 $q->where('nama_tamu', 'like', '%' . $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
             })
             ->whereIn('status_reservasi', ['Selesai', 'Batal', 'Dibatalkan'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate($perPage)->appends($request->query());
 
         $kelasKamars = KelasKamar::all();
 
@@ -113,7 +115,8 @@ class GuestReservationController extends Controller
             'pesananAktif' => $pesananAktif,
             'pembayaranAktif' => $pembayaranAktif,
             'arsipReservasi' => $arsipReservasi,
-            'kelasKamars' => $kelasKamars
+            'kelasKamars' => $kelasKamars,
+            'perPage' => $perPage // Passing perPage ke View
         ]);
     }
 

@@ -251,7 +251,7 @@
 
                                 <button
                                     onclick="bukaDetailKelas('{{ $kelas->id }}', '{{ $kelas->nama_kelas }}', '{{ number_format($kelas->harga, 0, ',', '.') }}', {{ json_encode($kelas->fasilitas) }}, '{{ asset('storage/' . $kelas->thumbnail) }}', '{{ $kelas->foto_1 ? asset('storage/' . $kelas->foto_1) : '' }}', '{{ $kelas->foto_2 ? asset('storage/' . $kelas->foto_2) : '' }}', '{{ $kelas->foto_3 ? asset('storage/' . $kelas->foto_3) : '' }}', {{ $kelas->sisa_kamar_riil }})"
-                                    class="w-full bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-700 font-bold border border-amber-200 py-2.5 rounded-xl transition duration-200 text-sm">
+                                    class="w-full bg-amber-600 hover:bg-amber-700 hover:text-white text-white font-bold py-2.5 rounded-xl transition transform hover:-translate-y-0.5 border-none duration-200 text-sm">
                                     Detail & Pesan
                                 </button>
                             </div>
