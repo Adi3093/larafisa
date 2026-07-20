@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('pembayarans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('reservasi_id')->constrained()->cascadeOnDelete();
-            $table->string('invoice')->unique();
+            $table->string('invoice', 20)->unique();
             $table->decimal('total', 10, 2);
             $table->text('qr_image')->nullable();
             $table->json('raw_response')->nullable();

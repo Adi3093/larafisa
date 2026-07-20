@@ -10,14 +10,13 @@ return new class extends Migration
     {
         Schema::create('reservasis', function (Blueprint $table) {
             $table->id();
-            $table->string('no_reservasi')->unique();
+            $table->string('no_reservasi', 20)->unique();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('dibuat_oleh_user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('kamar_id')->constrained('kamars')->cascadeOnDelete();
-            $table->string('nama_tamu');
+            $table->string('nama_tamu', 100);
             $table->string('no_ktp', 16)->nullable();
             $table->string('no_hp', 15);
-
             $table->datetime('check_in');
             $table->datetime('check_out');
             $table->json('ekstra')->nullable();

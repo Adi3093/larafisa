@@ -1,113 +1,104 @@
-// ==========================================
-// MODULE 1: GLOBAL STATE & CACHE VARIABLES
-// ==========================================
-let paymentInterval = null;
-let timerInterval = null;
-let paymentIsExpired = false; 
 
-// ==========================================
+// MODULE 1: GLOBAL STATE & CACHE VARIABLES
+const paymentIntervals = {};
+const timerIntervals = {};
+const paymentExpiredFlags = {}; 
+
 // MODULE 2: MODAL WINDOW CONTROL
-// ==========================================
 function handleCloseModal() {
-    const modal = document.getElementById('modalDetail');
-    if (paymentIsExpired) {
-        modal.classList.add('hidden');
-        window.location.reload(); 
-    } else {
-        modal.classList.add('hidden');
-    }
+    window.location.reload(); 
 }
 
-// ==========================================
-// MODULE 3: COUNTDOWN TIMER ENGINE
-// ==========================================
-function startCountdown(expiredAtStr) {
-    if (timerInterval) clearInterval(timerInterval);
+// MODULE 3: WIZARD MOBILE TAB CONTROLLER
+function openMobileWizard(id) {
+    document.getElementById('infoPanel-' + id).classList.add('mobile-hide');
+    document.getElementById('paymentPanel-' + id).classList.remove('hidden');
+    document.getElementById('paymentPanel-' + id).classList.add('mobile-flex');
+    document.getElementById('headerTitleMobile-' + id).innerText = 'Detail Pembayaran';
+    document.getElementById('backBtn-' + id).classList.remove('hidden');
+}
+
+function closeMobileWizard(id) {
+    document.getElementById('infoPanel-' + id).classList.remove('mobile-hide');
+    document.getElementById('paymentPanel-' + id).classList.add('hidden');
+    document.getElementById('paymentPanel-' + id).classList.remove('mobile-flex');
+    document.getElementById('headerTitleMobile-' + id).innerText = 'Detail dan Reservasi Tamu';
+    document.getElementById('backBtn-' + id).classList.add('hidden');
+}
+
+// MODULE 4: COUNTDOWN TIMER ENGINE
+function startCountdown(expiredAtStr, resId) {
+    if (timerIntervals[resId]) clearInterval(timerIntervals[resId]);
+    
     const safeDateStr = expiredAtStr.replace(' ', 'T');
     const countDownDate = new Date(safeDateStr).getTime();
-    const timerDisplay = document.getElementById("qrisTimer");
+    const timerDisplay = document.getElementById("qrisTimer-" + resId);
 
     if (!timerDisplay) return;
 
-    timerInterval = setInterval(function() {
+    timerIntervals[resId] = setInterval(function() {
         const now = new Date().getTime();
         const distance = countDownDate - now;
 
-        if (distance > 3600000) {
-            timerDisplay.innerHTML = "⏳ Menunggu Jendela Pembayaran (Aktif H-1 Jam)";
-            timerDisplay.className = "text-[11px] font-bold text-amber-800 border border-amber-200 bg-amber-50 rounded-lg py-1 px-3 inline-block";
-        } else if (distance >= 0) {
+        if (distance >= 0) {
             timerDisplay.className = "text-xl font-black text-red-600 tracking-widest border border-red-200 bg-red-50 rounded-lg py-1 px-3 inline-block animate-pulse";
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
             timerDisplay.innerHTML = (hours < 10 ? "0" + hours : hours) + ":" + (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds);
         } else {
-            clearInterval(timerInterval);
-            paymentIsExpired = true;
+            clearInterval(timerIntervals[resId]);
+            paymentExpiredFlags[resId] = true;
             timerDisplay.innerHTML = "❌ KEDALUWARSA / WAKTU HABIS";
             timerDisplay.className = "text-xs font-black text-gray-500 tracking-wider border border-gray-200 bg-gray-100 rounded-lg py-1 px-3 inline-block";
 
-            const container = document.getElementById('qrisContainer');
+            const container = document.getElementById('qrisContainer-' + resId);
             if (container) {
                 container.innerHTML = `
                     <div class="text-center w-full animate-fade-in p-6 bg-red-50 rounded-2xl border border-red-200">
                         <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3"><span class="text-2xl">❌</span></div>
                         <h4 class="font-black text-red-700 text-lg mb-1">Pembayaran Kedaluwarsa</h4>
-                        <p class="text-xs text-red-600/80 font-medium">Waktu batas check-in telah terlampaui. Reservasi ini otomatis dibatalkan.</p>
-                        <p class="text-[10px] text-gray-400 mt-3 italic">Silakan tutup menu ini untuk memperbarui riwayat Anda.</p>
+                        <p class="text-xs text-red-600/80 font-medium">Waktu batas pembayaran telah terlampaui. Reservasi ini otomatis dibatalkan.</p>
+                        <p class="text-[10px] text-gray-400 mt-3 italic">Silakan muat ulang halaman untuk memperbarui riwayat Anda.</p>
                     </div>
                 `;
             }
 
-            const displayStatus = document.getElementById('statusPaymentDisplay');
+            const displayStatus = document.getElementById('statusPaymentDisplay-' + resId);
             if (displayStatus) {
                 displayStatus.innerText = "GAGAL / KEDALUWARSA";
-                displayStatus.className = "text-red-600 font-bold uppercase";
+                displayStatus.className = "text-red-600 font-bold uppercase tracking-wider";
             }
+
+            // Menghilangkan tombol download saat kadaluarsa
+            const downloadBtns = document.querySelectorAll('.qris-download-btn-' + resId);
+            downloadBtns.forEach(btn => {
+                btn.style.display = 'none';
+            });
         }
     }, 1000);
 }
 
-// ==========================================
-// MODULE 4: IMAGE DOWNLOAD RESEP SIONIS
-// ==========================================
-async function downloadQR(imageUrl, invoiceNo) {
-    try {
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
-        const blobUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = `QRIS-${invoiceNo}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(blobUrl);
-    } catch (e) {
-        alert('Gagal mengunduh gambar.');
-    }
-}
-
-// ==========================================
 // MODULE 5: REALTIME TRANSACTION CHECKER
-// ==========================================
-function startPaymentCheck(invoice) {
-    if (paymentInterval) clearInterval(paymentInterval);
-    const statusDisplay = document.getElementById('statusPaymentDisplay');
-    const container = document.getElementById('qrisContainer');
+function startPaymentCheck(invoice, resId) {
+    if (paymentIntervals[resId]) clearInterval(paymentIntervals[resId]);
+    const statusDisplay = document.getElementById('statusPaymentDisplay-' + resId);
+    const container = document.getElementById('qrisContainer-' + resId);
 
-    paymentInterval = setInterval(async () => {
+    paymentIntervals[resId] = setInterval(async () => {
         try {
             const res = await fetch(`/payment/check/${invoice}`);
             const data = await res.json();
+            
             if (data.status === "berhasil") {
-                clearInterval(paymentInterval);
-                if (timerInterval) clearInterval(timerInterval);
+                clearInterval(paymentIntervals[resId]);
+                if (timerIntervals[resId]) clearInterval(timerIntervals[resId]);
+                
                 if (statusDisplay) {
                     statusDisplay.innerHTML = "BERHASIL (PAID)";
-                    statusDisplay.className = "text-green-600 font-black uppercase";
+                    statusDisplay.className = "text-green-600 font-black uppercase tracking-wider";
                 }
+                
                 if (container) {
                     container.innerHTML = `
                         <div class="text-center w-full animate-fade-in">
@@ -118,15 +109,67 @@ function startPaymentCheck(invoice) {
                         </div>
                     `;
                 }
+                
+                // Menghilangkan tombol saat lunas
+                const downloadBtns = document.querySelectorAll('.qris-download-btn-' + resId);
+                downloadBtns.forEach(btn => btn.style.display = 'none');
+                
             } else if (data.status === "gagal") {
-                paymentIsExpired = true;
+                paymentExpiredFlags[resId] = true;
             }
         } catch (error) {}
     }, 5000);
 }
 
+// MODULE 6: QR CODE DOWNLOADER (BYPASS CACHE)
+async function forceDownloadQR(btn, imageUrl, invoiceNo) {
+    if (btn.disabled) return;
+
+    const textSpan = btn.querySelector('.btn-text');
+    const originalHtml = textSpan.innerHTML;
+
+    btn.disabled = true;
+    btn.classList.add('opacity-75', 'cursor-wait');
+
+    // Mulai animasi titik-titik
+    let dotCount = 0;
+    const animationInterval = setInterval(() => {
+        dotCount = (dotCount + 1) % 4;
+        textSpan.innerHTML = `Mendownload${'.'.repeat(dotCount)}`;
+    }, 400);
+
+    try {
+        const cleanUrl = imageUrl.replace(/&amp;/g, '&');
+        const response = await fetch(cleanUrl);
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.style.display = 'none';
+        link.href = blobUrl;
+        link.download = `QRIS-${invoiceNo}.png`;
+
+        document.body.appendChild(link);
+        link.click();
+
+        setTimeout(() => {
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+        }, 100);
+    } catch (e) {
+        alert("Gagal mengunduh gambar QR. Silakan cek koneksi internet Anda.");
+    } finally {
+        clearInterval(animationInterval);
+        textSpan.innerHTML = originalHtml;
+        btn.disabled = false;
+        btn.classList.remove('opacity-75', 'cursor-wait');
+    }
+}
+
 // EXPORT TO GLOBAL WINDOW
 window.handleCloseModal = handleCloseModal;
 window.startCountdown = startCountdown;
-window.downloadQR = downloadQR;
 window.startPaymentCheck = startPaymentCheck;
+window.openMobileWizard = openMobileWizard;
+window.closeMobileWizard = closeMobileWizard;
+window.forceDownloadQR = forceDownloadQR;

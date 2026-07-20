@@ -17,8 +17,9 @@ use Illuminate\Notifications\Notifiable;
     'password',
     'avatar',
     'role',
-    'Last_seen',
-    'no_ktp'
+    'last_seen',
+    'no_ktp',
+    'no_hp',
 ])]
 #[Hidden([
     'password',
@@ -36,6 +37,7 @@ class User extends Authenticatable
     {
         return $this->hasMany(Reservasi::class, 'dibuat_oleh_user_id');
     }
+
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 

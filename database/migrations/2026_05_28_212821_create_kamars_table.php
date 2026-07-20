@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('kamars', function (Blueprint $table) {
             $table->id();
             $table->foreignId('kelas_kamar_id')->constrained('kelas_kamars')->onDelete('cascade');
-            $table->string('nomor_ruangan')->unique();
+            $table->string('nomor_ruangan', 5)->unique();
             $table->enum('status', ['Tersedia', 'Terpakai', 'Dibooking', 'Maintenance'])->default('Tersedia');
             $table->timestamps();
         });

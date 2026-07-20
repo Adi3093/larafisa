@@ -19,11 +19,12 @@ class GuestReservationController extends Controller
     public function index(Request $request)
     {
         $kelasId = $request->kelas_id;
-        $checkin = $request->filter_checkin ?? date('Y-m-d\TH:i');
-        $checkout = $request->filter_checkout ?? date('Y-m-d\TH:i', strtotime('+1 day'));
+
+        $checkin = $request->filter_checkin ?? Carbon::now()->format('Y-m-d\TH:i');
+        $checkout = $request->filter_checkout ?? Carbon::now()->addDays(1)->setTime(11, 0)->format('Y-m-d\TH:i');
+
         $kelasKamars = KelasKamar::all();
 
-        // LOGIKA PENGECEKAN MAINTENANCE
         $isMaintenance = false;
         if (Cache::get('maintenance_mode') === 'true' && Cache::get('main_online') === 'true') {
             $isMaintenance = true;
@@ -75,7 +76,8 @@ class GuestReservationController extends Controller
         if (!Auth::check()) {
             return view('landing_page.hriwayat', [
                 'isLoggedIn' => false,
-                'pesananAktif' => null,
+                'pesananAktifs' => collect(),
+                'pembayaranAktifs' => collect(),
                 'arsipReservasi' => collect(),
                 'kelasKamars' => collect()
             ]);
@@ -83,23 +85,22 @@ class GuestReservationController extends Controller
 
         $user = Auth::user();
 
-        $pesananAktif = Reservasi::with(['kamar.kelasKamar'])
+        // 1. PERBAIKAN: Menggunakan get() agar bisa mengambil lebih dari 1 kamar (Maks. 4 kamar)
+        $pesananAktifs = Reservasi::with(['kamar.kelasKamar'])
             ->where(function ($q) use ($user) {
                 $q->where('nama_tamu', 'like', '%' . $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
             })
             ->whereIn('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi', 'Check-In'])
             ->orderBy('created_at', 'desc')
-            ->first();
+            ->get();
 
-        $pembayaranAktif = null;
-        if ($pesananAktif && isset($pesananAktif->ekstra['Metode Pembayaran']) && $pesananAktif->ekstra['Metode Pembayaran'] === 'QRIS') {
-            $pembayaranAktif = Pembayaran::where('reservasi_id', $pesananAktif->id)->first();
-        }
+        // 2. PERBAIKAN: Tarik semua invoice/pembayaran milik pesanan-pesanan yang sedang aktif
+        $pembayaranAktifs = Pembayaran::whereIn('reservasi_id', $pesananAktifs->pluck('id'))
+            ->get()
+            ->keyBy('reservasi_id');
 
-        // AMBIL PARAMETER PER_PAGE DARI REQUEST, DEFAULT 10
         $perPage = $request->input('per_page', 10);
 
-        // UBAH GET() MENJADI PAGINATE()
         $arsipReservasi = Reservasi::with('kamar.kelasKamar')
             ->where(function ($q) use ($user) {
                 $q->where('nama_tamu', 'like', '%' . $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
@@ -112,29 +113,61 @@ class GuestReservationController extends Controller
 
         return view('landing_page.hriwayat', [
             'isLoggedIn' => true,
-            'pesananAktif' => $pesananAktif,
-            'pembayaranAktif' => $pembayaranAktif,
+            'pesananAktifs' => $pesananAktifs,
+            'pembayaranAktifs' => $pembayaranAktifs,
             'arsipReservasi' => $arsipReservasi,
             'kelasKamars' => $kelasKamars,
-            'perPage' => $perPage // Passing perPage ke View
+            'perPage' => $perPage
         ]);
     }
 
     public function store(Request $request, PakasirPaymentService $pakasirService)
     {
-        $request->validate([
-            'nama_tamu' => 'required|string|max:255',
-            'no_ktp' => 'required|string|max:16',
-            'no_hp' => 'required|string|max:15',
+        $user = Auth::user();
+
+        $rules = [
             'kelas_kamar_id' => 'required|exists:kelas_kamars,id',
             'check_in' => 'required|date',
             'check_out' => 'required|date|after:check_in',
-        ]);
+        ];
 
+        if (empty($user->no_ktp) || empty($user->no_hp)) {
+            $rules['no_ktp'] = 'required|regex:/^[0-9]+$/|min:16|max:16';
+            $rules['no_hp'] = 'required|regex:/^[0-9]+$/|min:10|max:15';
+        }
+
+        $request->validate($rules);
+
+        $noKtp = $request->no_ktp ?? $user->no_ktp;
+        $noHp = $request->no_hp ?? $user->no_hp;
+
+        if (substr($noHp, 0, 1) === '0') {
+            $noHp = '62' . substr($noHp, 1);
+        }
+
+        if (empty($user->no_ktp) || empty($user->no_hp)) {
+            $user->no_ktp = $noKtp;
+            $user->no_hp = $noHp;
+            $user->save();
+        }
+
+        // --- 1. PERBAIKAN: CEK LIMIT MAKSIMAL 4 KAMAR AKTIF ---
+        $activeReservationsCount = Reservasi::where(function ($q) use ($user, $noKtp) {
+            $q->where('nama_tamu', 'like', '%' . $user->name . '%')
+                ->orWhere('no_ktp', $noKtp);
+        })
+            ->whereIn('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi', 'Check-In'])
+            ->count();
+
+        if ($activeReservationsCount >= 4) {
+            return back()->withInput()->with('error', 'Batas maksimal tercapai! Anda hanya dapat memiliki 4 reservasi kamar aktif secara bersamaan.');
+        }
+        // ------------------------------------------------------
+
+        $namaTamu = $user->name;
         $checkIn = Carbon::parse($request->check_in)->format('Y-m-d H:i:s');
         $checkOut = Carbon::parse($request->check_out)->format('Y-m-d H:i:s');
 
-        // 1. Logika Pencarian Kamar Acak Secara Otomatis
         $reservedIds = Reservasi::whereIn('status_reservasi', ['Terkonfirmasi', 'Check-In'])
             ->where(function ($q) use ($checkIn, $checkOut) {
                 $q->where('check_in', '<', $checkOut)->where('check_out', '>', $checkIn);
@@ -153,7 +186,6 @@ class GuestReservationController extends Controller
         $noReservasi = 'RSV-' . date('Ymd') . '-' . strtoupper(Str::random(4));
         $noInvoice = 'INV-' . date('Ymd') . '-' . strtoupper(Str::random(4));
 
-        // 2. Hitung Total Bayar
         $diffTime = strtotime($checkOut) - strtotime($checkIn);
         $diffDays = ceil($diffTime / (60 * 60 * 24));
         if ($diffDays <= 0) $diffDays = 1;
@@ -163,7 +195,6 @@ class GuestReservationController extends Controller
         $hargaEkstra = ((int)$request->extra_bed * 100000) + ((int)$request->extra_selimut * 25000);
         $totalBayar = $hargaKamar + $hargaEkstra;
 
-        // 3. Susun Data Ekstra Baru
         $ekstra = [
             'Jumlah Anggota' => (int) $request->jumlah_anggota,
             'Extra Bed' => (int) $request->extra_bed,
@@ -174,12 +205,11 @@ class GuestReservationController extends Controller
             'Detail Pembayaran' => $request->metode_pembayaran === 'QRIS' ? 'Menunggu Pembayaran QRIS' : 'Bayar di Tempat'
         ];
 
-        // 4. Simpan Reservasi ke Database
         $id = Reservasi::create([
             'no_reservasi' => $noReservasi,
-            'nama_tamu' => $request->nama_tamu,
-            'no_ktp' => $request->no_ktp,
-            'no_hp' => $request->no_hp,
+            'nama_tamu' => $namaTamu,
+            'no_ktp' => $noKtp,
+            'no_hp' => $noHp,
             'kamar_id' => $kamarBebas->id,
             'check_in' => $checkIn,
             'check_out' => $checkOut,
@@ -187,6 +217,7 @@ class GuestReservationController extends Controller
             'tipe_reservasi' => 'Online',
             'status_reservasi' => 'Menunggu Konfirmasi'
         ]);
+
         Pembayaran::create([
             'reservasi_id' => $id->id,
             'invoice' => $noInvoice,
@@ -195,14 +226,12 @@ class GuestReservationController extends Controller
             'expired_at' => $checkIn,
         ]);
 
-        // QRIS Code
         if ($request->metode_pembayaran === 'QRIS') {
             $pakasirService->createQrisPayment($noInvoice, $totalBayar);
         }
 
-        $userSaatIni = Auth::user();
-        if ($userSaatIni) {
-            $userSaatIni->notify(new ReservasiBerhasil(
+        if ($user) {
+            $user->notify(new ReservasiBerhasil(
                 $noReservasi,
                 $kelasKamar->nama_kelas,
                 $request->jumlah_anggota
@@ -215,32 +244,28 @@ class GuestReservationController extends Controller
     public function generateQris($id, \App\Services\PakasirPaymentService $pakasirService)
     {
         $reservasi = Reservasi::with('kamar.kelasKamar')->findOrFail($id);
-
         $pembayaran = \App\Models\Pembayaran::where('reservasi_id', $reservasi->id)->first();
 
-        // 1. Jika sudah ada QR Image
         if ($pembayaran && $pembayaran->qr_image) {
             return response()->json([
                 'success'  => true,
                 'qr_image' => $pembayaran->qr_image,
                 'status'   => $pembayaran->status,
-                'invoice'  => $pembayaran->invoice, // <-- Tambahan ini
+                'invoice'  => $pembayaran->invoice,
                 'expired_at' => $pembayaran->expired_at,
             ]);
         }
 
         $totalBayar = $reservasi->ekstra['Total Bayar'] ?? 0;
-
         $pembayaranBaru = $pakasirService->createQrisPayment($pembayaran->invoice, $totalBayar);
 
-        // 2. Jika baru saja dibuat
         if ($pembayaranBaru && $pembayaranBaru->qr_image) {
             return response()->json([
                 'success'  => true,
                 'qr_image' => $pembayaranBaru->qr_image,
                 'status'   => $pembayaranBaru->status,
-                'invoice'  => $pembayaranBaru->invoice, // <-- Tambahan ini
-                'expired_at' => $reservasi->check_in,
+                'invoice'  => $pembayaranBaru->invoice,
+                'expired_at' => $pembayaranBaru->expired_at,
             ]);
         }
 

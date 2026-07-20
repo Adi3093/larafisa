@@ -53,13 +53,14 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:45',
             'email' => 'required|string|email|max:45|unique:users',
-            'password' => 'required|string|min:8',
+            'password' => 'required|string|min:8|confirmed', // <-- Tambahkan |confirmed di sini
         ]);
+
         $baseUsername = Str::before($request->email, "@");
         $username = $baseUsername;
 
         $counter = 1;
-        while (User::Where('username', $username)->exists()) {
+        while (User::where('username', $username)->exists()) {
             $username = $baseUsername . $counter;
             $counter++;
         }
@@ -68,15 +69,13 @@ class AuthController extends Controller
             'name' => $request->name,
             'username' => $username,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'password' => $request->password, // (Optional) Bisa pakai $request->password saja karena di User model sudah ada 'hashed'
             'role' => 'tamu',
         ]);
 
         Auth::login($user);
         return redirect('/');
     }
-
-    //logout
     public function logout(Request $request)
     {
         Auth::logout();
