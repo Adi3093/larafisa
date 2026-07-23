@@ -1,6 +1,4 @@
-// ==========================================
 // MODULE 1: MANAJEMEN MODAL TAMBAH AKUN
-// ==========================================
 /**
  * Membuka modal tambah pengguna
  */
@@ -17,9 +15,7 @@ function closeAddModal() {
 }
 
 
-// ==========================================
 // MODULE 2: MANAJEMEN MODAL EDIT AKUN
-// ==========================================
 /**
  * Membuka modal edit pengguna dan menyisipkan data ID dan Teks ke form
  */
@@ -44,9 +40,7 @@ function closeEditModal() {
 }
 
 
-// ==========================================
 // MODULE 3: EVENT LISTENER DOM
-// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     
     // Auto-Submit Dropdown 'Tampilkan Baris'
@@ -61,10 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
-// ==========================================
 // MODULE 4: EXPORT FUNCTIONS TO GLOBAL WINDOW
-// ==========================================
-// Daftarkan fungsi ke window agar dapat dipanggil dari atribut HTML onclick
 window.openAddModal = openAddModal;
 window.closeAddModal = closeAddModal;
 window.openEditModal = openEditModal;

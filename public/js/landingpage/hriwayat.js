@@ -1,58 +1,83 @@
-
 // MODULE 1: GLOBAL STATE & CACHE VARIABLES
 const paymentIntervals = {};
 const timerIntervals = {};
-const paymentExpiredFlags = {}; 
+const paymentExpiredFlags = {};
 
 // MODULE 2: MODAL WINDOW CONTROL
 function handleCloseModal() {
-    window.location.reload(); 
+    window.location.reload();
 }
 
 // MODULE 3: WIZARD MOBILE TAB CONTROLLER
 function openMobileWizard(id) {
-    document.getElementById('infoPanel-' + id).classList.add('mobile-hide');
-    document.getElementById('paymentPanel-' + id).classList.remove('hidden');
-    document.getElementById('paymentPanel-' + id).classList.add('mobile-flex');
-    document.getElementById('headerTitleMobile-' + id).innerText = 'Detail Pembayaran';
-    document.getElementById('backBtn-' + id).classList.remove('hidden');
+    let infoPanel = document.getElementById("infoPanel-" + id);
+    let payPanel = document.getElementById("paymentPanel-" + id);
+    infoPanel.classList.remove("block");
+    infoPanel.classList.add("hidden", "md:block");
+    payPanel.classList.remove("hidden");
+    payPanel.classList.add("flex");
+
+    document.getElementById("headerTitleMobile-" + id).innerText =
+        "Detail Pembayaran";
+    document.getElementById("backBtn-" + id).classList.remove("hidden");
 }
 
 function closeMobileWizard(id) {
-    document.getElementById('infoPanel-' + id).classList.remove('mobile-hide');
-    document.getElementById('paymentPanel-' + id).classList.add('hidden');
-    document.getElementById('paymentPanel-' + id).classList.remove('mobile-flex');
-    document.getElementById('headerTitleMobile-' + id).innerText = 'Detail dan Reservasi Tamu';
-    document.getElementById('backBtn-' + id).classList.add('hidden');
+    let infoPanel = document.getElementById("infoPanel-" + id);
+    let payPanel = document.getElementById("paymentPanel-" + id);
+
+    // 1. Tampilkan kembali Info Panel di Layar HP
+    infoPanel.classList.remove("hidden", "md:block");
+    infoPanel.classList.add("block");
+
+    // 2. Sembunyikan kembali Payment Panel di Layar HP
+    payPanel.classList.remove("flex");
+    payPanel.classList.add("hidden");
+
+    // 3. Kembalikan Header
+    document.getElementById("headerTitleMobile-" + id).innerText =
+        "Detail dan Reservasi Tamu";
+    document.getElementById("backBtn-" + id).classList.add("hidden");
 }
 
 // MODULE 4: COUNTDOWN TIMER ENGINE
 function startCountdown(expiredAtStr, resId) {
     if (timerIntervals[resId]) clearInterval(timerIntervals[resId]);
-    
-    const safeDateStr = expiredAtStr.replace(' ', 'T');
+
+    const safeDateStr = expiredAtStr.replace(" ", "T");
     const countDownDate = new Date(safeDateStr).getTime();
     const timerDisplay = document.getElementById("qrisTimer-" + resId);
 
     if (!timerDisplay) return;
 
-    timerIntervals[resId] = setInterval(function() {
+    timerIntervals[resId] = setInterval(function () {
         const now = new Date().getTime();
         const distance = countDownDate - now;
 
         if (distance >= 0) {
-            timerDisplay.className = "text-xl font-black text-red-600 tracking-widest border border-red-200 bg-red-50 rounded-lg py-1 px-3 inline-block animate-pulse";
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            timerDisplay.className =
+                "text-xl font-black text-red-600 tracking-widest border border-red-200 bg-red-50 rounded-lg py-1 px-3 inline-block animate-pulse";
+            const hours = Math.floor(
+                (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+            );
+            const minutes = Math.floor(
+                (distance % (1000 * 60 * 60)) / (1000 * 60),
+            );
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            timerDisplay.innerHTML = (hours < 10 ? "0" + hours : hours) + ":" + (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds);
+            timerDisplay.innerHTML =
+                (hours < 10 ? "0" + hours : hours) +
+                ":" +
+                (minutes < 10 ? "0" + minutes : minutes) +
+                ":" +
+                (seconds < 10 ? "0" + seconds : seconds);
         } else {
             clearInterval(timerIntervals[resId]);
             paymentExpiredFlags[resId] = true;
             timerDisplay.innerHTML = "❌ KEDALUWARSA / WAKTU HABIS";
-            timerDisplay.className = "text-xs font-black text-gray-500 tracking-wider border border-gray-200 bg-gray-100 rounded-lg py-1 px-3 inline-block";
+            timerDisplay.className =
+                "text-xs font-black text-gray-500 tracking-wider border border-gray-200 bg-gray-100 rounded-lg py-1 px-3 inline-block";
 
-            const container = document.getElementById('qrisContainer-' + resId);
+            const container = document.getElementById("qrisContainer-" + resId);
             if (container) {
                 container.innerHTML = `
                     <div class="text-center w-full animate-fade-in p-6 bg-red-50 rounded-2xl border border-red-200">
@@ -64,16 +89,21 @@ function startCountdown(expiredAtStr, resId) {
                 `;
             }
 
-            const displayStatus = document.getElementById('statusPaymentDisplay-' + resId);
+            const displayStatus = document.getElementById(
+                "statusPaymentDisplay-" + resId,
+            );
             if (displayStatus) {
                 displayStatus.innerText = "GAGAL / KEDALUWARSA";
-                displayStatus.className = "text-red-600 font-bold uppercase tracking-wider";
+                displayStatus.className =
+                    "text-red-600 font-bold uppercase tracking-wider";
             }
 
             // Menghilangkan tombol download saat kadaluarsa
-            const downloadBtns = document.querySelectorAll('.qris-download-btn-' + resId);
-            downloadBtns.forEach(btn => {
-                btn.style.display = 'none';
+            const downloadBtns = document.querySelectorAll(
+                ".qris-download-btn-" + resId,
+            );
+            downloadBtns.forEach((btn) => {
+                btn.style.display = "none";
             });
         }
     }, 1000);
@@ -82,23 +112,26 @@ function startCountdown(expiredAtStr, resId) {
 // MODULE 5: REALTIME TRANSACTION CHECKER
 function startPaymentCheck(invoice, resId) {
     if (paymentIntervals[resId]) clearInterval(paymentIntervals[resId]);
-    const statusDisplay = document.getElementById('statusPaymentDisplay-' + resId);
-    const container = document.getElementById('qrisContainer-' + resId);
+    const statusDisplay = document.getElementById(
+        "statusPaymentDisplay-" + resId,
+    );
+    const container = document.getElementById("qrisContainer-" + resId);
 
     paymentIntervals[resId] = setInterval(async () => {
         try {
             const res = await fetch(`/payment/check/${invoice}`);
             const data = await res.json();
-            
+
             if (data.status === "berhasil") {
                 clearInterval(paymentIntervals[resId]);
                 if (timerIntervals[resId]) clearInterval(timerIntervals[resId]);
-                
+
                 if (statusDisplay) {
                     statusDisplay.innerHTML = "BERHASIL (PAID)";
-                    statusDisplay.className = "text-green-600 font-black uppercase tracking-wider";
+                    statusDisplay.className =
+                        "text-green-600 font-black uppercase tracking-wider";
                 }
-                
+
                 if (container) {
                     container.innerHTML = `
                         <div class="text-center w-full animate-fade-in">
@@ -109,11 +142,12 @@ function startPaymentCheck(invoice, resId) {
                         </div>
                     `;
                 }
-                
+
                 // Menghilangkan tombol saat lunas
-                const downloadBtns = document.querySelectorAll('.qris-download-btn-' + resId);
-                downloadBtns.forEach(btn => btn.style.display = 'none');
-                
+                const downloadBtns = document.querySelectorAll(
+                    ".qris-download-btn-" + resId,
+                );
+                downloadBtns.forEach((btn) => (btn.style.display = "none"));
             } else if (data.status === "gagal") {
                 paymentExpiredFlags[resId] = true;
             }
@@ -125,27 +159,27 @@ function startPaymentCheck(invoice, resId) {
 async function forceDownloadQR(btn, imageUrl, invoiceNo) {
     if (btn.disabled) return;
 
-    const textSpan = btn.querySelector('.btn-text');
+    const textSpan = btn.querySelector(".btn-text");
     const originalHtml = textSpan.innerHTML;
 
     btn.disabled = true;
-    btn.classList.add('opacity-75', 'cursor-wait');
+    btn.classList.add("opacity-75", "cursor-wait");
 
     // Mulai animasi titik-titik
     let dotCount = 0;
     const animationInterval = setInterval(() => {
         dotCount = (dotCount + 1) % 4;
-        textSpan.innerHTML = `Mendownload${'.'.repeat(dotCount)}`;
+        textSpan.innerHTML = `Mendownload${".".repeat(dotCount)}`;
     }, 400);
 
     try {
-        const cleanUrl = imageUrl.replace(/&amp;/g, '&');
+        const cleanUrl = imageUrl.replace(/&amp;/g, "&");
         const response = await fetch(cleanUrl);
         const blob = await response.blob();
         const blobUrl = window.URL.createObjectURL(blob);
 
-        const link = document.createElement('a');
-        link.style.display = 'none';
+        const link = document.createElement("a");
+        link.style.display = "none";
         link.href = blobUrl;
         link.download = `QRIS-${invoiceNo}.png`;
 
@@ -162,7 +196,7 @@ async function forceDownloadQR(btn, imageUrl, invoiceNo) {
         clearInterval(animationInterval);
         textSpan.innerHTML = originalHtml;
         btn.disabled = false;
-        btn.classList.remove('opacity-75', 'cursor-wait');
+        btn.classList.remove("opacity-75", "cursor-wait");
     }
 }
 

@@ -46,18 +46,35 @@ class GuestReservationController extends Controller
                 'checkin' => $checkin,
                 'checkout' => $checkout,
                 'reservasiAktif' => collect(),
+                'pesananAktifs' => collect(),
+                'pembayaranAktifs' => collect(),
+                'arsipReservasi' => Reservasi::where('id', 0)->paginate(10),
                 'isMaintenance' => $isMaintenance
             ]);
         }
 
         $user = Auth::user();
-        $reservasiAktif = Reservasi::with('kamar.kelasKamar')
+
+        $pesananAktifs = Reservasi::with('kamar.kelasKamar')
             ->where(function ($q) use ($user) {
                 $q->where('nama_tamu', 'like', '%' . $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
             })
-            ->whereIn('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi'])
+            ->whereIn('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi', 'Check-In'])
             ->orderBy('created_at', 'desc')
             ->get();
+
+        $pembayaranAktifs = Pembayaran::whereIn('reservasi_id', $pesananAktifs->pluck('id'))
+            ->get()
+            ->keyBy('reservasi_id');
+
+        $perPage = $request->input('per_page', 10);
+        $arsipReservasi = Reservasi::with('kamar.kelasKamar')
+            ->where(function ($q) use ($user) {
+                $q->where('nama_tamu', 'like', '%' . $user->name . '%')->orWhere('no_ktp', $user->no_ktp);
+            })
+            ->whereIn('status_reservasi', ['Selesai', 'Batal', 'Dibatalkan'])
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage)->appends($request->query());
 
         return view('landing_page.hreservasi', [
             'isLoggedIn' => true,
@@ -66,11 +83,15 @@ class GuestReservationController extends Controller
             'kelasId' => $kelasId,
             'checkin' => $checkin,
             'checkout' => $checkout,
-            'reservasiAktif' => $reservasiAktif,
+            'reservasiAktif' => $pesananAktifs,
+            'pesananAktifs' => $pesananAktifs,
+            'pembayaranAktifs' => $pembayaranAktifs,
+            'arsipReservasi' => $arsipReservasi,
             'isMaintenance' => $isMaintenance
         ]);
     }
 
+    // FUNGSI RIWAYAT DIHILANGKAN KARENA SUDAH PUNYA CONTROLLER SENDIRI DI SESI SEBELUMNYA
     public function riwayat(Request $request)
     {
         if (!Auth::check()) {
@@ -84,7 +105,6 @@ class GuestReservationController extends Controller
         }
 
         $user = Auth::user();
-
         // 1. PERBAIKAN: Menggunakan get() agar bisa mengambil lebih dari 1 kamar (Maks. 4 kamar)
         $pesananAktifs = Reservasi::with(['kamar.kelasKamar'])
             ->where(function ($q) use ($user) {
@@ -93,7 +113,6 @@ class GuestReservationController extends Controller
             ->whereIn('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi', 'Check-In'])
             ->orderBy('created_at', 'desc')
             ->get();
-
         // 2. PERBAIKAN: Tarik semua invoice/pembayaran milik pesanan-pesanan yang sedang aktif
         $pembayaranAktifs = Pembayaran::whereIn('reservasi_id', $pesananAktifs->pluck('id'))
             ->get()
@@ -110,7 +129,6 @@ class GuestReservationController extends Controller
             ->paginate($perPage)->appends($request->query());
 
         $kelasKamars = KelasKamar::all();
-
         return view('landing_page.hriwayat', [
             'isLoggedIn' => true,
             'pesananAktifs' => $pesananAktifs,
@@ -118,6 +136,7 @@ class GuestReservationController extends Controller
             'arsipReservasi' => $arsipReservasi,
             'kelasKamars' => $kelasKamars,
             'perPage' => $perPage
+
         ]);
     }
 
@@ -151,7 +170,6 @@ class GuestReservationController extends Controller
             $user->save();
         }
 
-        // --- 1. PERBAIKAN: CEK LIMIT MAKSIMAL 4 KAMAR AKTIF ---
         $activeReservationsCount = Reservasi::where(function ($q) use ($user, $noKtp) {
             $q->where('nama_tamu', 'like', '%' . $user->name . '%')
                 ->orWhere('no_ktp', $noKtp);
@@ -162,7 +180,6 @@ class GuestReservationController extends Controller
         if ($activeReservationsCount >= 4) {
             return back()->withInput()->with('error', 'Batas maksimal tercapai! Anda hanya dapat memiliki 4 reservasi kamar aktif secara bersamaan.');
         }
-        // ------------------------------------------------------
 
         $namaTamu = $user->name;
         $checkIn = Carbon::parse($request->check_in)->format('Y-m-d H:i:s');
@@ -192,13 +209,15 @@ class GuestReservationController extends Controller
 
         $kelasKamar = KelasKamar::find($request->kelas_kamar_id);
         $hargaKamar = $kelasKamar->harga * $diffDays;
-        $hargaEkstra = ((int)$request->extra_bed * 100000) + ((int)$request->extra_selimut * 25000);
+
+        // PERUBAHAN LOGIKA HARGA: Hanya Ekstra Bed (Rp 50.000)
+        $hargaEkstra = ((int)$request->extra_bed * 50000);
         $totalBayar = $hargaKamar + $hargaEkstra;
 
+        // PERUBAHAN ARRAY EKSTRA: Selimut dihapus
         $ekstra = [
             'Jumlah Anggota' => (int) $request->jumlah_anggota,
             'Extra Bed' => (int) $request->extra_bed,
-            'Extra Selimut' => (int) $request->extra_selimut,
             'Pesan Tambahan' => $request->pesan_tambahan ?? '-',
             'Metode Pembayaran' => $request->metode_pembayaran,
             'Total Bayar' => $totalBayar,
@@ -223,7 +242,7 @@ class GuestReservationController extends Controller
             'invoice' => $noInvoice,
             'total' => $totalBayar,
             'status' => 'pending',
-            'expired_at' => $checkIn,
+            'expired_at' => $checkIn, // Sesuai logika H-1 aslinya
         ]);
 
         if ($request->metode_pembayaran === 'QRIS') {

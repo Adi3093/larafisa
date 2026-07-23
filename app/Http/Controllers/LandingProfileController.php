@@ -21,6 +21,7 @@ class LandingProfileController extends Controller
         return view('landing_page.hedit', compact('user'));
     }
 
+    // 1. FUNGSI UPDATE PROFIL (Tanpa Password)
     public function update(Request $request)
     {
         $user = User::findOrFail(Auth::id());
@@ -30,14 +31,21 @@ class LandingProfileController extends Controller
             'username' => 'required|string|max:45|unique:users,username,' . $user->id,
             'email' => 'required|string|email|max:45|unique:users,email,' . $user->id,
             'no_ktp' => 'nullable|string|max:16|unique:users,no_ktp,' . $user->id,
+            'no_hp' => 'nullable|string|max:15',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
-            'password' => 'nullable|string|min:8',
         ]);
 
-        $data = $request->except(['password', 'avatar']);
+        $data = $request->except(['avatar', 'no_hp']);
 
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
+        // Rapikan format No HP (Otomatis ubah 08.. jadi 628..)
+        if ($request->filled('no_hp')) {
+            $noHp = $request->no_hp;
+            if (substr($noHp, 0, 1) === '0') {
+                $noHp = '62' . substr($noHp, 1);
+            } elseif (substr($noHp, 0, 2) !== '62') {
+                $noHp = '62' . $noHp;
+            }
+            $data['no_hp'] = $noHp;
         }
 
         if ($request->hasFile('avatar')) {
@@ -47,5 +55,27 @@ class LandingProfileController extends Controller
 
         $user->update($data);
         return redirect()->route('profil.tamu')->with('success', 'Data profil berhasil diperbarui!');
+    }
+
+    // 2. FUNGSI TAMPILKAN HALAMAN UBAH PASSWORD
+    public function password()
+    {
+        return view('landing_page.hpassword');
+    }
+
+    // 3. FUNGSI UPDATE PASSWORD
+    public function updatePassword(Request $request)
+    {
+        $user = User::findOrFail(Auth::id());
+
+        $request->validate([
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user->update([
+            'password' => Hash::make($request->password)
+        ]);
+
+        return redirect()->route('profil.tamu')->with('success', 'Kata sandi berhasil diperbarui!');
     }
 }

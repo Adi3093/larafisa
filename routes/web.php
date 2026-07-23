@@ -49,7 +49,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/profil-tamu', [LandingProfileController::class, 'index'])->name('profil.tamu');
     Route::get('/profil-tamu/edit', [LandingProfileController::class, 'edit'])->name('profil.tamu.edit');
     Route::put('/profil-tamu/update', [LandingProfileController::class, 'update'])->name('profil.tamu.update');
+    // Rute untuk menampilkan halaman Ubah Password
+    Route::get('/profil/password', [App\Http\Controllers\LandingProfileController::class, 'password'])->name('profil.tamu.password');
 
+    // Rute untuk memproses perubahan Password
+    Route::put('/profil/password', [App\Http\Controllers\LandingProfileController::class, 'updatePassword'])->name('profil.tamu.update_password');
     // Reservasi Online Tamu (Simpan & Batal)
     Route::post('/reservasi-online', [App\Http\Controllers\GuestReservationController::class, 'store'])->name('reservasi.tamu.store');
     Route::put('/reservasi-online/{id}/update', [App\Http\Controllers\GuestReservationController::class, 'update'])->name('reservasi.tamu.update');

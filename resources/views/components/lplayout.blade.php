@@ -6,11 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Fisa Hotel</title>
+
     <style>
         [x-cloak] {
             display: none !important;
         }
     </style>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
@@ -22,8 +24,9 @@
         $isReservasi = request()->is('*reservasi*');
         $isRiwayat = request()->is('*riwayat*');
         $isNotif = request()->is('*pusat-notifikasi*');
+        $isPassword = request()->is('*password*');
 
-        $isSolidBg = $isProfile || $isReservasi || $isRiwayat || $isNotif;
+        $isSolidBg = $isProfile || $isReservasi || $isRiwayat || $isNotif || $isPassword;
 
         $navBgClass = $isSolidBg
             ? 'bg-amber-600 border-none'
@@ -64,8 +67,7 @@
             <div class="flex lg:flex-1 justify-end items-center">
                 @auth
                     <div class="flex items-center gap-3 sm:gap-4">
-
-                        @if (!$isProfile)
+                        @if (!$isProfile && !$isPassword)
                             <div class="hidden sm:flex items-center gap-3">
                                 <span
                                     class="text-sm font-bold {{ $textColor }}">{{ explode(' ', trim(auth()->user()->name))[0] }}</span>
@@ -82,7 +84,7 @@
 
                         <div class="relative" x-data="{
                             openNotif: false,
-                            unreadCount: {{ auth()->user()->unreadNotifications->count() }},
+                            unreadCount: {{ auth()->user()->unreadNotifications->count() ?? 0 }},
                             notifications: [],
                             async fetchNotif() {
                                 try {
@@ -105,11 +107,9 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                                 </svg>
-
                                 <template x-if="unreadCount > 0">
                                     <span x-text="unreadCount > 99 ? '99+' : unreadCount"
-                                        class="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold text-white bg-red-500 border-2 border-white rounded-full translate-x-1 -translate-y-1">
-                                    </span>
+                                        class="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold text-white bg-red-500 border-2 border-white rounded-full translate-x-1 -translate-y-1"></span>
                                 </template>
                             </button>
 
@@ -121,7 +121,6 @@
                                     <span x-text="unreadCount + ' Baru'"
                                         class="text-[10px] font-bold bg-amber-200 text-amber-800 px-2.5 py-1 rounded-full"></span>
                                 </div>
-
                                 <div class="max-h-[350px] overflow-y-auto">
                                     <template x-for="notif in notifications" :key="notif.id">
                                         <a :href="'/pusat-notifikasi?id=' + notif.id"
@@ -132,7 +131,6 @@
                                             <p class="text-[10px] font-bold text-amber-600 mt-2" x-text="notif.time"></p>
                                         </a>
                                     </template>
-
                                     <template x-if="notifications.length === 0">
                                         <div class="px-5 py-10 text-center">
                                             <span class="text-4xl opacity-30 block mb-3">📭</span>
@@ -140,23 +138,18 @@
                                         </div>
                                     </template>
                                 </div>
-
                                 <div class="bg-gray-50 p-3 border-t border-gray-100 text-center">
                                     <a href="{{ route('notif.tamu') }}"
-                                        class="text-sm font-bold text-amber-600 hover:text-amber-700 hover:underline">
-                                        Lihat Semua Notifikasi &rarr;
-                                    </a>
+                                        class="text-sm font-bold text-amber-600 hover:text-amber-700 hover:underline">Lihat
+                                        Semua Notifikasi &rarr;</a>
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 @else
                     @if (!$isProfile)
                         <a href="{{ route('login') }}"
-                            class="text-sm font-bold {{ $isSolidBg ? 'bg-white text-amber-700 hover:bg-amber-50' : 'bg-amber-600 text-white hover:bg-amber-700' }} px-5 py-2.5 rounded-lg transition shadow-md shadow-amber-600/20">
-                            Masuk
-                        </a>
+                            class="text-sm font-bold {{ $isSolidBg ? 'bg-white text-amber-700 hover:bg-amber-50' : 'bg-amber-600 text-white hover:bg-amber-700' }} px-5 py-2.5 rounded-lg transition shadow-md shadow-amber-600/20">Masuk</a>
                     @endif
                 @endauth
             </div>
@@ -167,6 +160,7 @@
         {{ $slot }}
     </main>
 
+    <!-- Navigasi Bawah Mobile -->
     <div
         class="fixed bottom-0 left-0 right-0 z-[9999] w-full bg-white border-t border-amber-100 lg:hidden shadow-[0_-5px_15px_-3px_rgba(0,0,0,0.05)]">
         <div class="grid h-16 max-w-lg grid-cols-4 mx-auto font-medium">
@@ -181,7 +175,6 @@
                 <span
                     class="text-[10px] {{ request()->is('/') ? 'text-amber-600 font-bold' : 'text-amber-900/50 group-hover:text-amber-600' }}">Beranda</span>
             </a>
-
             <a href="{{ route('reservasi.tamu') }}"
                 class="inline-flex flex-col items-center justify-center px-5 hover:bg-amber-50/50 group">
                 <svg class="w-6 h-6 mb-1 {{ $isReservasi ? 'text-amber-600' : 'text-amber-900/40 group-hover:text-amber-600' }}"
@@ -193,7 +186,6 @@
                 <span
                     class="text-[10px] {{ $isReservasi ? 'font-bold text-amber-600' : 'text-amber-900/50 group-hover:text-amber-600' }}">Reservasi</span>
             </a>
-
             <a href="{{ route('riwayat.tamu') }}"
                 class="inline-flex flex-col items-center justify-center px-5 hover:bg-amber-50/50 group">
                 <svg class="w-6 h-6 mb-1 {{ $isRiwayat ? 'text-amber-600' : 'text-amber-900/40 group-hover:text-amber-600' }}"
@@ -205,7 +197,6 @@
                 <span
                     class="text-[10px] {{ $isRiwayat ? 'font-bold text-amber-600' : 'text-amber-900/50 group-hover:text-amber-600' }}">Riwayat</span>
             </a>
-
             <a href="{{ route('profil.tamu') }}"
                 class="inline-flex flex-col items-center justify-center px-5 hover:bg-amber-50/50 group">
                 <svg class="w-6 h-6 mb-1 {{ $isProfile ? 'text-amber-600' : 'text-amber-900/40 group-hover:text-amber-600' }}"
@@ -227,9 +218,7 @@
             if (form.hasAttribute('data-confirm')) {
                 e.preventDefault();
                 const dataRaw = form.getAttribute('data-confirm').split('|');
-
                 if (!form.id) form.id = 'auto-id-' + Math.random().toString(36).substring(2, 9);
-
                 window.dispatchEvent(new CustomEvent('open-confirm', {
                     detail: {
                         title: dataRaw[0],

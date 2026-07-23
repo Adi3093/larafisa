@@ -1,32 +1,8 @@
 <x-lplayout>
-    <style>
-        [x-cloak] {
-            display: none !important;
-        }
-
-        .tab-scroll::-webkit-scrollbar {
-            height: 4px;
-        }
-
-        .tab-scroll::-webkit-scrollbar-thumb {
-            background-color: #fcd34d;
-            border-radius: 10px;
-        }
-
-        /* CSS KHUSUS WIZARD MOBILE ANTI-GAGAL */
-        @media (max-width: 767px) {
-            .mobile-hide {
-                display: none !important;
-            }
-
-            .mobile-flex {
-                display: flex !important;
-            }
-        }
-    </style>
-
     <div class="absolute top-0 left-0 w-full h-64 bg-amber-600 z-0"></div>
+
     <div class="relative z-10 min-h-screen pt-24 lg:pt-32 pb-24 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+
         <div class="mb-8">
             <h1 class="text-white text-3xl font-extrabold tracking-tight">Riwayat & Status Perjalanan</h1>
             <p class="text-amber-100 mt-1">Pantau perkembangan reservasi kamar Anda secara real-time.</p>
@@ -35,14 +11,11 @@
         @if (session('success'))
             <div
                 class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl shadow-sm font-bold">
-                ✅ {{ session('success') }}
-            </div>
+                ✅ {{ session('success') }}</div>
         @endif
-
         @if (session('error'))
-            <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-sm font-bold">
-                ⚠️ {{ session('error') }}
-            </div>
+            <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-sm font-bold">⚠️
+                {{ session('error') }}</div>
         @endif
 
         @if (!$isLoggedIn)
@@ -110,6 +83,7 @@
 
             <div x-data="{ tab: '{{ $activeTab }}' }"
                 class="bg-white rounded-3xl shadow-2xl shadow-amber-900/10 border-2 border-amber-200 overflow-hidden">
+
                 <div class="flex w-full bg-white border-b-2 border-amber-200 justify-between">
                     <button @click="tab = 'pembayaran'"
                         :class="tab === 'pembayaran' ? 'bg-amber-100 text-amber-800 shadow-inner' :
@@ -167,8 +141,8 @@
                 </div>
 
                 <div class="p-4 sm:p-8 min-h-[400px]">
+
                     @php
-                        // Render card
                         $renderActiveCard = function ($pesananData) {
                             if (!$pesananData) {
                                 return '';
@@ -218,6 +192,7 @@
                                 '
                                             </div>
                                         </div>
+
                                         <div class="grid grid-cols-2 gap-4 max-w-sm mb-6">
                                             <div>
                                                 <span class="block text-[10px] font-bold text-amber-800/70 uppercase tracking-wider mb-1">Check-in :</span>
@@ -263,7 +238,6 @@
                             </div>
                         @endif
                     </div>
-
                     <div x-show="tab === 'konfirmasi'" x-cloak class="animate-fade-in space-y-4">
                         @if ($tabKonfirmasi->isNotEmpty())
                             @foreach ($tabKonfirmasi as $pesan)
@@ -284,7 +258,6 @@
                             </div>
                         @endif
                     </div>
-
                     <div x-show="tab === 'checkin'" x-cloak class="animate-fade-in space-y-4">
                         @if ($tabCheckin->isNotEmpty())
                             @foreach ($tabCheckin as $pesan)
@@ -305,7 +278,6 @@
                             </div>
                         @endif
                     </div>
-
                     <div x-show="tab === 'checkout'" x-cloak class="animate-fade-in space-y-4">
                         @if ($tabCheckout->isNotEmpty())
                             @foreach ($tabCheckout as $pesan)
@@ -449,6 +421,7 @@
         @endif
 
     </div>
+
     @if ($isLoggedIn)
         @php
             $allReservations = collect();
@@ -471,8 +444,10 @@
                 class="fixed inset-0 z-[99999] hidden overflow-y-auto bg-gray-900/60 backdrop-blur-sm"
                 aria-labelledby="modal-title" role="dialog" aria-modal="true">
                 <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
+
                     <div
                         class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl shadow-amber-900/20 transition-all sm:my-8 w-full sm:max-w-4xl border-2 border-amber-200">
+
                         <div
                             class="px-6 py-4 border-b-2 border-amber-200 flex justify-between items-center bg-amber-50">
                             <h3 class="text-xl font-black text-amber-950">
@@ -564,6 +539,7 @@
 
                             <div id="paymentPanel-{{ $res->id }}"
                                 class="w-full md:w-1/2 md:border-l-2 md:border-amber-100 p-6 flex-col h-full bg-gradient-to-b from-amber-50/50 to-white hidden md:flex">
+
                                 <div class="border-b-2 border-amber-100 pb-2 mb-4 hidden md:block">
                                     <h4 class="text-xl font-black text-amber-900">Detail Pembayaran</h4>
                                 </div>
@@ -627,6 +603,7 @@
                                             class="border-2 border-amber-200 rounded-2xl flex-grow min-h-[220px] flex items-center justify-center bg-white shadow-inner p-4">
                                             <div id="qrisContainer-{{ $res->id }}"
                                                 class="text-center w-full flex flex-col items-center justify-center">
+
                                                 @if (isset($pembayaranAktif) && $pembayaranAktif->status === 'berhasil')
                                                     <div class="text-center w-full animate-fade-in">
                                                         <div
@@ -706,7 +683,6 @@
     @if ($isLoggedIn)
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                // Loop semua pembayaran aktif agar timer dan checker berjalan paralel
                 @foreach ($pembayaranAktifs as $pembayaranAktif)
                     @if ($pembayaranAktif->status === 'pending' && $pembayaranAktif->qr_image)
                         startPaymentCheck("{{ $pembayaranAktif->invoice }}", "{{ $pembayaranAktif->reservasi_id }}");
@@ -717,64 +693,4 @@
         </script>
     @endif
 
-    <script>
-        function openMobileWizard(id) {
-            document.getElementById('infoPanel-' + id).classList.add('mobile-hide');
-            document.getElementById('paymentPanel-' + id).classList.remove('hidden');
-            document.getElementById('paymentPanel-' + id).classList.add('mobile-flex');
-            document.getElementById('headerTitleMobile-' + id).innerText = 'Detail Pembayaran';
-            document.getElementById('backBtn-' + id).classList.remove('hidden');
-        }
-
-        function closeMobileWizard(id) {
-            document.getElementById('infoPanel-' + id).classList.remove('mobile-hide');
-            document.getElementById('paymentPanel-' + id).classList.add('hidden');
-            document.getElementById('paymentPanel-' + id).classList.remove('mobile-flex');
-            document.getElementById('headerTitleMobile-' + id).innerText = 'Detail dan Reservasi Tamu';
-            document.getElementById('backBtn-' + id).classList.add('hidden');
-        }
-
-        async function forceDownloadQR(btn, imageUrl, invoiceNo) {
-            if (btn.disabled) return;
-
-            const textSpan = btn.querySelector('.btn-text');
-            const originalHtml = textSpan.innerHTML;
-
-            btn.disabled = true;
-            btn.classList.add('opacity-75', 'cursor-wait');
-
-            let dotCount = 0;
-            const animationInterval = setInterval(() => {
-                dotCount = (dotCount + 1) % 4;
-                textSpan.innerHTML = `Mendownload${'.'.repeat(dotCount)}`;
-            }, 400);
-
-            try {
-                const cleanUrl = imageUrl.replace(/&amp;/g, '&');
-                const response = await fetch(cleanUrl);
-                const blob = await response.blob();
-                const blobUrl = window.URL.createObjectURL(blob);
-
-                const link = document.createElement('a');
-                link.style.display = 'none';
-                link.href = blobUrl;
-                link.download = `QRIS-${invoiceNo}.png`;
-
-                document.body.appendChild(link);
-                link.click();
-
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                    window.URL.revokeObjectURL(blobUrl);
-                }, 100);
-            } catch (e) {
-                alert("Gagal mengunduh gambar QR. Silakan cek koneksi internet Anda.");
-            } finally {
-                clearInterval(animationInterval);
-                textSpan.innerHTML = originalHtml;
-                btn.disabled = false;
-                btn.classList.remove('opacity-75', 'cursor-wait');
-            }
-        }
-    </script>
 </x-lplayout>

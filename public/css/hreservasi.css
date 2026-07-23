@@ -1,0 +1,16 @@
+/* MODUL 1: INPUT NUMBER CLEANER (Menyembunyikan panah naik-turun default)   */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+/* MODUL 2: DATETIME CUSTOMIZATION (Styling icon kalender)                   */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s ease-in-out;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
