@@ -122,16 +122,6 @@
                 <td class="text-right">Rp {{ number_format($totalBed, 0, ',', '.') }}</td>
             </tr>
         @endif
-
-        @if ($qtySelimut > 0)
-            <tr>
-                <td colspan="2">Ex. Selimut ({{ $qtySelimut }}x)</td>
-            </tr>
-            <tr>
-                <td>&nbsp;</td>
-                <td class="text-right">Rp {{ number_format($totalSelimut, 0, ',', '.') }}</td>
-            </tr>
-        @endif
     </table>
 
     <div class="total-box text-right font-bold" style="font-size: 14px;">

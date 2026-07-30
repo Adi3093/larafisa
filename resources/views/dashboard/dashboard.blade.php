@@ -167,6 +167,5 @@
         window.markedDates = @json($jadwalReservasi);
     </script>
     <script src="{{ asset('js/dashboard/dashboard.js') }}?v={{ time() }}"></script>
-
-    <link rel="stylesheet" href="{{ asset('css/landingpage/dashboard.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}?v={{ time() }}">
 </x-dblayout>

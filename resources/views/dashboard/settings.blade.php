@@ -407,7 +407,7 @@
         </div>
     </div>
 
-    <link rel="stylesheet" href="{{ asset('css/landingpage/settings.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/settings.css') }}?v={{ time() }}">
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
     <script>
         // Mengirim data dari Server (Blade/PHP) ke Global Window JS

@@ -64,7 +64,6 @@ class CheckInOutController extends Controller
     {
         $reservasi = Reservasi::findOrFail($id);
 
-        // PERBAIKAN: Selalu rekam waktu nyata saat tombol Check-In ditekan!
         $reservasi->update([
             'status_reservasi' => 'Check-In',
             'check_in' => Carbon::now()
@@ -81,16 +80,11 @@ class CheckInOutController extends Controller
     {
         $reservasi = Reservasi::findOrFail($id);
 
-        // Update Ekstra (Bed, Selimut)
         $ekstra = is_array($reservasi->ekstra) ? $reservasi->ekstra : json_decode($reservasi->ekstra, true) ?? [];
         if ($request->has('extra_bed_qty')) {
             $ekstra['Extra Bed'] = (int) $request->extra_bed_qty;
         }
-        if ($request->has('extra_selimut_qty')) {
-            $ekstra['Extra Selimut'] = (int) $request->extra_selimut_qty;
-        }
 
-        // JIKA HANYA SIMPAN PERUBAHAN TANGGAL / EKSTRA (Bukan Selesai)
         if ($request->action_type === 'simpan') {
             $newCheckOut = $reservasi->check_out;
             if ($request->filled('tanggal_checkout')) {
@@ -104,8 +98,6 @@ class CheckInOutController extends Controller
             return back()->with('success', 'Perubahan jadwal & ekstra berhasil disimpan.');
         }
 
-        // JIKA CHECK-OUT SELESAI
-        // PERBAIKAN: Selalu rekam waktu nyata saat tombol Check-Out ditekan!
         $reservasi->update([
             'status_reservasi' => 'Selesai',
             'check_out' => Carbon::now(),
@@ -185,9 +177,10 @@ class CheckInOutController extends Controller
             return back()->with('error', 'Gagal memperpanjang! Tanggal Check-Out baru tidak boleh lebih awal dari waktu Check-In.');
         }
 
+        // BUG 1 FIX: Pengecekan Tabrakan saat extend kamar
         $isTabrakan = Reservasi::where('kamar_id', $reservasi->kamar_id)
             ->where('id', '!=', $id)
-            ->whereIn('status_reservasi', ['Terkonfirmasi', 'Check-In'])
+            ->whereIn('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi', 'Check-In'])
             ->where(function ($q) use ($checkIn, $newCheckOut) {
                 $q->where('check_in', '<', $newCheckOut)
                     ->where('check_out', '>', $checkIn);
@@ -205,24 +198,20 @@ class CheckInOutController extends Controller
     {
         $reservasi = Reservasi::with('kamar.kelasKamar')->findOrFail($id);
 
-        // PERBAIKAN KALKULASI HARI: Basis kalender (bukan hitungan desimal 24 jam)
         $checkIn = Carbon::parse($reservasi->check_in)->startOfDay();
         $checkOut = Carbon::parse($reservasi->check_out)->startOfDay();
-        $diffDays = max(1, (int) $checkIn->diffInDays($checkOut)); // Minimal 1 Malam
+        $diffDays = max(1, (int) $checkIn->diffInDays($checkOut));
 
         $hargaKamar = $reservasi->kamar->kelasKamar->harga ?? 0;
         $totalKamar = $hargaKamar * $diffDays;
 
         $ekstra = is_array($reservasi->ekstra) ? $reservasi->ekstra : json_decode($reservasi->ekstra, true);
         $qtyBed = $ekstra['Extra Bed'] ?? 0;
-        $qtySelimut = $ekstra['Extra Selimut'] ?? 0;
 
-        $totalBed = $qtyBed * 100000;
-        $totalSelimut = $qtySelimut * 25000;
-
-        $totalAkhir = $totalKamar + $totalBed + $totalSelimut;
+        $totalBed = $qtyBed * 50000;
+        $totalAkhir = $totalKamar + $totalBed;
         $kasir = Auth::user()->name;
 
-        return view('dashboard.strukthermal', compact('reservasi', 'diffDays', 'hargaKamar', 'totalKamar', 'qtyBed', 'totalBed', 'qtySelimut', 'totalSelimut', 'totalAkhir', 'kasir', 'ekstra'));
+        return view('dashboard.strukthermal', compact('reservasi', 'diffDays', 'hargaKamar', 'totalKamar', 'qtyBed', 'totalBed', 'totalAkhir', 'kasir', 'ekstra'));
     }
 }

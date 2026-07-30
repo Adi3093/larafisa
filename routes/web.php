@@ -7,6 +7,7 @@ use App\Http\Controllers\KamarController;
 use App\Http\Controllers\LandingProfileController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReservasiController;
 use App\Http\Middleware\UpdateLastSeen;
 use Illuminate\Support\Facades\Route;
 
@@ -49,11 +50,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profil-tamu', [LandingProfileController::class, 'index'])->name('profil.tamu');
     Route::get('/profil-tamu/edit', [LandingProfileController::class, 'edit'])->name('profil.tamu.edit');
     Route::put('/profil-tamu/update', [LandingProfileController::class, 'update'])->name('profil.tamu.update');
-    // Rute untuk menampilkan halaman Ubah Password
     Route::get('/profil/password', [App\Http\Controllers\LandingProfileController::class, 'password'])->name('profil.tamu.password');
-
-    // Rute untuk memproses perubahan Password
     Route::put('/profil/password', [App\Http\Controllers\LandingProfileController::class, 'updatePassword'])->name('profil.tamu.update_password');
+
     // Reservasi Online Tamu (Simpan & Batal)
     Route::post('/reservasi-online', [App\Http\Controllers\GuestReservationController::class, 'store'])->name('reservasi.tamu.store');
     Route::put('/reservasi-online/{id}/update', [App\Http\Controllers\GuestReservationController::class, 'update'])->name('reservasi.tamu.update');
@@ -109,6 +108,7 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
     Route::put('/reservasi/{id}', [App\Http\Controllers\ReservasiController::class, 'update'])->name('reservasi.update');
     Route::post('/reservasi/{id}/konfirmasi', [App\Http\Controllers\ReservasiController::class, 'konfirmasi'])->name('reservasi.konfirmasi');
     Route::post('/reservasi/{id}/batal', [App\Http\Controllers\ReservasiController::class, 'batal'])->name('reservasi.batal');
+    Route::get('/reservasi/{id}/generate-qris', [App\Http\Controllers\ReservasiController::class, 'generateQrisWalkin'])->name('reservasi.generate.qris');
 
     // Export Riwayat
     Route::get('/reservasi/export/csv', [App\Http\Controllers\ReservasiController::class, 'exportCsv'])->name('reservasi.csv');
@@ -144,4 +144,7 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
     Route::get('/pendapatan/export/{format}', [App\Http\Controllers\PendapatanController::class, 'export'])->name('pendapatan.export');
     // Rute API untuk menyimpan status Maintenance ke Server
     Route::post('/settings/maintenance', [App\Http\Controllers\ProfileController::class, 'updateMaintenance'])->name('settings.maintenance');
+
+    // Rute API internal untuk mengecek notifikasi reservasi baru (Nebeng di Web)
+    Route::get('/api/cek-notifikasi', [ReservasiController::class, 'cekNotifikasi']);
 });

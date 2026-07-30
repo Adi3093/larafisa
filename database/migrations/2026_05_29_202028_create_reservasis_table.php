@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('nama_tamu', 100);
             $table->string('no_ktp', 16)->nullable();
             $table->string('no_hp', 15);
+            $table->text('alamat')->nullable();
             $table->datetime('check_in');
             $table->datetime('check_out');
             $table->json('ekstra')->nullable();
