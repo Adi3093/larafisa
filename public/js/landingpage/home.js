@@ -1,21 +1,14 @@
 // MODULE 1: GLOBAL STATE VARIABLES
-// Menyimpan ID kelas kamar yang sedang dilihat di modal
 let kelasIdAktif = null;
 
 // MODULE 2: MODAL WINDOW CONTROL
-/**
- * Fungsi untuk membuka modal dan mengisi seluruh data secara dinamis
- */
 function bukaDetailKelas(id, namaKelas, harga, fasilitas, thumb, f1, f2, f3, jumlahTersedia) {
-    // 1. Simpan ID ke dalam state global
     kelasIdAktif = id;
 
-    // 2. Tulis Data Teks Utama
     document.getElementById('modal_nama_kelas').innerText = namaKelas;
     document.getElementById('modal_harga').innerText = harga;
     document.getElementById('modal_foto_utama').src = thumb;
     
-    // 3. Atur UI Ketersediaan (Badge & Tombol)
     const ketersediaanElem = document.getElementById('modal_ketersediaan');
     const btnPesan = document.getElementById('modal_btn_pesan');
 
@@ -31,9 +24,10 @@ function bukaDetailKelas(id, namaKelas, harga, fasilitas, thumb, f1, f2, f3, jum
         btnPesan.innerText = "Saat Ini Tidak Tersedia";
     }
 
-    // 4. Susun Galeri Foto Mini (Thumbnail)
+    // 🚀 FIX: Menggunakan "Set" untuk secara otomatis membuang URL gambar yang terduplikat
     let galeriHTML = '';
-    let arrayFoto = [thumb, f1, f2, f3].filter(foto => foto !== '');
+    let arrayFoto = [...new Set([thumb, f1, f2, f3])].filter(foto => foto !== '');
+    
     arrayFoto.forEach(fotoUrl => {
         galeriHTML += `
             <div class="h-16 sm:h-24 rounded-xl overflow-hidden shadow-sm border-2 border-transparent hover:border-amber-400 cursor-pointer transition" onclick="document.getElementById('modal_foto_utama').src='${fotoUrl}'">
@@ -43,48 +37,94 @@ function bukaDetailKelas(id, namaKelas, harga, fasilitas, thumb, f1, f2, f3, jum
     });
     document.getElementById('galeri_tambahan').innerHTML = galeriHTML;
 
-    // 5. Susun List Fasilitas
     let fasHTML = '';
     fasilitas.forEach(item => {
         fasHTML += `<li class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0"></span>${item}</li>`;
     });
     document.getElementById('modal_fasilitas').innerHTML = fasHTML;
 
-    // 6. Tampilkan Modal
-    document.body.classList.add('overflow-hidden'); // Kunci scroll halaman belakang
+    document.body.classList.add('overflow-hidden');
     document.getElementById('modalDetail').classList.remove('hidden');
 }
 
-/**
- * Fungsi untuk menutup modal
- */
 function tutupDetailKelas() {
-    document.body.classList.remove('overflow-hidden'); // Kembalikan scroll
+    document.body.classList.remove('overflow-hidden'); 
     document.getElementById('modalDetail').classList.add('hidden');
 }
 
 // MODULE 3: REDIRECTION & FILTERING
-/**
- * Fungsi untuk membawa tamu ke halaman form reservasi beserta parameternya
- */
 function lanjutReservasi() {
     let checkin = document.getElementById('filter_checkin').value;
     let checkout = document.getElementById('filter_checkout').value;
     
-    // Redirect langsung ke URL halaman form reservasi dengan Query String (URL Parameter)
     window.location.href = `/reservasi-online?kelas_id=${kelasIdAktif}&filter_checkin=${checkin}&filter_checkout=${checkout}`;
 }
 
-/**
- * Fungsi untuk menghapus query string filter di URL
- */
 function resetFilter() {
-    // URL dasar dari situs, diambil dari tag khusus atau menggunakan origin murni
     window.location.href = window.location.origin + "/#kamar";
 }
 
-// MODULE 4: EXPORT TO GLOBAL WINDOW
+
+// MODULE 4: KONTROL UI TANGGAL DAN PENGINAP
+function adjustDateHome(inputId, daysToAdd) {
+    let input = document.getElementById(inputId);
+    if (!input || !input.value) return;
+
+    let dateObj = new Date(input.value);
+    dateObj.setDate(dateObj.getDate() + daysToAdd);
+    
+    let year = dateObj.getFullYear();
+    let month = String(dateObj.getMonth() + 1).padStart(2, "0");
+    let day = String(dateObj.getDate()).padStart(2, "0");
+    let hours = String(dateObj.getHours()).padStart(2, "0");
+    let minutes = String(dateObj.getMinutes()).padStart(2, "0");
+    
+    input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    syncMinCheckoutHome();
+}
+
+function syncMinCheckoutHome() {
+    let inInput = document.getElementById("filter_checkin");
+    let outInput = document.getElementById("filter_checkout");
+    if (!inInput || !outInput || !inInput.value || !outInput.value) return;
+
+    let inDate = new Date(inInput.value);
+    let outDate = new Date(outInput.value);
+
+    if (outDate <= inDate) {
+        let newOut = new Date(inDate);
+        newOut.setDate(newOut.getDate() + 1);
+        newOut.setHours(11, 0, 0, 0); // Kunci batasan ke jam 11 Siang
+        
+        let year = newOut.getFullYear();
+        let month = String(newOut.getMonth() + 1).padStart(2, "0");
+        let day = String(newOut.getDate()).padStart(2, "0");
+        let hours = String(newOut.getHours()).padStart(2, "0");
+        let minutes = String(newOut.getMinutes()).padStart(2, "0");
+        
+        outInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+}
+
+function adjustPenginap(change) {
+    let hiddenInput = document.getElementById('filter_tamu');
+    let displayInput = document.getElementById('display_penginap');
+    let currentVal = parseInt(hiddenInput.value) || 1;
+    let newVal = currentVal + change;
+    
+    // Batas Minimal 1 Orang, Maksimal 4 Orang
+    if (newVal >= 1 && newVal <= 4) {
+        hiddenInput.value = newVal;
+        displayInput.value = newVal + " Orang";
+    }
+}
+
+
+// MODULE 5: EXPORT TO GLOBAL WINDOW
 window.bukaDetailKelas = bukaDetailKelas;
 window.tutupDetailKelas = tutupDetailKelas;
 window.lanjutReservasi = lanjutReservasi;
 window.resetFilter = resetFilter;
+window.adjustDateHome = adjustDateHome;
+window.syncMinCheckoutHome = syncMinCheckoutHome;
+window.adjustPenginap = adjustPenginap;

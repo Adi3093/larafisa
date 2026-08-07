@@ -18,117 +18,137 @@
                 </p>
             </div>
 
+            <!-- FIX: KOTAK FASILITAS DIPERKECIL DI MOBILE (w-[105px]) AGAR TIDAK KRAM -->
             <div class="mt-10 lg:mt-16 w-full">
                 <div
-                    class="flex overflow-x-auto gap-3 sm:gap-4 pb-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    class="flex overflow-x-auto gap-3 sm:gap-6 pb-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     <div
-                        class="flex-none w-32 sm:w-40 snap-center bg-white/60 backdrop-blur-md p-4 rounded-2xl border border-white text-center hover:bg-white/80 transition shadow-sm">
+                        class="flex-none w-[105px] sm:w-44 lg:w-48 snap-center bg-white/60 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-white text-center hover:bg-white/80 transition shadow-sm">
                         <div
-                            class="w-10 h-10 sm:w-12 sm:h-12 mx-auto bg-amber-600 text-white rounded-full flex items-center justify-center mb-3 shadow-md shadow-amber-600/20">
-                            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            class="w-10 h-10 sm:w-14 sm:h-14 mx-auto bg-amber-600 text-white rounded-full flex items-center justify-center mb-2 sm:mb-3 shadow-md shadow-amber-600/20">
+                            <svg class="w-5 h-5 sm:w-7 sm:h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0">
                                 </path>
                             </svg>
                         </div>
-                        <h3 class="font-bold text-amber-950 text-xs sm:text-sm">Wifi Area</h3>
+                        <h3 class="font-bold text-amber-950 text-[11px] sm:text-sm leading-tight">Wifi Area</h3>
                     </div>
                     <div
-                        class="flex-none w-32 sm:w-40 snap-center bg-white/60 backdrop-blur-md p-4 rounded-2xl border border-white text-center hover:bg-white/80 transition shadow-sm">
+                        class="flex-none w-[105px] sm:w-44 lg:w-48 snap-center bg-white/60 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-white text-center hover:bg-white/80 transition shadow-sm">
                         <div
-                            class="w-10 h-10 sm:w-12 sm:h-12 mx-auto bg-amber-600 text-white rounded-full flex items-center justify-center mb-3 shadow-md shadow-amber-600/20">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="lucide lucide-circle-parking-icon lucide-circle-parking">
+                            class="w-10 h-10 sm:w-14 sm:h-14 mx-auto bg-amber-600 text-white rounded-full flex items-center justify-center mb-2 sm:mb-3 shadow-md shadow-amber-600/20">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                class="w-5 h-5 sm:w-7 sm:h-7">
                                 <circle cx="12" cy="12" r="10" />
                                 <path d="M9 17V7h4a3 3 0 0 1 0 6H9" />
                             </svg>
                         </div>
-                        <h3 class="font-bold text-amber-950 text-xs sm:text-sm">Free Parking</h3>
+                        <h3 class="font-bold text-amber-950 text-[11px] sm:text-sm leading-tight">Free Parking</h3>
                     </div>
                     <div
-                        class="flex-none w-32 sm:w-40 snap-center bg-white/60 backdrop-blur-md p-4 rounded-2xl border border-white text-center hover:bg-white/80 transition shadow-sm">
+                        class="flex-none w-[105px] sm:w-44 lg:w-48 snap-center bg-white/60 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-white text-center hover:bg-white/80 transition shadow-sm">
                         <div
-                            class="w-10 h-10 sm:w-12 sm:h-12 mx-auto bg-amber-600 text-white rounded-full flex items-center justify-center mb-3 shadow-md shadow-amber-600/20">
-                            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            class="w-10 h-10 sm:w-14 sm:h-14 mx-auto bg-amber-600 text-white rounded-full flex items-center justify-center mb-2 sm:mb-3 shadow-md shadow-amber-600/20">
+                            <svg class="w-5 h-5 sm:w-7 sm:h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
                                 </path>
                             </svg>
                         </div>
-                        <h3 class="font-bold text-amber-950 text-xs sm:text-sm">Keamanan 24 Jam</h3>
+                        <h3 class="font-bold text-amber-950 text-[11px] sm:text-sm leading-tight">Keamanan 24 Jam</h3>
                     </div>
                     <div
-                        class="flex-none w-32 sm:w-40 snap-center bg-white/60 backdrop-blur-md p-4 rounded-2xl border border-white text-center hover:bg-white/80 transition shadow-sm">
+                        class="flex-none w-[105px] sm:w-44 lg:w-48 snap-center bg-white/60 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-white text-center hover:bg-white/80 transition shadow-sm">
                         <div
-                            class="w-10 h-10 sm:w-12 sm:h-12 mx-auto bg-amber-600 text-white rounded-full flex items-center justify-center mb-3 shadow-md shadow-amber-600/20">
-                            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            class="w-10 h-10 sm:w-14 sm:h-14 mx-auto bg-amber-600 text-white rounded-full flex items-center justify-center mb-2 sm:mb-3 shadow-md shadow-amber-600/20">
+                            <svg class="w-5 h-5 sm:w-7 sm:h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
-                        <h3 class="font-bold text-amber-950 text-xs sm:text-sm">Pelayanan 24 Jam</h3>
+                        <h3 class="font-bold text-amber-950 text-[11px] sm:text-sm leading-tight">Pelayanan 24 Jam</h3>
                     </div>
                     <div
-                        class="flex-none w-32 sm:w-40 snap-center bg-white/60 backdrop-blur-md p-4 rounded-2xl border border-white text-center hover:bg-white/80 transition shadow-sm">
+                        class="flex-none w-[105px] sm:w-44 lg:w-48 snap-center bg-white/60 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-white text-center hover:bg-white/80 transition shadow-sm">
                         <div
-                            class="w-10 h-10 sm:w-12 sm:h-12 mx-auto bg-amber-600 text-white rounded-full flex items-center justify-center mb-3 shadow-md shadow-amber-600/20">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="lucide lucide-utensils-crossed-icon lucide-utensils-crossed">
+                            class="w-10 h-10 sm:w-14 sm:h-14 mx-auto bg-amber-600 text-white rounded-full flex items-center justify-center mb-2 sm:mb-3 shadow-md shadow-amber-600/20">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                class="w-5 h-5 sm:w-7 sm:h-7">
                                 <path d="m16 2-2.3 2.3a3 3 0 0 0 0 4.2l1.8 1.8a3 3 0 0 0 4.2 0L22 8" />
                                 <path d="M15 15 3.3 3.3a4.2 4.2 0 0 0 0 6l7.3 7.3c.7.7 2 .7 2.8 0L15 15Zm0 0 7 7" />
                                 <path d="m2.1 21.8 6.4-6.3" />
                                 <path d="m19 5-7 7" />
                             </svg>
                         </div>
-                        <h3 class="font-bold text-amber-950 text-xs sm:text-sm">Free Sarapan</h3>
+                        <h3 class="font-bold text-amber-950 text-[11px] sm:text-sm leading-tight">Free Sarapan</h3>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- FIX: PENAMBAHAN MIN-W-0 PADA INPUT AGAR TIDAK MELUBER & MERUSAK GRID DESKTOP -->
     <div
-        class="sticky top-4 sm:top-6 z-40 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 lg:-mt-24 mb-10 lg:mb-16 transition-all duration-300">
+        class="relative z-40 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 lg:-mt-24 mb-10 lg:mb-16 transition-all duration-300">
         <div
-            class="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl shadow-amber-900/5 border border-amber-100 p-5 sm:p-8">
+            class="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl shadow-amber-900/5 border border-amber-100 p-4 sm:p-8">
             <form id="formFilterKamar" method="GET" action="{{ url('/') }}#kamar"
-                class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                <div class="col-span-1 md:col-span-2">
-                    <label class="block text-sm font-bold text-amber-950 mb-2">Tanggal Menginap</label>
-                    <div class="flex gap-2">
-                        <div class="w-full">
-                            <span class="text-[10px] sm:text-xs text-amber-800/60 block mb-1">Check-in (WIB)</span>
-                            <input type="datetime-local" id="filter_checkin" name="filter_checkin"
-                                value="{{ request('filter_checkin', date('Y-m-d\TH:i')) }}"
-                                class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-amber-500 p-2 sm:p-2.5 text-sm bg-amber-50/50 text-amber-950"
-                                required>
-                        </div>
-                        <div class="w-full">
-                            <span class="text-[10px] sm:text-xs text-amber-800/60 block mb-1">Check-out (WIB)</span>
-                            <input type="datetime-local" id="filter_checkout" name="filter_checkout"
-                                value="{{ request('filter_checkout', date('Y-m-d\TH:i', strtotime('+1 day'))) }}"
-                                class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-amber-500 p-2 sm:p-2.5 text-sm bg-amber-50/50 text-amber-950"
-                                required>
-                        </div>
+                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 items-end">
+
+                <div class="w-full">
+                    <label class="block text-xs sm:text-sm font-bold text-amber-950 mb-1 sm:mb-2">Check-in (WIB)</label>
+                    <div
+                        class="flex border border-amber-200 rounded-lg overflow-hidden shadow-sm bg-amber-50/50 focus-within:ring-1 focus-within:border-amber-500 transition">
+                        <input type="datetime-local" id="filter_checkin" name="filter_checkin"
+                            value="{{ request('filter_checkin', date('Y-m-d\TH:i')) }}"
+                            class="flex-1 min-w-0 border-none p-2 sm:p-2.5 text-[12px] sm:text-sm bg-transparent text-amber-950 focus:ring-0 cursor-pointer"
+                            required onchange="syncMinCheckoutHome()">
+                        <button type="button" onclick="adjustDateHome('filter_checkin', -1)"
+                            class="px-2.5 sm:px-3 bg-white border-l border-r border-amber-200 hover:bg-amber-100 text-amber-700 font-black transition">&lt;</button>
+                        <button type="button" onclick="adjustDateHome('filter_checkin', 1)"
+                            class="px-2.5 sm:px-3 bg-white hover:bg-amber-100 text-amber-700 font-black transition">&gt;</button>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-bold text-amber-950 mb-2">Jumlah Tamu</label>
-                    <select name="filter_tamu" id="filter_tamu"
-                        class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-amber-500 p-2 sm:p-2.5 text-sm bg-amber-50/50 text-amber-950">
-                        <option value="1" {{ request('filter_tamu', 1) == 1 ? 'selected' : '' }}>1 Orang</option>
-                        <option value="2" {{ request('filter_tamu') == 2 ? 'selected' : '' }}>2 Orang</option>
-                        <option value="3" {{ request('filter_tamu') == 3 ? 'selected' : '' }}>3 Orang</option>
-                        <option value="4" {{ request('filter_tamu') >= 4 ? 'selected' : '' }}>4+ Orang</option>
-                    </select>
+
+                <div class="w-full">
+                    <label class="block text-xs sm:text-sm font-bold text-amber-950 mb-1 sm:mb-2">Check-out</label>
+                    <div
+                        class="flex border border-amber-200 rounded-lg overflow-hidden shadow-sm bg-amber-50/50 focus-within:ring-1 focus-within:border-amber-500 transition">
+                        <input type="datetime-local" id="filter_checkout" name="filter_checkout"
+                            value="{{ request('filter_checkout', date('Y-m-d\T11:00', strtotime('+1 day'))) }}"
+                            class="flex-1 min-w-0 border-none p-2 sm:p-2.5 text-[12px] sm:text-sm bg-transparent text-amber-950 focus:ring-0 cursor-pointer"
+                            required onchange="syncMinCheckoutHome()">
+                        <button type="button" onclick="adjustDateHome('filter_checkout', -1)"
+                            class="px-2.5 sm:px-3 bg-white border-l border-r border-amber-200 hover:bg-amber-100 text-amber-700 font-black transition">&lt;</button>
+                        <button type="button" onclick="adjustDateHome('filter_checkout', 1)"
+                            class="px-2.5 sm:px-3 bg-white hover:bg-amber-100 text-amber-700 font-black transition">&gt;</button>
+                    </div>
                 </div>
-                <div>
+
+                <div class="w-full">
+                    <label class="block text-xs sm:text-sm font-bold text-amber-950 mb-1 sm:mb-2">Jumlah
+                        Penginap</label>
+                    <div
+                        class="flex border border-amber-200 rounded-lg overflow-hidden shadow-sm bg-amber-50/50 transition">
+                        <input type="text" id="display_penginap" value="{{ request('filter_tamu', 1) }} Orang"
+                            readonly
+                            class="flex-1 min-w-0 border-none text-center p-2 sm:p-2.5 text-[12px] sm:text-sm font-bold text-amber-950 bg-transparent focus:ring-0 cursor-default">
+                        <input type="hidden" id="filter_tamu" name="filter_tamu"
+                            value="{{ request('filter_tamu', 1) }}">
+                        <button type="button" onclick="adjustPenginap(-1)"
+                            class="px-3 sm:px-4 bg-white border-l border-amber-200 hover:bg-amber-100 text-amber-700 font-black transition">&lt;</button>
+                        <button type="button" onclick="adjustPenginap(1)"
+                            class="px-3 sm:px-4 bg-white border-l border-amber-200 hover:bg-amber-100 text-amber-700 font-black transition">&gt;</button>
+                    </div>
+                </div>
+
+                <div class="w-full mt-2 lg:mt-0">
                     <button type="submit"
-                        class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-lg transition shadow-md shadow-amber-600/30 text-sm sm:text-base border-none">
-                        Cek Ketersediaan
+                        class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 sm:py-3 rounded-lg transition shadow-md shadow-amber-600/30 text-sm sm:text-base border-none">
+                        Cek Kamar
                     </button>
                 </div>
             </form>
@@ -160,7 +180,7 @@
 
         @php
             $checkinReq = request('filter_checkin', date('Y-m-d\TH:i'));
-            $checkoutReq = request('filter_checkout', date('Y-m-d\TH:i', strtotime('+1 day')));
+            $checkoutReq = request('filter_checkout', date('Y-m-d\T11:00', strtotime('+1 day')));
             $tamuReq = (int) request('filter_tamu', 1);
             $checkinDate = \Carbon\Carbon::parse($checkinReq);
             $checkoutDate = \Carbon\Carbon::parse($checkoutReq);
@@ -179,8 +199,8 @@
                         if (!$isSingle) {
                             continue;
                         }
-                    } elseif ($tamuReq == 2) {
-                        if (!$isDouble) {
+                    } else {
+                        if (!$isSingle && !$isDouble) {
                             continue;
                         }
                     }
@@ -206,17 +226,18 @@
 
         @if (request()->has('filter_checkin') && $tamuReq >= 3 && !$filteredKelas->isEmpty())
             <div
-                class="max-w-3xl mx-auto bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-xl mb-6 flex items-start gap-4 shadow-sm mt-6">
+                class="max-w-3xl mx-auto bg-blue-50 border border-blue-200 text-blue-800 p-5 rounded-xl mb-6 flex items-start gap-4 shadow-sm mt-6">
                 <svg class="w-8 h-8 text-blue-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div class="text-left">
-                    <h4 class="font-bold text-blue-900">Rekomendasi Pemesanan ({{ $tamuReq }} Tamu)</h4>
+                    <h4 class="font-bold text-blue-900">Rekomendasi Pemesanan ({{ $tamuReq }} Penginap)</h4>
                     <p class="text-sm mt-1 leading-relaxed">Berdasarkan jumlah orang yang Anda pilih, kami menyarankan
-                        Anda untuk menambahkan <strong>Layanan Extra Bed</strong> atau memesan <strong>2 kamar
-                            terpisah</strong> agar istirahat keluarga Anda tetap nyaman.</p>
+                        Anda untuk menambahkan <strong>Layanan Extra Bed</strong> di Menu Reservasi nanti, atau memesan
+                        <strong>2 kamar terpisah</strong> agar istirahat keluarga Anda tetap nyaman maksimal.
+                    </p>
                 </div>
             </div>
         @endif
@@ -225,7 +246,7 @@
             @if ($filteredKelas->isEmpty())
                 <div
                     class="text-center text-amber-800 py-12 bg-white rounded-2xl border border-amber-100 shadow-sm mt-4">
-                    <p>Maaf, tidak ada tipe kelas kamar yang tersedia pada rentang waktu atau jumlah tamu tersebut.</p>
+                    <p>Maaf, tidak ada tipe kelas kamar yang tersedia pada rentang waktu tersebut.</p>
                     <button onclick="resetFilter()" class="mt-4 text-amber-600 font-bold hover:underline">Reset
                         Pencarian</button>
                 </div>
@@ -236,11 +257,9 @@
                         <div
                             class="kamar-card w-[85vw] sm:w-[320px] lg:w-[360px] flex-none snap-center bg-white rounded-2xl shadow-md shadow-stone-200/50 border border-stone-100 overflow-hidden hover:shadow-xl hover:shadow-amber-900/10 transition duration-300 flex flex-col">
                             <div class="relative h-48 sm:h-56 overflow-hidden bg-amber-100">
-                                <img src="{{ asset('storage/' . $kelas->thumbnail) }}"
-                                    alt="{{ $kelas->nama_kelas }}"
+                                <img src="{{ asset('storage/' . $kelas->thumbnail) }}" alt="{{ $kelas->nama_kelas }}"
                                     class="w-full h-full object-cover hover:scale-105 transition duration-500">
                             </div>
-
                             <div class="p-5 flex flex-col flex-grow">
                                 <h3 class="text-xl sm:text-2xl font-black text-amber-950 mb-1">
                                     {{ $kelas->nama_kelas }}</h3>
@@ -262,197 +281,48 @@
         </div>
     </div>
 
+    <!-- GALERI BENTO GRID -->
     <section class="bg-white py-10 lg:py-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-10">
-                <h2 class="text-2xl sm:text-3xl font-bold text-amber-950 mb-3">Jelajahi Sekitar Kami</h2>
+                <h2 class="text-2xl sm:text-3xl font-bold text-amber-950 mb-3">Galeri Hotel</h2>
                 <div class="w-16 h-1 bg-amber-500 mx-auto rounded"></div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-                <div class="overflow-hidden">
-                    <h3
-                        class="flex items-center gap-2 font-bold text-lg text-amber-900 mb-4 pb-2 border-b border-amber-100">
-                        <svg class="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
-                            </path>
-                        </svg>
-                        Kota Terdekat
-                    </h3>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6">
+                <!-- Baris 1: Kiri Kecil (5/12), Kanan Lebar (7/12) -->
+                <div
+                    class="md:col-span-5 h-[220px] sm:h-[300px] rounded-3xl overflow-hidden shadow-sm border border-amber-200 group relative">
+                    <img src="{{ asset('storage/landingpage/koridor.png') }}" alt="Galeri Fisa"
+                        class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
                     <div
-                        class="flex overflow-x-auto gap-4 pb-6 pt-1 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                        <div
-                            class="flex-none w-[80vw] sm:w-[280px] snap-center flex items-center gap-4 bg-amber-50/50 p-3 rounded-2xl border border-amber-100 shadow-sm hover:shadow-md hover:border-amber-300 transition group">
-                            <img src="{{ asset('storage/landingpage/bumiayu.jpg') }}" alt="Bumiayu"
-                                class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl object-cover group-hover:scale-105 transition border border-amber-200">
-                            <div class="min-w-0">
-                                <strong class="block text-sm sm:text-base text-amber-950 truncate">Pusat Kota
-                                    Bumiayu</strong>
-                                <span class="block text-xs sm:text-sm text-amber-800/70 mt-0.5 truncate">Jarak: 3
-                                    KM</span>
-                                <span class="block text-xs font-bold text-amber-600 mt-1 truncate">± 6 Menit</span>
-                            </div>
-                        </div>
-                        <div
-                            class="flex-none w-[80vw] sm:w-[280px] snap-center flex items-center gap-4 bg-amber-50/50 p-3 rounded-2xl border border-amber-100 shadow-sm hover:shadow-md hover:border-amber-300 transition group">
-                            <img src="{{ asset('storage/landingpage/purwokerto.jpg') }}" alt="Purwokerto"
-                                class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl object-cover group-hover:scale-105 transition border border-amber-200">
-                            <div class="min-w-0">
-                                <strong class="block text-sm sm:text-base text-amber-950 truncate">Purwokerto</strong>
-                                <span class="block text-xs sm:text-sm text-amber-800/70 mt-0.5 truncate">Jarak: 36
-                                    KM</span>
-                                <span class="block text-xs font-bold text-amber-600 mt-1 truncate">± 1 Jam</span>
-                            </div>
-                        </div>
-                        <div
-                            class="flex-none w-[80vw] sm:w-[280px] snap-center flex items-center gap-4 bg-amber-50/50 p-3 rounded-2xl border border-amber-100 shadow-sm hover:shadow-md hover:border-amber-300 transition group">
-                            <img src="{{ asset('storage/landingpage/tegal.jpg') }}" alt="Tegal"
-                                class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl object-cover group-hover:scale-105 transition border border-amber-200">
-                            <div class="min-w-0">
-                                <strong class="block text-sm sm:text-base text-amber-950 truncate">Tegal</strong>
-                                <span class="block text-xs sm:text-sm text-amber-800/70 mt-0.5 truncate">Jarak: 66
-                                    KM</span>
-                                <span class="block text-xs font-bold text-amber-600 mt-1 truncate">± 2 Jam</span>
-                            </div>
-                        </div>
+                        class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition duration-300">
+                    </div>
+                </div>
+                <div
+                    class="md:col-span-7 h-[220px] sm:h-[300px] rounded-3xl overflow-hidden shadow-sm border border-amber-200 group relative">
+                    <img src="{{ asset('storage/landingpage/lobbylt2.jpg') }}" alt="Galeri Fisa"
+                        class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition duration-300">
                     </div>
                 </div>
 
-                <div class="overflow-hidden">
-                    <h3
-                        class="flex items-center gap-2 font-bold text-lg text-amber-900 mb-4 pb-2 border-b border-amber-100">
-                        <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9">
-                            </path>
-                        </svg>
-                        Fasilitas Kota Terdekat
-                    </h3>
+                <!-- Baris 2: Kiri Lebar (7/12), Kanan Kecil (5/12) -->
+                <div
+                    class="md:col-span-7 h-[220px] sm:h-[300px] rounded-3xl overflow-hidden shadow-sm border border-amber-200 group relative">
+                    <img src="{{ asset('storage/landingpage/backhotel.jpg') }}" alt="Galeri Fisa"
+                        class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
                     <div
-                        class="flex overflow-x-auto gap-4 pb-6 pt-1 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                        <div
-                            class="flex-none w-[80vw] sm:w-[280px] snap-center flex items-center gap-4 bg-amber-50/50 p-3 rounded-2xl border border-amber-100 shadow-sm hover:shadow-md hover:border-amber-300 transition group">
-                            <img src="{{ asset('storage/landingpage/rsudbmy.jpg') }}" alt="rsud"
-                                class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl object-cover group-hover:scale-105 transition border border-amber-200">
-                            <div class="min-w-0">
-                                <strong class="block text-sm sm:text-base text-amber-950 truncate">RSUD
-                                    Bumiayu</strong>
-                                <span class="block text-xs sm:text-sm text-amber-800/70 mt-0.5 truncate">Jarak: 3
-                                    Meter</span>
-                                <span class="block text-xs font-bold text-amber-600 mt-1 truncate">± 5 Menit (Sepeda
-                                    Motor)</span>
-                            </div>
-                        </div>
-                        <div
-                            class="flex-none w-[80vw] sm:w-[280px] snap-center flex items-center gap-4 bg-amber-50/50 p-3 rounded-2xl border border-amber-100 shadow-sm hover:shadow-md hover:border-amber-300 transition group">
-                            <img src="{{ asset('storage/landingpage/stasiunbmy.png') }}" alt="stasiun"
-                                class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl object-cover group-hover:scale-105 transition border border-amber-200">
-                            <div class="min-w-0">
-                                <strong class="block text-sm sm:text-base text-amber-950 truncate">Stasiun
-                                    Bumiayu</strong>
-                                <span class="block text-xs sm:text-sm text-amber-800/70 mt-0.5 truncate">Jarak: 5
-                                    KM</span>
-                                <span class="block text-xs font-bold text-amber-600 mt-1 truncate">± 10 menit (Sepeda
-                                    Motor)</span>
-                            </div>
-                        </div>
+                        class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition duration-300">
                     </div>
                 </div>
-
-                {{-- Restoran dan Cafe Terdekat --}}
-                <div class="overflow-hidden">
-                    <h3
-                        class="flex items-center gap-2 font-bold text-lg text-amber-900 mb-4 pb-2 border-b border-amber-100">
-                        <svg class="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
-                            </path>
-                        </svg>
-                        Restoran dan Cafe Terdekat
-                    </h3>
+                <div
+                    class="md:col-span-5 h-[220px] sm:h-[300px] rounded-3xl overflow-hidden shadow-sm border border-amber-200 group relative">
+                    <img src="{{ asset('storage/landingpage/lobbylt1.jpg') }}" alt="Galeri Fisa"
+                        class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
                     <div
-                        class="flex overflow-x-auto gap-4 pb-6 pt-1 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                        <div
-                            class="flex-none w-[80vw] sm:w-[280px] snap-center flex items-center gap-4 bg-amber-50/50 p-3 rounded-2xl border border-amber-100 shadow-sm hover:shadow-md hover:border-amber-300 transition group">
-                            <img src="{{ asset('storage/landingpage/breezel.jpg') }}" alt="Bumiayu"
-                                class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl object-cover group-hover:scale-105 transition border border-amber-200">
-                            <div class="min-w-0">
-                                <strong class="block text-sm sm:text-base text-amber-950 truncate">Breezel Coffee
-                                    and Space</strong>
-                                <span class="block text-xs sm:text-sm text-amber-800/70 mt-0.5 truncate">Jarak: 2
-                                    KM</span>
-                                <span class="block text-xs font-bold text-amber-600 mt-1 truncate">± 4 Menit</span>
-                            </div>
-                        </div>
-                        <div
-                            class="flex-none w-[80vw] sm:w-[280px] snap-center flex items-center gap-4 bg-amber-50/50 p-3 rounded-2xl border border-amber-100 shadow-sm hover:shadow-md hover:border-amber-300 transition group">
-                            <img src="{{ asset('storage/landingpage/samasta.jpg') }}" alt="samasta"
-                                class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl object-cover group-hover:scale-105 transition border border-amber-200">
-                            <div class="min-w-0">
-                                <strong class="block text-sm sm:text-base text-amber-950 truncate">Samasta
-                                    Coffee</strong>
-                                <span class="block text-xs sm:text-sm text-amber-800/70 mt-0.5 truncate">Jarak: 5
-                                    KM</span>
-                                <span class="block text-xs font-bold text-amber-600 mt-1 truncate">± 10 Menit</span>
-                            </div>
-                        </div>
-                        <div
-                            class="flex-none w-[80vw] sm:w-[280px] snap-center flex items-center gap-4 bg-amber-50/50 p-3 rounded-2xl border border-amber-100 shadow-sm hover:shadow-md hover:border-amber-300 transition group">
-                            <img src="{{ asset('storage/landingpage/tegal.jpg') }}" alt="Tegal"
-                                class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl object-cover group-hover:scale-105 transition border border-amber-200">
-                            <div class="min-w-0">
-                                <strong class="block text-sm sm:text-base text-amber-950 truncate">Tegal</strong>
-                                <span class="block text-xs sm:text-sm text-amber-800/70 mt-0.5 truncate">Jarak: 66
-                                    KM</span>
-                                <span class="block text-xs font-bold text-amber-600 mt-1 truncate">± 2 Jam</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="overflow-hidden">
-                    <h3
-                        class="flex items-center gap-2 font-bold text-lg text-amber-900 mb-4 pb-2 border-b border-amber-100">
-                        <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9">
-                            </path>
-                        </svg>
-                        Objek Wisata Terdekat
-                    </h3>
-                    <div
-                        class="flex overflow-x-auto gap-4 pb-6 pt-1 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                        <div
-                            class="flex-none w-[80vw] sm:w-[280px] snap-center flex items-center gap-4 bg-amber-50/50 p-3 rounded-2xl border border-amber-100 shadow-sm hover:shadow-md hover:border-amber-300 transition group">
-                            <img src="{{ asset('storage/landingpage/sahbatalam.jpg') }}" alt="waterpark"
-                                class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl object-cover group-hover:scale-105 transition border border-amber-200">
-                            <div class="min-w-0">
-                                <strong class="block text-sm sm:text-base text-amber-950 truncate">Sahabat Alam
-                                    Waterpark</strong>
-                                <span class="block text-xs sm:text-sm text-amber-800/70 mt-0.5 truncate">Jarak: 100
-                                    Meter</span>
-                                <span class="block text-xs font-bold text-amber-600 mt-1 truncate">± 2 Menit (Sepeda
-                                    Motor)</span>
-                            </div>
-                        </div>
-                        <div
-                            class="flex-none w-[80vw] sm:w-[280px] snap-center flex items-center gap-4 bg-amber-50/50 p-3 rounded-2xl border border-amber-100 shadow-sm hover:shadow-md hover:border-amber-300 transition group">
-                            <img src="{{ asset('storage/landingpage/kaligua.jpeg') }}" alt="kaligua"
-                                class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl object-cover group-hover:scale-105 transition border border-amber-200">
-                            <div class="min-w-0">
-                                <strong class="block text-sm sm:text-base text-amber-950 truncate">Agrowisata
-                                    Kaligua</strong>
-                                <span class="block text-xs sm:text-sm text-amber-800/70 mt-0.5 truncate">Jarak: 20
-                                    KM</span>
-                                <span class="block text-xs font-bold text-amber-600 mt-1 truncate">± 45 menit
-                                    (Sepeda Motor)</span>
-                            </div>
-                        </div>
+                        class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition duration-300">
                     </div>
                 </div>
             </div>
@@ -466,8 +336,8 @@
                     <h2 class="text-3xl font-bold mb-4">Lokasi Kami</h2>
                     <div class="w-16 h-1 bg-amber-500 rounded mb-6"></div>
                     <p class="text-amber-900/80 mb-6 leading-relaxed text-sm sm:text-base font-medium">
-                        Hotel FISA menawarkan akses mudah ke berbagai destinasi
-                        wisata, pusat perbelanjaan, dan kawasan kuliner.
+                        Hotel FISA menawarkan akses mudah ke berbagai destinasi wisata, pusat perbelanjaan, dan kawasan
+                        kuliner.
                     </p>
                     <div class="flex items-start gap-3 mb-8 bg-white p-4 rounded-xl border border-amber-200 shadow-sm">
                         <svg class="w-6 h-6 text-amber-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
@@ -491,8 +361,7 @@
                     <iframe width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0"
                         marginwidth="0"
                         src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2852.992346342969!2d109.02251207094082!3d-7.263819854039304!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e6f8f38880a00b7%3A0x9c295af614499311!2sHotel%20Fisa!5e0!3m2!1sid!2sid!4v1780671646505!5m2!1sid!2sid"
-                        class="grayscale hover:grayscale-0 transition duration-500">
-                    </iframe>
+                        class="grayscale hover:grayscale-0 transition duration-500"></iframe>
                 </div>
             </div>
         </div>
@@ -526,8 +395,7 @@
                         <div>
                             <div
                                 class="inline-block bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wider border border-amber-200">
-                                Katalog Tipe Kamar
-                            </div>
+                                Katalog Tipe Kamar</div>
                             <h3 id="modal_nama_kelas" class="text-2xl sm:text-3xl font-black text-amber-950 mb-2">
                             </h3>
                             <div class="text-xl sm:text-2xl font-bold text-amber-600 mb-8">Rp <span

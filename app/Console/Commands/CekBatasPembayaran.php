@@ -20,8 +20,10 @@ class CekBatasPembayaran extends Command
 
         // ================================================================
         // KASUS 1: SISA WAKTU <= 30 MENIT (KIRIM PENGINGAT)
+        // HANYA jika QRIS sudah tergenerate (qr_image tidak null)
         // ================================================================
         $pembayaranIngatkan = Pembayaran::where('status', 'pending')
+            ->whereNotNull('qr_image') // <-- FIX: Harus yang sudah minta QRIS
             ->where('expired_at', '<=', $sekarang->copy()->addMinutes(30))
             ->where('expired_at', '>', $sekarang)
             ->get();
@@ -33,7 +35,6 @@ class CekBatasPembayaran extends Command
                 $user = User::where('no_ktp', $reservasi->no_ktp)->first();
 
                 if ($user) {
-                    // Filter berbasis PHP murni untuk menghindari error type data JSON di MySQL
                     $sudahDiingatkan = $user->notifications()
                         ->where('type', PengingatPembayaran::class)
                         ->get()
@@ -51,8 +52,12 @@ class CekBatasPembayaran extends Command
 
         // ================================================================
         // KASUS 2: WAKTU HABIS / KADALUARSA (BATALKAN OTOMATIS)
+        // HANYA batal otomatis jika dia sudah klik 'Generate QRIS'
+        // dan waktunya habis.
+        // (Jika belum generate, biarkan Controller yang urus jadi 'Terlewat')
         // ================================================================
         $pembayaranExpired = Pembayaran::where('status', 'pending')
+            ->whereNotNull('qr_image') // <-- FIX: Kunci utamanya di sini!
             ->where('expired_at', '<', $sekarang)
             ->get();
 
@@ -66,7 +71,6 @@ class CekBatasPembayaran extends Command
                 if ($reservasi->tipe_reservasi === 'Online') {
                     $user = User::where('no_ktp', $reservasi->no_ktp)->first();
                     if ($user) {
-                        // Cek duplikasi pembatalan via PHP murni
                         $sudahDibatalkanNotif = $user->notifications()
                             ->where('type', PembayaranKadaluarsa::class)
                             ->get()
@@ -77,6 +81,41 @@ class CekBatasPembayaran extends Command
                         if (!$sudahDibatalkanNotif) {
                             $user->notify(new PembayaranKadaluarsa($reservasi->no_reservasi));
                         }
+                    }
+                }
+            }
+        }
+
+        // ================================================================
+        // KASUS 3: PEMBATALAN 3 HARI (SAFETY NET BACKUP)
+        // Membatalkan reservasi yang belum generate QRIS tapi sudah 
+        // lewat batas toleransi 3 hari dari check-in.
+        // ================================================================
+        $batasTigaHari = $sekarang->copy()->subDays(3);
+
+        $reservasiHangus = \App\Models\Reservasi::whereIn('status_reservasi', ['Menunggu Konfirmasi', 'Terlewat'])
+            ->where('check_in', '<=', $batasTigaHari)
+            ->get();
+
+        foreach ($reservasiHangus as $resHangus) {
+            $resHangus->update(['status_reservasi' => 'Dibatalkan']);
+            if ($resHangus->pembayaran) {
+                $resHangus->pembayaran->update(['status' => 'dibatalkan']);
+            }
+
+            // Kirim Notif Kadaluarsa (karena hangus 3 hari)
+            if ($resHangus->tipe_reservasi === 'Online') {
+                $user = User::where('no_ktp', $resHangus->no_ktp)->first();
+                if ($user) {
+                    $sudahDibatalkanNotif = $user->notifications()
+                        ->where('type', PembayaranKadaluarsa::class)
+                        ->get()
+                        ->contains(function ($notif) use ($resHangus) {
+                            return ($notif->data['no_reservasi'] ?? '') === $resHangus->no_reservasi;
+                        });
+
+                    if (!$sudahDibatalkanNotif) {
+                        $user->notify(new PembayaranKadaluarsa($resHangus->no_reservasi));
                     }
                 }
             }

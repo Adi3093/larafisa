@@ -9,20 +9,23 @@ use App\Models\Pembayaran;
 class Reservasi extends Model
 {
     use HasFactory;
-    protected $fillable = ['no_reservasi', 
-    'dibuat_oleh_user_id', 
-    'nama_tamu', 'no_ktp', 
-    'no_hp',
-    'alamat',
-    'kamar_id', 
-    'ekstra', 
-    'check_in', 
-    'check_out', 
-    'tipe_reservasi', 
-    'status_reservasi'];
+    protected $fillable = [
+        'no_reservasi',
+        'dibuat_oleh_user_id',
+        'nama_tamu',
+        'no_ktp',
+        'no_hp',
+        'alamat',
+        'kamar_id',
+        'ekstra',
+        'check_in',
+        'check_out',
+        'tipe_reservasi',
+        'status_reservasi'
+    ];
     protected $casts = [
-        'check-in' => 'datetime',
-        'check-out' => 'datetime',
+        'check_in' => 'datetime',
+        'check_out' => 'datetime',
         'ekstra' => 'array'
     ];
     public function user()

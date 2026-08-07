@@ -14,7 +14,7 @@ class KamarController extends Controller
     public function landingPage(Request $request)
     {
         $checkin = $request->input('filter_checkin', date('Y-m-d\TH:i'));
-        $checkout = $request->input('filter_checkout', date('Y-m-d\TH:i', strtotime('+1 day')));
+        $checkout = $request->input('filter_checkout', date('Y-m-d\T11:00', strtotime('+1 day')));
         $jumlahTamu = (int) $request->input('filter_tamu', 1);
         $checkinDate = Carbon::parse($checkin);
         $checkoutDate = Carbon::parse($checkout);
@@ -23,10 +23,7 @@ class KamarController extends Controller
         $kelasKamars = collect();
 
         foreach ($semuaKelas as $kelas) {
-            // Filter Berdasarkan Kapasitas yang baru
-            if ($isSearched && $kelas->kapasitas < $jumlahTamu) {
-                continue; // Skip jika kapasitas kelas tidak muat untuk jumlah tamu
-            }
+            // FIX: Filter kapasitas dicabut dari backend agar view bisa mengelola rekomendasi 3-4 orang.
 
             $totalKamar = Kamar::where('kelas_kamar_id', $kelas->id)->where('status', '!=', 'Maintenance')->count();
             $terpakai = Reservasi::whereIn('status_reservasi', ['Terkonfirmasi', 'Check-In'])
@@ -85,7 +82,7 @@ class KamarController extends Controller
         $request->validate([
             'nama_kelas' => 'required|string|max:255',
             'harga' => 'required|numeric|min:0',
-            'kapasitas' => 'required|integer|min:1', // Validasi Kapasitas
+            'kapasitas' => 'required|integer|min:1',
             'fasilitas' => 'required|array',
             'foto_1' => 'nullable|image|max:5120',
             'foto_2' => 'nullable|image|max:5120',
@@ -111,7 +108,7 @@ class KamarController extends Controller
         $request->validate([
             'nama_kelas' => 'required|string|max:255',
             'harga' => 'required|numeric|min:0',
-            'kapasitas' => 'required|integer|min:1', // Validasi Kapasitas
+            'kapasitas' => 'required|integer|min:1',
             'fasilitas' => 'required|array',
             'foto_1' => 'nullable|image|max:5120',
             'foto_2' => 'nullable|image|max:5120',

@@ -59,6 +59,9 @@ Route::middleware('auth')->group(function () {
     Route::put('/reservasi-online/{id}/batal', [App\Http\Controllers\GuestReservationController::class, 'batal'])->name('reservasi.tamu.batal');
     Route::get('/reservasi-online/{id}/generate-qris', [App\Http\Controllers\GuestReservationController::class, 'generateQris'])->name('reservasi.qris.generate');
     Route::get('/payment/check/{invoice}', [PaymentController::class, 'checkStatus']);
+    Route::get('/riwayat/check-updates', [App\Http\Controllers\GuestReservationController::class, 'checkUpdates']);
+    Route::get('/reservasi/generate-qris/{id}', [App\Http\Controllers\GuestReservationController::class, 'generateQris'])->name('guest.generate.qris');
+    Route::delete('/reservasi-online/{id}/hapus', [App\Http\Controllers\GuestReservationController::class, 'destroy'])->name('reservasi.tamu.destroy');
 
     // Rute Modul Notifikasi
     Route::get('/pusat-notifikasi', [HomeNotifController::class, 'index'])->name('notif.tamu');

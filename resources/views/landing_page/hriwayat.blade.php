@@ -8,14 +8,34 @@
             <p class="text-amber-100 mt-1">Pantau perkembangan reservasi kamar Anda secara real-time.</p>
         </div>
 
+        <div id="toastMessage" class="custom-toast-js flex items-center justify-center gap-2">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                </path>
+            </svg>
+            <span id="toastText"></span>
+        </div>
+
         @if (session('success'))
             <div
-                class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl shadow-sm font-bold">
-                ✅ {{ session('success') }}</div>
+                class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl shadow-sm font-bold flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                {{ session('success') }}
+            </div>
         @endif
         @if (session('error'))
-            <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-sm font-bold">⚠️
-                {{ session('error') }}</div>
+            <div
+                class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-sm font-bold flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                    </path>
+                </svg>
+                {{ session('error') }}
+            </div>
         @endif
 
         @if (!$isLoggedIn)
@@ -41,7 +61,6 @@
             </div>
         @else
             @php
-                // LOGIKA PENGELOMPOKAN MULTI-RESERVASI KE DALAM TAB
                 $tabPembayaran = collect();
                 $tabKonfirmasi = collect();
                 $tabCheckin = collect();
@@ -51,11 +70,10 @@
                     $status = $pesanan->status_reservasi;
                     $ekstra = is_array($pesanan->ekstra) ? $pesanan->ekstra : json_decode($pesanan->ekstra, true) ?? [];
                     $metode = $ekstra['Metode Pembayaran'] ?? '';
-                    $pembayaran = $pembayaranAktifs[$pesanan->id] ?? null;
-                    $payStatus = $pembayaran->status ?? '';
 
-                    if ($status === 'Menunggu Konfirmasi') {
-                        if ($metode === 'QRIS' && $payStatus === 'pending') {
+                    // FIX BUG: Paksa KUNCI di tab Pembayaran jika metodenya QRIS
+                    if (in_array($status, ['Menunggu Konfirmasi', 'Terlewat'])) {
+                        if ($metode === 'QRIS') {
                             $tabPembayaran->push($pesanan);
                         } else {
                             $tabKonfirmasi->push($pesanan);
@@ -83,7 +101,6 @@
 
             <div x-data="{ tab: '{{ $activeTab }}' }"
                 class="bg-white rounded-3xl shadow-2xl shadow-amber-900/10 border-2 border-amber-200 overflow-hidden">
-
                 <div class="flex w-full bg-white border-b-2 border-amber-200 justify-between">
                     <button @click="tab = 'pembayaran'"
                         :class="tab === 'pembayaran' ? 'bg-amber-100 text-amber-800 shadow-inner' :
@@ -141,9 +158,8 @@
                 </div>
 
                 <div class="p-4 sm:p-8 min-h-[400px]">
-
                     @php
-                        $renderActiveCard = function ($pesananData) {
+                        $renderActiveCard = function ($pesananData) use ($pembayaranAktifs) {
                             if (!$pesananData) {
                                 return '';
                             }
@@ -155,6 +171,28 @@
                             $fotoKamar = $pesananData->kamar?->kelasKamar?->thumbnail
                                 ? asset('storage/' . $pesananData->kamar->kelasKamar->thumbnail)
                                 : asset('storage/landingpage/room-placeholder.jpg');
+
+                            // Cek apakah QRIS sudah di-generate untuk pesanan ini
+                            $pembayaranItem = $pembayaranAktifs[$pesananData->id] ?? null;
+                            $sudahGenerateQris = $pembayaranItem && !empty($pembayaranItem->qr_image);
+
+                            // Tombol Hapus (Hanya muncul jika QRIS BELUM di-generate)
+                            $tombolHapus = '';
+                            if (!$sudahGenerateQris) {
+                                $tombolHapus =
+                                    '
+                                <form action="' .
+                                    route('reservasi.tamu.destroy', $pesananData->id) .
+                                    '" method="POST" class="m-0" data-confirm="Hapus Reservasi?|Apakah Anda yakin ingin menghapus data reservasi ini?" data-theme="danger" data-btn="Ya, Hapus">
+                                    ' .
+                                    csrf_field() .
+                                    '
+                                    ' .
+                                    method_field('DELETE') .
+                                    '
+                                    <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition transform hover:-translate-y-0.5 duration-300 shadow-sm border border-red-200">Hapus</button>
+                                </form>';
+                            }
 
                             return '
                             <div class="bg-white border-2 border-amber-200 rounded-3xl p-4 sm:p-5 flex flex-col md:flex-row gap-6 items-center md:items-stretch mb-4 hover:shadow-xl hover:border-amber-400 transition-all duration-300">
@@ -175,7 +213,6 @@
                                 '</p>
                                             </div>
                                         </div>
-
                                         <div class="flex text-sm text-gray-700 mb-5">
                                             <div class="w-32 font-bold text-amber-800/70 uppercase tracking-wider text-[10px]">Layanan Extra :</div>
                                             <div class="flex-1 font-medium space-y-1 text-xs">
@@ -192,7 +229,6 @@
                                 '
                                             </div>
                                         </div>
-
                                         <div class="grid grid-cols-2 gap-4 max-w-sm mb-6">
                                             <div>
                                                 <span class="block text-[10px] font-bold text-amber-800/70 uppercase tracking-wider mb-1">Check-in :</span>
@@ -208,10 +244,13 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div>
+                                    <div class="flex flex-wrap items-center gap-3">
                                         <button onclick="document.getElementById(\'modalDetail-' .
                                 $pesananData->id .
                                 '\').classList.remove(\'hidden\')" class="w-full sm:w-auto px-8 py-2.5 bg-amber-600 rounded-xl text-sm font-bold text-white hover:bg-amber-700 focus:bg-amber-600 transition transform hover:-translate-y-0.5 duration-300 shadow-sm border-none">Detail Reservasi</button>
+                                        ' .
+                                $tombolHapus .
+                                '
                                     </div>
                                 </div>
                             </div>';
@@ -219,11 +258,9 @@
                     @endphp
 
                     <div x-show="tab === 'pembayaran'" x-cloak class="animate-fade-in space-y-4">
-                        @if ($tabPembayaran->isNotEmpty())
-                            @foreach ($tabPembayaran as $pesan)
-                                {!! $renderActiveCard($pesan) !!}
-                            @endforeach
-                        @else
+                        @forelse($tabPembayaran as $pesan)
+                            {!! $renderActiveCard($pesan) !!}
+                        @empty
                             <div class="text-center py-16">
                                 <div
                                     class="w-20 h-20 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -236,14 +273,12 @@
                                 <p class="text-gray-500 text-sm mt-2">Semua tagihan Anda sudah dibayar atau tidak ada
                                     pesanan tertunda.</p>
                             </div>
-                        @endif
+                        @endforelse
                     </div>
                     <div x-show="tab === 'konfirmasi'" x-cloak class="animate-fade-in space-y-4">
-                        @if ($tabKonfirmasi->isNotEmpty())
-                            @foreach ($tabKonfirmasi as $pesan)
-                                {!! $renderActiveCard($pesan) !!}
-                            @endforeach
-                        @else
+                        @forelse($tabKonfirmasi as $pesan)
+                            {!! $renderActiveCard($pesan) !!}
+                        @empty
                             <div class="text-center py-16">
                                 <div
                                     class="w-20 h-20 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -253,17 +288,13 @@
                                     </svg>
                                 </div>
                                 <h3 class="text-lg font-extrabold text-amber-950">Tidak Ada Antrean Konfirmasi</h3>
-                                <p class="text-gray-500 text-sm mt-2">Tidak ada reservasi Anda yang sedang menunggu
-                                    respon resepsionis.</p>
                             </div>
-                        @endif
+                        @endforelse
                     </div>
                     <div x-show="tab === 'checkin'" x-cloak class="animate-fade-in space-y-4">
-                        @if ($tabCheckin->isNotEmpty())
-                            @foreach ($tabCheckin as $pesan)
-                                {!! $renderActiveCard($pesan) !!}
-                            @endforeach
-                        @else
+                        @forelse($tabCheckin as $pesan)
+                            {!! $renderActiveCard($pesan) !!}
+                        @empty
                             <div class="text-center py-16">
                                 <div
                                     class="w-20 h-20 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -273,17 +304,13 @@
                                     </svg>
                                 </div>
                                 <h3 class="text-lg font-extrabold text-amber-950">Belum Ada Jadwal Check-In</h3>
-                                <p class="text-gray-500 text-sm mt-2">Anda tidak memiliki jadwal kedatangan dalam waktu
-                                    dekat.</p>
                             </div>
-                        @endif
+                        @endforelse
                     </div>
                     <div x-show="tab === 'checkout'" x-cloak class="animate-fade-in space-y-4">
-                        @if ($tabCheckout->isNotEmpty())
-                            @foreach ($tabCheckout as $pesan)
-                                {!! $renderActiveCard($pesan) !!}
-                            @endforeach
-                        @else
+                        @forelse($tabCheckout as $pesan)
+                            {!! $renderActiveCard($pesan) !!}
+                        @empty
                             <div class="text-center py-16">
                                 <div
                                     class="w-20 h-20 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -293,10 +320,8 @@
                                     </svg>
                                 </div>
                                 <h3 class="text-lg font-extrabold text-amber-950">Tidak Sedang Menginap</h3>
-                                <p class="text-gray-500 text-sm mt-2">Anda tidak sedang menginap di kamar hotel manapun
-                                    saat ini.</p>
                             </div>
-                        @endif
+                        @endforelse
                     </div>
 
                     <div x-show="tab === 'riwayat'" x-cloak class="animate-fade-in space-y-4">
@@ -331,9 +356,7 @@
                                                     #{{ $history->no_reservasi }}</p>
                                             </div>
                                             <span
-                                                class="px-4 py-1.5 rounded-full border-2 text-[10px] font-black uppercase tracking-wider {{ $pillClass }} whitespace-nowrap bg-white">
-                                                {{ $history->status_reservasi }}
-                                            </span>
+                                                class="px-4 py-1.5 rounded-full border-2 text-[10px] font-black uppercase tracking-wider {{ $pillClass }} whitespace-nowrap bg-white">{{ $history->status_reservasi }}</span>
                                         </div>
                                         <div class="flex text-sm text-gray-700 mb-5">
                                             <div
@@ -354,15 +377,13 @@
                                         <div class="grid grid-cols-2 gap-4 max-w-sm mb-6">
                                             <div>
                                                 <span
-                                                    class="block text-[10px] font-bold text-amber-800/70 uppercase tracking-wider mb-1">Check-in
-                                                    :</span>
+                                                    class="block text-[10px] font-bold text-amber-800/70 uppercase tracking-wider mb-1">Check-in:</span>
                                                 <span
                                                     class="text-xs font-black text-amber-950">{{ \Carbon\Carbon::parse($history->check_in)->format('d-m-Y H:i') }}</span>
                                             </div>
                                             <div>
                                                 <span
-                                                    class="block text-[10px] font-bold text-amber-800/70 uppercase tracking-wider mb-1">Check-out
-                                                    :</span>
+                                                    class="block text-[10px] font-bold text-amber-800/70 uppercase tracking-wider mb-1">Check-out:</span>
                                                 <span
                                                     class="text-xs font-black text-amber-950">{{ \Carbon\Carbon::parse($history->check_out)->format('d-m-Y H:i') }}</span>
                                             </div>
@@ -387,8 +408,6 @@
                                     </svg>
                                 </div>
                                 <h3 class="text-lg font-extrabold text-amber-950">Belum Ada Riwayat</h3>
-                                <p class="text-gray-500 text-sm mt-2">Anda belum memiliki catatan pemesanan kamar di
-                                    masa lalu.</p>
                             </div>
                         @endforelse
 
@@ -438,6 +457,7 @@
                 $isPesananAktif = $pesananAktifs->contains('id', $res->id);
                 $pembayaranAktif = $isPesananAktif ? $pembayaranAktifs[$res->id] ?? null : null;
                 $ekstra = is_array($res->ekstra) ? $res->ekstra : json_decode($res->ekstra, true) ?? [];
+                $isQrisRequested = isset($pembayaranAktif) && $pembayaranAktif->qr_image;
             @endphp
 
             <div id="modalDetail-{{ $res->id }}"
@@ -447,7 +467,6 @@
 
                     <div
                         class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl shadow-amber-900/20 transition-all sm:my-8 w-full sm:max-w-4xl border-2 border-amber-200">
-
                         <div
                             class="px-6 py-4 border-b-2 border-amber-200 flex justify-between items-center bg-amber-50">
                             <h3 class="text-xl font-black text-amber-950">
@@ -455,30 +474,28 @@
                                     Reservasi Tamu</span>
                                 <span class="hidden md:block">Detail dan Reservasi Tamu</span>
                             </h3>
-
                             <div class="flex items-center gap-4">
                                 <button type="button" id="backBtn-{{ $res->id }}"
                                     onclick="closeMobileWizard('{{ $res->id }}')"
-                                    class="hidden text-amber-600 hover:text-amber-900 transition">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    class="hidden text-amber-600 hover:text-amber-900 transition"><svg class="w-6 h-6"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                             d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                                    </svg>
-                                </button>
+                                    </svg></button>
                                 <button type="button"
                                     onclick="document.getElementById('modalDetail-{{ $res->id }}').classList.add('hidden'); closeMobileWizard('{{ $res->id }}');"
-                                    class="text-amber-500 hover:text-red-500 transition">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    class="text-amber-500 hover:text-red-500 transition"><svg class="w-6 h-6"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                             d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                </button>
+                                    </svg></button>
                             </div>
                         </div>
 
                         <div class="flex flex-col md:flex-row bg-white">
-                            <div id="infoPanel-{{ $res->id }}" class="w-full md:w-1/2 p-6 space-y-6 block">
-                                <div>
+                            <!-- KIRI: INFO & RESCHEDULE -->
+                            <div id="infoPanel-{{ $res->id }}" class="w-full md:w-1/2 p-6 block">
+                                <div class="mb-6">
                                     <div class="flex justify-between items-end border-b-2 border-amber-100 pb-2 mb-3">
                                         <h4 class="text-lg font-black text-amber-900">Informasi Tamu</h4>
                                         <span class="text-[10px] font-bold text-amber-600/70 uppercase">Code: <span
@@ -491,37 +508,90 @@
                                             {{ $ekstra['Jumlah Anggota'] ?? 1 }} Orang</p>
                                     </div>
                                 </div>
-                                <div>
-                                    <div class="border-b-2 border-amber-100 pb-2 mb-3">
-                                        <h4 class="text-lg font-black text-amber-900">Informasi Pesanan</h4>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4 mb-3">
-                                        <div>
-                                            <span
-                                                class="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-1 block">Check-In:</span>
-                                            <div
-                                                class="border border-amber-200 bg-amber-50 rounded-lg p-2.5 text-center text-sm font-black text-amber-950 shadow-inner">
-                                                {{ \Carbon\Carbon::parse($res->check_in)->translatedFormat('d M Y') }}
-                                            </div>
+
+                                @if (in_array($res->status_reservasi, ['Menunggu Konfirmasi', 'Terlewat']))
+                                    <div id="formReschedule-{{ $res->id }}" class="mb-6"
+                                        data-checkin-time="{{ \Carbon\Carbon::parse($res->check_in)->toIso8601String() }}"
+                                        data-status="{{ $res->status_reservasi }}" data-id="{{ $res->id }}"
+                                        data-qris-generated="{{ $isQrisRequested ? 'true' : 'false' }}">
+                                        <div class="border-b-2 border-amber-100 pb-2 mb-4">
+                                            <h4 class="text-lg font-black text-amber-900">Ubah Jadwal Menginap</h4>
                                         </div>
-                                        <div>
-                                            <span
-                                                class="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-1 block">Check-Out:</span>
+
+                                        @if ($isQrisRequested)
                                             <div
-                                                class="border border-amber-200 bg-amber-50 rounded-lg p-2.5 text-center text-sm font-black text-amber-950 shadow-inner">
-                                                {{ \Carbon\Carbon::parse($res->check_out)->translatedFormat('d M Y') }}
+                                                class="p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-bold rounded-xl text-center shadow-inner mb-4">
+                                                🔒 Jadwal telah terkunci karena QRIS pembayaran sudah diminta.
                                             </div>
-                                        </div>
+                                        @else
+                                            <div id="warningTerlewat-{{ $res->id }}"
+                                                class="{{ $res->status_reservasi === 'Terlewat' ? 'block' : 'hidden' }} mb-4 p-3 bg-red-50 border border-red-300 text-red-700 text-xs font-bold rounded-xl shadow-sm">
+                                                ⚠️ Waktu Check-in terlewat! Segera sesuaikan waktu check-in Anda minimal
+                                                pada jam saat ini.
+                                            </div>
+
+                                            <form id="formRescheduleEl-{{ $res->id }}"
+                                                action="{{ route('reservasi.tamu.update', $res->id) }}"
+                                                method="POST" class="space-y-4"
+                                                onsubmit="return validateRescheduleTime('{{ $res->id }}')">
+                                                @csrf
+                                                @method('PUT')
+                                                <div>
+                                                    <label
+                                                        class="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-1 block">CHECK-IN:</label>
+                                                    <div class="flex items-center gap-2">
+                                                        <input type="datetime-local" id="checkin-{{ $res->id }}"
+                                                            name="check_in"
+                                                            min="{{ \Carbon\Carbon::now('Asia/Jakarta')->format('Y-m-d\TH:i') }}"
+                                                            value="{{ \Carbon\Carbon::parse($res->check_in)->format('Y-m-d\TH:i') }}"
+                                                            class="flex-1 text-sm border-amber-300 font-medium rounded-lg focus:ring-amber-600 focus:border-amber-600 shadow-sm px-3 py-2"
+                                                            required>
+                                                        <button type="button"
+                                                            onclick="adjustDateRiwayat('checkin-{{ $res->id }}', -1)"
+                                                            class="px-3 py-2 bg-white border border-amber-300 rounded-lg text-amber-700 hover:bg-amber-50 font-bold shadow-sm">&lt;</button>
+                                                        <button type="button"
+                                                            onclick="adjustDateRiwayat('checkin-{{ $res->id }}', 1)"
+                                                            class="px-3 py-2 bg-white border border-amber-300 rounded-lg text-amber-700 hover:bg-amber-50 font-bold shadow-sm">&gt;</button>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label
+                                                        class="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-1 block">CHECK
+                                                        OUT:</label>
+                                                    <div class="flex items-center gap-2">
+                                                        <input type="datetime-local"
+                                                            id="checkout-{{ $res->id }}" name="check_out"
+                                                            value="{{ \Carbon\Carbon::parse($res->check_out)->format('Y-m-d\TH:i') }}"
+                                                            class="flex-1 text-sm border-amber-300 font-medium rounded-lg focus:ring-amber-600 focus:border-amber-600 shadow-sm px-3 py-2"
+                                                            required>
+                                                        <button type="button"
+                                                            onclick="adjustDateRiwayat('checkout-{{ $res->id }}', -1)"
+                                                            class="px-3 py-2 bg-white border border-amber-300 rounded-lg text-amber-700 hover:bg-amber-50 font-bold shadow-sm">&lt;</button>
+                                                        <button type="button"
+                                                            onclick="adjustDateRiwayat('checkout-{{ $res->id }}', 1)"
+                                                            class="px-3 py-2 bg-white border border-amber-300 rounded-lg text-amber-700 hover:bg-amber-50 font-bold shadow-sm">&gt;</button>
+                                                    </div>
+                                                </div>
+                                                <button type="submit"
+                                                    class="w-full py-3 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold rounded-xl text-sm transition shadow-sm border-none mt-2">
+                                                    Simpan Perubahan Jadwal
+                                                </button>
+                                            </form>
+                                        @endif
                                     </div>
-                                    <p class="text-sm font-medium text-amber-700 mt-4">Kelas Kamar : <span
+                                @endif
+
+                                <div class="mb-6">
+                                    <p class="text-sm font-medium text-amber-700">Kelas Kamar : <span
                                             class="font-bold text-amber-950">{{ $res->kamar?->kelasKamar?->nama_kelas ?? '-' }}</span>
                                     </p>
                                 </div>
+
                                 <div>
                                     <div class="border-b-2 border-amber-100 pb-2 mb-3">
                                         <h4 class="text-lg font-black text-amber-900">Layanan Ekstra</h4>
                                     </div>
-                                    <div class="space-y-1 text-sm text-amber-950 font-medium mb-6">
+                                    <div class="space-y-1 text-sm text-amber-950 font-medium">
                                         <p>Extra Bed <span
                                                 class="text-amber-600 font-black">x{{ $ekstra['Extra Bed'] ?? 0 }}</span>
                                         </p>
@@ -529,17 +599,17 @@
                                                 class="text-amber-600 font-black">x{{ $ekstra['Extra Selimut'] ?? 0 }}</span>
                                         </p>
                                     </div>
-
-                                    <button type="button" onclick="openMobileWizard('{{ $res->id }}')"
-                                        class="w-full md:hidden py-3 bg-amber-50 border border-amber-300 text-amber-800 font-bold rounded-xl shadow-sm hover:bg-amber-100 transition">
-                                        Lihat Pembayaran
-                                    </button>
                                 </div>
+
+                                <button type="button" onclick="openMobileWizard('{{ $res->id }}')"
+                                    class="w-full md:hidden py-3 bg-amber-50 border border-amber-300 text-amber-800 font-bold rounded-xl shadow-sm hover:bg-amber-100 transition mt-6 border-none">
+                                    Lihat Pembayaran
+                                </button>
                             </div>
 
+                            <!-- KANAN: PEMBAYARAN -->
                             <div id="paymentPanel-{{ $res->id }}"
                                 class="w-full md:w-1/2 md:border-l-2 md:border-amber-100 p-6 flex-col h-full bg-gradient-to-b from-amber-50/50 to-white hidden md:flex">
-
                                 <div class="border-b-2 border-amber-100 pb-2 mb-4 hidden md:block">
                                     <h4 class="text-xl font-black text-amber-900">Detail Pembayaran</h4>
                                 </div>
@@ -557,31 +627,14 @@
                                         <span class="text-amber-700">Tanggal Check-out</span>
                                         <span>{{ \Carbon\Carbon::parse($res->check_out)->translatedFormat('d M Y') }}</span>
                                     </div>
-
-                                    @if (($ekstra['Extra Bed'] ?? 0) > 0)
-                                        <div class="flex justify-between">
-                                            <span class="text-amber-700">Layanan Extra (Bed)</span>
-                                            <span class="text-amber-600 font-black">x{{ $ekstra['Extra Bed'] }}</span>
-                                        </div>
-                                    @endif
-                                    @if (($ekstra['Extra Selimut'] ?? 0) > 0)
-                                        <div class="flex justify-between">
-                                            <span class="text-amber-700">Layanan Extra (Selimut)</span>
-                                            <span
-                                                class="text-amber-600 font-black">x{{ $ekstra['Extra Selimut'] }}</span>
-                                        </div>
-                                    @endif
-
                                     <div
                                         class="flex justify-between font-bold text-amber-600 pt-3 mt-3 border-t-2 border-amber-100">
                                         <span>Status Pembayaran</span>
+
+                                        <!-- FIX STATUS "PENDING" JADI "TERLEWAT" -->
                                         <span id="statusPaymentDisplay-{{ $res->id }}"
-                                            class="uppercase tracking-wider">
-                                            @if ($isPesananAktif)
-                                                {{ $pembayaranAktif->status ?? $res->status_reservasi }}
-                                            @else
-                                                {{ $res->status_reservasi }}
-                                            @endif
+                                            class="uppercase tracking-wider {{ $res->status_reservasi === 'Terlewat' ? 'text-red-600 font-bold animate-pulse' : '' }}">
+                                            {{ $res->status_reservasi === 'Terlewat' ? 'TERLEWAT' : ($isPesananAktif ? $pembayaranAktif->status ?? $res->status_reservasi : $res->status_reservasi) }}
                                         </span>
                                     </div>
                                 </div>
@@ -600,10 +653,10 @@
                                 @if ($isPesananAktif && isset($ekstra['Metode Pembayaran']) && $ekstra['Metode Pembayaran'] === 'QRIS')
                                     <div class="flex flex-col flex-grow justify-end space-y-4">
                                         <div
-                                            class="border-2 border-amber-200 rounded-2xl flex-grow min-h-[220px] flex items-center justify-center bg-white shadow-inner p-4">
+                                            class="border-2 border-amber-200 rounded-2xl flex-grow min-h-[220px] flex items-center justify-center bg-white shadow-sm p-6 flex-col text-center">
+
                                             <div id="qrisContainer-{{ $res->id }}"
                                                 class="text-center w-full flex flex-col items-center justify-center">
-
                                                 @if (isset($pembayaranAktif) && $pembayaranAktif->status === 'berhasil')
                                                     <div class="text-center w-full animate-fade-in">
                                                         <div
@@ -619,12 +672,8 @@
                                                         <h4 class="font-black text-green-700 text-xl">Pembayaran Lunas!
                                                         </h4>
                                                     </div>
-                                                @elseif (isset($pembayaranAktif) && $pembayaranAktif->qr_image)
-                                                    @php
-                                                        $qrUrl =
-                                                            'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' .
-                                                            urlencode($pembayaranAktif->qr_image);
-                                                    @endphp
+                                                @elseif ($isQrisRequested)
+                                                    @php $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' . urlencode($pembayaranAktif->qr_image); @endphp
                                                     <div class="animate-fade-in flex flex-col items-center w-full">
                                                         <div class="mb-3 text-center w-full">
                                                             <p
@@ -637,24 +686,75 @@
                                                         <img src="{{ $qrUrl }}" alt="QRIS"
                                                             class="w-44 h-44 object-contain shadow-sm border border-amber-200 rounded-xl bg-white p-2 mx-auto">
                                                     </div>
+                                                @else
+                                                    <!-- KOTAK QRIS -->
+                                                    <div id="qrisPlaceholder-{{ $res->id }}"
+                                                        class="flex flex-col items-center w-full {{ $res->status_reservasi === 'Terlewat' ? 'hidden' : 'flex' }}">
+                                                        <div
+                                                            class="w-16 h-16 mb-4 text-amber-500 bg-amber-50 rounded-xl p-3 border border-amber-200">
+                                                            <svg fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24" stroke-width="2"
+                                                                class="w-full h-full">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z">
+                                                                </path>
+                                                            </svg>
+                                                        </div>
+                                                        <p
+                                                            class="text-[11px] font-bold text-amber-900 mb-5 leading-relaxed">
+                                                            Klik tombol di bawah ini untuk memunculkan <br>kode QRIS dan
+                                                            mengunci jadwal reservasi.
+                                                        </p>
+                                                        <button type="button" id="btnGenQris-{{ $res->id }}"
+                                                            onclick="confirmGenerateQris('{{ $res->id }}', '{{ route('guest.generate.qris', $res->id) }}')"
+                                                            class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-md transition transform hover:-translate-y-0.5 border-none text-sm w-full">
+                                                            Generate QRIS
+                                                        </button>
+                                                    </div>
+
+                                                    <!-- KOTAK TERLEWAT -->
+                                                    <div id="boxQrisTerlewat-{{ $res->id }}"
+                                                        class="flex-col items-center w-full {{ $res->status_reservasi === 'Terlewat' ? 'flex' : 'hidden' }}">
+                                                        <div
+                                                            class="w-16 h-16 mb-4 mx-auto text-red-500 bg-red-50 rounded-xl p-3 border border-red-200">
+                                                            <svg fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24" stroke-width="2"
+                                                                class="w-full h-full">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                                                                </path>
+                                                            </svg>
+                                                        </div>
+                                                        <p
+                                                            class="text-[11px] font-bold text-red-700 mb-2 leading-relaxed">
+                                                            Waktu Check-in Anda sudah terlewat! <br> Silakan Ubah Jadwal
+                                                            Anda (Reschedule) terlebih dahulu di kotak sebelah kiri.
+                                                        </p>
+                                                    </div>
+
+                                                    <div id="qrisActive-{{ $res->id }}" class="hidden w-full">
+                                                    </div>
                                                 @endif
                                             </div>
                                         </div>
 
-                                        @if (isset($pembayaranAktif) && $pembayaranAktif->qr_image && $pembayaranAktif->status !== 'berhasil')
-                                            <button type="button"
-                                                onclick="forceDownloadQR(this, '{!! $qrUrl !!}', '{{ $pembayaranAktif->invoice }}')"
-                                                class="qris-download-btn-{{ $res->id }} mt-2 w-full bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-400 font-bold py-3 px-4 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2 text-center cursor-pointer relative z-50">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4">
-                                                    </path>
-                                                </svg>
-                                                <span class="btn-text">Download Kode QR</span>
-                                            </button>
-                                        @endif
+                                        <div id="qrisDownloadContainer-{{ $res->id }}"
+                                            class="{{ $isQrisRequested && $pembayaranAktif->status !== 'berhasil' ? 'block' : 'hidden' }}">
+                                            @if ($isQrisRequested && $pembayaranAktif->status !== 'berhasil')
+                                                <button type="button"
+                                                    onclick="forceDownloadQR(this, '{!! $qrUrl !!}', '{{ $pembayaranAktif->invoice }}')"
+                                                    class="qris-download-btn-{{ $res->id }} mt-2 w-full bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-400 font-bold py-3 px-4 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2 text-center cursor-pointer relative z-50 border-none">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4">
+                                                        </path>
+                                                    </svg>
+                                                    <span class="btn-text">Download Kode QR</span>
+                                                </button>
+                                            @endif
+                                        </div>
                                     </div>
                                 @else
                                     <div
@@ -677,7 +777,45 @@
         @endforeach
     @endif
 
-    <link rel="stylesheet" href="{{ asset('css/landingpage/hriwayat.css') }}?v={{ time() }}">
+    <!-- Wadah Custom Modal Confirm -->
+    <div id="jsConfirmModal"
+        class="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm hidden animate-fade-in">
+        <div
+            class="relative bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-md w-full border border-amber-100">
+            <div class="bg-white px-6 pt-6 pb-6">
+                <div class="sm:flex sm:items-start">
+                    <div
+                        class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-amber-100 sm:mx-0 sm:h-12 sm:w-12 shadow-inner ring-4 ring-amber-50 shrink-0">
+                        <svg class="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <div class="mt-4 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-xl leading-6 font-black text-amber-950 mb-2" id="jsConfirmTitle">Konfirmasi
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-600 font-medium whitespace-pre-wrap leading-relaxed"
+                                id="jsConfirmDesc"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-amber-50/50 px-6 py-4 flex flex-col sm:flex-row-reverse gap-3 border-t border-amber-100">
+                <button type="button" id="jsConfirmBtnYa"
+                    class="w-full sm:w-auto inline-flex justify-center rounded-xl border border-transparent shadow-sm px-6 py-2.5 bg-amber-600 text-base font-bold text-white hover:bg-amber-700 transition focus:outline-none sm:text-sm border-none">
+                    Ya, Lanjutkan
+                </button>
+                <button type="button" onclick="document.getElementById('jsConfirmModal').classList.add('hidden')"
+                    class="w-full sm:w-auto inline-flex justify-center rounded-xl border border-amber-300 shadow-sm px-6 py-2.5 bg-white text-base font-bold text-amber-800 hover:bg-amber-50 transition focus:outline-none sm:text-sm border-none">
+                    Batal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="{{ asset('css/hriwayat.css') }}?v={{ time() }}">
     <script src="{{ asset('js/landingpage/hriwayat.js') }}?v={{ time() }}"></script>
 
     @if ($isLoggedIn)
@@ -692,5 +830,4 @@
             });
         </script>
     @endif
-
 </x-lplayout>

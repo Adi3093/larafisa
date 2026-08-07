@@ -46,7 +46,7 @@ class ProfileController extends Controller
         return back()->with('success', 'Profil sistem Anda berhasil diperbarui!');
     }
 
-    // FUNGSI BARU: Menyimpan Pengaturan Maintenance ke Server Cache
+    // Maintenance Setting
     public function updateMaintenance(Request $request)
     {
         Cache::forever('maintenance_mode', $request->maintenance_mode ? 'true' : 'false');
