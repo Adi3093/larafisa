@@ -8,15 +8,6 @@
             <p class="text-amber-100 mt-1">Pantau perkembangan reservasi kamar Anda secara real-time.</p>
         </div>
 
-        <div id="toastMessage" class="custom-toast-js flex items-center justify-center gap-2">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                </path>
-            </svg>
-            <span id="toastText"></span>
-        </div>
-
         @if (session('success'))
             <div
                 class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl shadow-sm font-bold flex items-center gap-2">
@@ -66,35 +57,43 @@
                 $tabCheckin = collect();
                 $tabCheckout = collect();
 
+                $waktuSekarang = \Carbon\Carbon::now('Asia/Jakarta');
+
                 foreach ($pesananAktifs as $pesanan) {
                     $status = $pesanan->status_reservasi;
-                    $ekstra = is_array($pesanan->ekstra) ? $pesanan->ekstra : json_decode($pesanan->ekstra, true) ?? [];
-                    $metode = $ekstra['Metode Pembayaran'] ?? '';
 
-                    // FIX BUG: Paksa KUNCI di tab Pembayaran jika metodenya QRIS
                     if (in_array($status, ['Menunggu Konfirmasi', 'Terlewat'])) {
-                        if ($metode === 'QRIS') {
-                            $tabPembayaran->push($pesanan);
-                        } else {
-                            $tabKonfirmasi->push($pesanan);
-                        }
+                        $tabPembayaran->push($pesanan);
                     } elseif ($status === 'Terkonfirmasi') {
-                        $tabCheckin->push($pesanan);
+                        $tabKonfirmasi->push($pesanan);
                     } elseif ($status === 'Check-In') {
-                        $tabCheckout->push($pesanan);
+                        $waktuCheckout = \Carbon\Carbon::parse($pesanan->check_out, 'Asia/Jakarta');
+                        if ($waktuSekarang->greaterThanOrEqualTo($waktuCheckout)) {
+                            $tabCheckout->push($pesanan);
+                        } else {
+                            $tabCheckin->push($pesanan);
+                        }
                     }
                 }
 
                 $activeTab = 'riwayat';
                 if (!request()->has('page') && !request()->has('per_page')) {
-                    if ($tabPembayaran->isNotEmpty()) {
-                        $activeTab = 'pembayaran';
-                    } elseif ($tabKonfirmasi->isNotEmpty()) {
-                        $activeTab = 'konfirmasi';
-                    } elseif ($tabCheckin->isNotEmpty()) {
-                        $activeTab = 'checkin';
-                    } elseif ($tabCheckout->isNotEmpty()) {
-                        $activeTab = 'checkout';
+                    if ($pesananAktifs->isNotEmpty()) {
+                        $firstPesanan = $pesananAktifs->first();
+                        $s = $firstPesanan->status_reservasi;
+
+                        if (in_array($s, ['Menunggu Konfirmasi', 'Terlewat'])) {
+                            $activeTab = 'pembayaran';
+                        } elseif ($s === 'Terkonfirmasi') {
+                            $activeTab = 'konfirmasi';
+                        } elseif ($s === 'Check-In') {
+                            $waktuCheckoutFirst = \Carbon\Carbon::parse($firstPesanan->check_out, 'Asia/Jakarta');
+                            if ($waktuSekarang->greaterThanOrEqualTo($waktuCheckoutFirst)) {
+                                $activeTab = 'checkout';
+                            } else {
+                                $activeTab = 'checkin';
+                            }
+                        }
                     }
                 }
             @endphp
@@ -172,23 +171,25 @@
                                 ? asset('storage/' . $pesananData->kamar->kelasKamar->thumbnail)
                                 : asset('storage/landingpage/room-placeholder.jpg');
 
-                            // Cek apakah QRIS sudah di-generate untuk pesanan ini
+                            // Tombol Hapus: Hanya jika QRIS belum di-generate DAN belum dikonfirmasi Resepsionis
                             $pembayaranItem = $pembayaranAktifs[$pesananData->id] ?? null;
                             $sudahGenerateQris = $pembayaranItem && !empty($pembayaranItem->qr_image);
+                            $bisaDihapus =
+                                !$sudahGenerateQris &&
+                                in_array($pesananData->status_reservasi, ['Menunggu Konfirmasi', 'Terlewat']);
 
-                            // Tombol Hapus (Hanya muncul jika QRIS BELUM di-generate)
                             $tombolHapus = '';
-                            if (!$sudahGenerateQris) {
+                            if ($bisaDihapus) {
                                 $tombolHapus =
                                     '
                                 <form action="' .
-                                    route('reservasi.tamu.destroy', $pesananData->id) .
+                                    route('reservasi.tamu.batal', $pesananData->id) .
                                     '" method="POST" class="m-0" data-confirm="Hapus Reservasi?|Apakah Anda yakin ingin menghapus data reservasi ini?" data-theme="danger" data-btn="Ya, Hapus">
                                     ' .
                                     csrf_field() .
                                     '
                                     ' .
-                                    method_field('DELETE') .
+                                    method_field('PUT') .
                                     '
                                     <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition transform hover:-translate-y-0.5 duration-300 shadow-sm border border-red-200">Hapus</button>
                                 </form>';
@@ -269,7 +270,7 @@
                                             d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                                     </svg>
                                 </div>
-                                <h3 class="text-lg font-extrabold text-amber-950">Tidak Ada Tagihan</h3>
+                                <h3 class="text-lg font-extrabold text-amber-950">Belum Ada Tagihan</h3>
                                 <p class="text-gray-500 text-sm mt-2">Semua tagihan Anda sudah dibayar atau tidak ada
                                     pesanan tertunda.</p>
                             </div>
@@ -285,8 +286,7 @@
                                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
+                                    </svg></div>
                                 <h3 class="text-lg font-extrabold text-amber-950">Tidak Ada Antrean Konfirmasi</h3>
                             </div>
                         @endforelse
@@ -301,8 +301,7 @@
                                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                                    </svg>
-                                </div>
+                                    </svg></div>
                                 <h3 class="text-lg font-extrabold text-amber-950">Belum Ada Jadwal Check-In</h3>
                             </div>
                         @endforelse
@@ -317,9 +316,8 @@
                                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                    </svg>
-                                </div>
-                                <h3 class="text-lg font-extrabold text-amber-950">Tidak Sedang Menginap</h3>
+                                    </svg></div>
+                                <h3 class="text-lg font-extrabold text-amber-950">Belum Waktunya Check-Out</h3>
                             </div>
                         @endforelse
                     </div>
@@ -405,8 +403,7 @@
                                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
+                                    </svg></div>
                                 <h3 class="text-lg font-extrabold text-amber-950">Belum Ada Riwayat</h3>
                             </div>
                         @endforelse
@@ -493,7 +490,6 @@
                         </div>
 
                         <div class="flex flex-col md:flex-row bg-white">
-                            <!-- KIRI: INFO & RESCHEDULE -->
                             <div id="infoPanel-{{ $res->id }}" class="w-full md:w-1/2 p-6 block">
                                 <div class="mb-6">
                                     <div class="flex justify-between items-end border-b-2 border-amber-100 pb-2 mb-3">
@@ -533,7 +529,8 @@
                                             <form id="formRescheduleEl-{{ $res->id }}"
                                                 action="{{ route('reservasi.tamu.update', $res->id) }}"
                                                 method="POST" class="space-y-4"
-                                                onsubmit="return validateRescheduleTime('{{ $res->id }}')">
+                                                data-confirm="Simpan Perubahan Jadwal?|Apakah Anda yakin ingin menyimpan perubahan jadwal ini?"
+                                                data-theme="amber" data-btn="Ya, Simpan">
                                                 @csrf
                                                 @method('PUT')
                                                 <div>
@@ -572,7 +569,8 @@
                                                             class="px-3 py-2 bg-white border border-amber-300 rounded-lg text-amber-700 hover:bg-amber-50 font-bold shadow-sm">&gt;</button>
                                                     </div>
                                                 </div>
-                                                <button type="submit"
+                                                <button type="button"
+                                                    onclick="validateRescheduleTime('{{ $res->id }}')"
                                                     class="w-full py-3 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold rounded-xl text-sm transition shadow-sm border-none mt-2">
                                                     Simpan Perubahan Jadwal
                                                 </button>
@@ -607,7 +605,6 @@
                                 </button>
                             </div>
 
-                            <!-- KANAN: PEMBAYARAN -->
                             <div id="paymentPanel-{{ $res->id }}"
                                 class="w-full md:w-1/2 md:border-l-2 md:border-amber-100 p-6 flex-col h-full bg-gradient-to-b from-amber-50/50 to-white hidden md:flex">
                                 <div class="border-b-2 border-amber-100 pb-2 mb-4 hidden md:block">
@@ -631,7 +628,6 @@
                                         class="flex justify-between font-bold text-amber-600 pt-3 mt-3 border-t-2 border-amber-100">
                                         <span>Status Pembayaran</span>
 
-                                        <!-- FIX STATUS "PENDING" JADI "TERLEWAT" -->
                                         <span id="statusPaymentDisplay-{{ $res->id }}"
                                             class="uppercase tracking-wider {{ $res->status_reservasi === 'Terlewat' ? 'text-red-600 font-bold animate-pulse' : '' }}">
                                             {{ $res->status_reservasi === 'Terlewat' ? 'TERLEWAT' : ($isPesananAktif ? $pembayaranAktif->status ?? $res->status_reservasi : $res->status_reservasi) }}
@@ -687,7 +683,6 @@
                                                             class="w-44 h-44 object-contain shadow-sm border border-amber-200 rounded-xl bg-white p-2 mx-auto">
                                                     </div>
                                                 @else
-                                                    <!-- KOTAK QRIS -->
                                                     <div id="qrisPlaceholder-{{ $res->id }}"
                                                         class="flex flex-col items-center w-full {{ $res->status_reservasi === 'Terlewat' ? 'hidden' : 'flex' }}">
                                                         <div
@@ -706,13 +701,12 @@
                                                             mengunci jadwal reservasi.
                                                         </p>
                                                         <button type="button" id="btnGenQris-{{ $res->id }}"
-                                                            onclick="confirmGenerateQris('{{ $res->id }}', '{{ route('guest.generate.qris', $res->id) }}')"
+                                                            onclick="triggerQrisConfirm('{{ $res->id }}', '{{ route('guest.generate.qris', $res->id) }}')"
                                                             class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-md transition transform hover:-translate-y-0.5 border-none text-sm w-full">
                                                             Generate QRIS
                                                         </button>
                                                     </div>
 
-                                                    <!-- KOTAK TERLEWAT -->
                                                     <div id="boxQrisTerlewat-{{ $res->id }}"
                                                         class="flex-col items-center w-full {{ $res->status_reservasi === 'Terlewat' ? 'flex' : 'hidden' }}">
                                                         <div
@@ -777,49 +771,14 @@
         @endforeach
     @endif
 
-    <!-- Wadah Custom Modal Confirm -->
-    <div id="jsConfirmModal"
-        class="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm hidden animate-fade-in">
-        <div
-            class="relative bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-md w-full border border-amber-100">
-            <div class="bg-white px-6 pt-6 pb-6">
-                <div class="sm:flex sm:items-start">
-                    <div
-                        class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-amber-100 sm:mx-0 sm:h-12 sm:w-12 shadow-inner ring-4 ring-amber-50 shrink-0">
-                        <svg class="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                    </div>
-                    <div class="mt-4 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-xl leading-6 font-black text-amber-950 mb-2" id="jsConfirmTitle">Konfirmasi
-                        </h3>
-                        <div class="mt-2">
-                            <p class="text-sm text-gray-600 font-medium whitespace-pre-wrap leading-relaxed"
-                                id="jsConfirmDesc"></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-amber-50/50 px-6 py-4 flex flex-col sm:flex-row-reverse gap-3 border-t border-amber-100">
-                <button type="button" id="jsConfirmBtnYa"
-                    class="w-full sm:w-auto inline-flex justify-center rounded-xl border border-transparent shadow-sm px-6 py-2.5 bg-amber-600 text-base font-bold text-white hover:bg-amber-700 transition focus:outline-none sm:text-sm border-none">
-                    Ya, Lanjutkan
-                </button>
-                <button type="button" onclick="document.getElementById('jsConfirmModal').classList.add('hidden')"
-                    class="w-full sm:w-auto inline-flex justify-center rounded-xl border border-amber-300 shadow-sm px-6 py-2.5 bg-white text-base font-bold text-amber-800 hover:bg-amber-50 transition focus:outline-none sm:text-sm border-none">
-                    Batal
-                </button>
-            </div>
-        </div>
-    </div>
-
     <link rel="stylesheet" href="{{ asset('css/hriwayat.css') }}?v={{ time() }}">
     <script src="{{ asset('js/landingpage/hriwayat.js') }}?v={{ time() }}"></script>
 
     @if ($isLoggedIn)
         <script>
+            // Simpan status awal ke window agar JS bisa baca dan compare (Untuk Fitur Auto-Update Status Tanpa Refresh)
+            window.initialReservations = @json($pesananAktifs->pluck('status_reservasi', 'id'));
+
             document.addEventListener('DOMContentLoaded', function() {
                 @foreach ($pembayaranAktifs as $pembayaranAktif)
                     @if ($pembayaranAktif->status === 'pending' && $pembayaranAktif->qr_image)

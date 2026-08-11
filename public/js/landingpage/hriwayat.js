@@ -24,101 +24,25 @@ function closeMobileWizard(id) {
     document.getElementById("backBtn-" + id).classList.add("hidden");
 }
 
-// MODULE 3: GLOBAL TOAST / ALERT MENGGUNAKAN STANDAR APLIKASI
-function showAppToast(title, message, theme = 'amber', btnText = 'Ya, Lanjutkan', callback = null) {
-    // Kita buat form temporary jika callback dipicu oleh event global x-confirm
-    let tempFormId = 'temp-confirm-form-' + Math.random().toString(36).substring(2, 9);
-    
-    // Simpan callback ke dalam fungsi global sementara agar bisa dipanggil x-confirm jika diperlukan,
-    // atau gunakan Event Listeners standar Laravel Anda:
-    window.dispatchEvent(new CustomEvent('open-confirm', {
-        detail: {
-            title: title,
-            message: message,
-            confirmText: btnText,
-            theme: theme,
-            targetAction: callback
-        }
-    }));
-}
-
-// MODULE 4: FRONTEND VALIDATION (ANTI-MUNDUR DENGAN X-CONFIRM)
-function validateRescheduleTime(resId) {
-    const checkinInput = document.getElementById('checkin-' + resId);
-    if (!checkinInput) return true;
-
-    const selectedTime = new Date(checkinInput.value).getTime();
-    const nowTime = new Date().getTime();
-
-    // Validasi Waktu Mundur
-    if (selectedTime < (nowTime - 60000)) {
-        // Panggil event open-confirm untuk error/peringatan waktu mundur
-        window.dispatchEvent(new CustomEvent('open-confirm', {
-            detail: {
-                title: "Waktu Tidak Valid",
-                message: "Waktu check-in tidak valid! Anda tidak dapat memilih waktu di masa lalu.",
-                confirmText: "Tutup",
-                theme: "danger"
-            }
-        }));
-        return false; 
+// MODULE 3: LAZY QRIS GENERATOR & CUSTOM CONFIRM TRIGGER
+function triggerQrisConfirm(resId, url) {
+    let form = document.getElementById('dummy-qris-' + resId);
+    if (!form) {
+        form = document.createElement('form');
+        form.id = 'dummy-qris-' + resId;
+        form.setAttribute('data-confirm', 'Generate QRIS Pembayaran?|Peringatan Penting: Anda tidak bisa mengubah jadwal setelah pembayaran dibuat. Apakah Anda yakin ingin mengunci reservasi dan men-generate QRIS sekarang?');
+        form.setAttribute('data-theme', 'amber');
+        form.setAttribute('data-btn', 'Ya, Buat QRIS');
+        
+        form.onsubmit = function(e) { e.preventDefault(); };
+        
+        form.submit = function() {
+            executeGenerateQris(resId, url);
+        };
+        document.body.appendChild(form);
     }
     
-    // Jika lolos, munculkan modal konfirmasi ubah jadwal global
-    const form = document.getElementById('formRescheduleEl-' + resId);
-    
-    // Kita intercept submit agar memunculkan komponen <x-confirm /> bawaan layout
-    if (!window._rescheduleConfirmed) {
-        window.dispatchEvent(new CustomEvent('open-confirm', {
-            detail: {
-                title: "Konfirmasi Perubahan Jadwal",
-                message: "Apakah Anda yakin ingin mengubah jadwal menginap ini?",
-                confirmText: "Ya, Ubah Jadwal",
-                theme: "amber"
-            }
-        }));
-
-        // Dengarkan event ketika user menekan tombol konfirmasi pada x-confirm global
-        document.addEventListener('confirm-success-once', function handler() {
-            document.removeEventListener('confirm-success-once', handler);
-            window._rescheduleConfirmed = true;
-            form.submit();
-        }, { once: true });
-
-        return false; // Tahan submit form dulu
-    }
-
-    return true; 
-}
-
-// MODULE 5: LAZY QRIS GENERATOR
-function confirmGenerateQris(resId, url) {
-    const btn = document.getElementById("btnGenQris-" + resId);
-    if (btn && btn.disabled) {
-        window.dispatchEvent(new CustomEvent('open-confirm', {
-            detail: {
-                title: "Akses Ditolak",
-                message: "Anda tidak bisa membuat QRIS. Jadwal Anda sudah terlewat.",
-                confirmText: "Tutup",
-                theme: "danger"
-            }
-        }));
-        return;
-    }
-
-    window.dispatchEvent(new CustomEvent('open-confirm', {
-        detail: {
-            title: "Peringatan Penting!",
-            message: "Jadwal reservasi akan TERKUNCI PERMANEN dan tidak bisa diubah lagi jika Anda sudah melanjutkan ke halaman pembayaran QRIS.",
-            confirmText: "Ya, Buat QRIS",
-            theme: "amber"
-        }
-    }));
-
-    document.addEventListener('confirm-success-once', function handler() {
-        document.removeEventListener('confirm-success-once', handler);
-        executeGenerateQris(resId, url);
-    }, { once: true });
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 }
 
 async function executeGenerateQris(resId, url) {
@@ -160,23 +84,27 @@ async function executeGenerateQris(resId, url) {
                 <div class="p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-bold rounded-xl text-center shadow-inner mb-4">🔒 Jadwal telah terkunci karena QRIS pembayaran sudah diminta.</div>`;
             }
 
+            // HILANGKAN TOMBOL HAPUS BEGITU QRIS TERGENERATE
+            const deleteForm = document.querySelector('form[action*="' + resId + '/batal"]');
+            if(deleteForm) deleteForm.remove();
+
             startPaymentCheck(data.invoice, resId);
             startCountdown(data.expired_at, resId);
         } else {
             window.dispatchEvent(new CustomEvent('open-confirm', {
-                detail: { title: "Gagal", message: data.message || "Gagal memuat sistem Gateway.", confirmText: "Tutup", theme: "danger" }
+                detail: { title: "Peringatan", message: data.message || "Gagal memuat sistem Gateway.", confirmText: "Tutup", theme: "danger" }
             }));
             if (btn) { btn.innerHTML = "Generate QRIS"; btn.disabled = false; }
         }
     } catch (e) {
         window.dispatchEvent(new CustomEvent('open-confirm', {
-            detail: { title: "Error", message: "Terjadi kesalahan koneksi server.", confirmText: "Tutup", theme: "danger" }
+            detail: { title: "Error Koneksi", message: "Terjadi kesalahan koneksi server.", confirmText: "Tutup", theme: "danger" }
         }));
         if (btn) { btn.innerHTML = "Generate QRIS"; btn.disabled = false; }
     }
 }
 
-// MODULE 6: DATE ADJUSTER (< > BUTTONS)
+// MODULE 4: DATE ADJUSTER (< > BUTTONS)
 function adjustDateRiwayat(inputId, daysToAdd) {
     let input = document.getElementById(inputId);
     if (!input || !input.value || input.disabled) return;
@@ -190,7 +118,7 @@ function adjustDateRiwayat(inputId, daysToAdd) {
     input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
-// MODULE 7: COUNTDOWN TIMER ENGINE
+// MODULE 5: COUNTDOWN TIMER ENGINE
 function startCountdown(expiredAtStr, resId) {
     if (timerIntervals[resId]) clearInterval(timerIntervals[resId]);
     const safeDateStr = expiredAtStr.replace(" ", "T");
@@ -234,7 +162,7 @@ function startCountdown(expiredAtStr, resId) {
     }, 1000);
 }
 
-// MODULE 8: REALTIME CHECK-IN STATUS CHECKER 
+// MODULE 6: REALTIME CHECK-IN STATUS CHECKER 
 setInterval(() => {
     const now = new Date().getTime();
     document.querySelectorAll('[data-checkin-time]').forEach(el => {
@@ -271,7 +199,7 @@ setInterval(() => {
     });
 }, 1000);
 
-// MODULE 9: REALTIME TRANSACTION CHECKER
+// MODULE 7: REALTIME TRANSACTION CHECKER
 function startPaymentCheck(invoice, resId) {
     if (paymentIntervals[resId]) clearInterval(paymentIntervals[resId]);
     const statusDisplay = document.getElementById("statusPaymentDisplay-" + resId);
@@ -303,7 +231,7 @@ function startPaymentCheck(invoice, resId) {
     }, 5000);
 }
 
-// MODULE 10: QR CODE DOWNLOADER
+// MODULE 8: QR CODE DOWNLOADER
 async function forceDownloadQR(btn, imageUrl, invoiceNo) {
     if (btn.disabled) return;
     const textSpan = btn.querySelector(".btn-text");
@@ -330,11 +258,66 @@ async function forceDownloadQR(btn, imageUrl, invoiceNo) {
     }
 }
 
-// Tangkap sinyal klik "Ya, Lanjutkan" dari komponen global <x-confirm />
+// MODULE 9: VALIDASI WAKTU RESCHEDULE MUNDUR (X-CONFIRM)
+function validateRescheduleTime(resId) {
+    const checkinInput = document.getElementById('checkin-' + resId);
+    if (!checkinInput) return;
+
+    const selectedTime = new Date(checkinInput.value).getTime();
+    const nowTime = new Date().getTime();
+
+    // Validasi Waktu Mundur
+    if (selectedTime < (nowTime - 60000)) {
+        window.dispatchEvent(new CustomEvent('open-confirm', {
+            detail: {
+                title: "Waktu Tidak Valid",
+                message: "Waktu check-in tidak valid! Anda tidak dapat memilih waktu di masa lalu.",
+                confirmText: "Tutup",
+                theme: "danger"
+            }
+        }));
+        return; 
+    }
+    
+    // Jika valid, eksekusi event 'submit' agar ditangkap oleh modal <x-confirm> di lplayout
+    const form = document.getElementById('formRescheduleEl-' + resId);
+    if (form) {
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    }
+}
+
+// MODULE 10: AUTO REFRESH JIKA STATUS BERUBAH OLEH RESEPSIONIS (Tanpa Toast Jeda)
+setInterval(async () => {
+    // Jika tidak ada data inisialisasi di window, abaikan
+    if (!window.initialReservations) return;
+
+    try {
+        const res = await fetch('/riwayat/check-updates');
+        const data = await res.json();
+        
+        if (data.reservasi) {
+            let hasChanged = false;
+            data.reservasi.forEach(r => {
+                // Jika status saat ini berbeda dengan status saat pertama kali load
+                if (window.initialReservations[r.id] && window.initialReservations[r.id] !== r.status_reservasi) {
+                    hasChanged = true;
+                }
+            });
+
+            // Jika ada perubahan, refresh halaman secara instan tanpa toast!
+            if (hasChanged) {
+                window.location.reload();
+            }
+        }
+    } catch (e) {
+        // Abaikan error jika koneksi terputus sesaat
+    }
+}, 5000); // Cek setiap 5 detik
+
+
+// Global Event Handlers
 document.addEventListener('DOMContentLoaded', () => {
-    // Kita buat event listener global untuk menangkap konfirmasi sukses dari x-confirm
     const observer = new MutationObserver(() => {
-        // Cek jika tombol konfirmasi global di-klik, kita bisa tembak event custom
         const confirmBtn = document.querySelector('[x-show="isOpen"] button.bg-amber-600, [x-show="isOpen"] button.bg-red-600');
         if (confirmBtn && !confirmBtn.hasAttribute('data-listened')) {
             confirmBtn.setAttribute('data-listened', 'true');
@@ -352,7 +335,7 @@ window.startPaymentCheck = startPaymentCheck;
 window.openMobileWizard = openMobileWizard; 
 window.closeMobileWizard = closeMobileWizard; 
 window.forceDownloadQR = forceDownloadQR; 
-window.confirmGenerateQris = confirmGenerateQris; 
+window.triggerQrisConfirm = triggerQrisConfirm;
 window.executeGenerateQris = executeGenerateQris; 
 window.adjustDateRiwayat = adjustDateRiwayat; 
 window.validateRescheduleTime = validateRescheduleTime;

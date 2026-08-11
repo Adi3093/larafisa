@@ -10,6 +10,11 @@ let calendarInstance = null;
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Membaca status Toggles Notifikasi Local Storage
     ['notif_reservasi', 'notif_checkin', 'notif_checkout'].forEach(setting => {
+        // SET DEFAULT JADI TRUE JIKA BELUM PERNAH DIATUR
+        if (localStorage.getItem(setting) === null) {
+            localStorage.setItem(setting, 'true');
+        }
+        
         const isChecked = localStorage.getItem(setting) === 'true';
         const toggleEl = document.getElementById('toggle_' + setting);
         if (toggleEl) toggleEl.checked = isChecked;

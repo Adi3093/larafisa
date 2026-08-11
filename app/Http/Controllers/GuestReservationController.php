@@ -121,17 +121,14 @@ class GuestReservationController extends Controller
 
         $user = Auth::user();
 
-        // 🛡️ ENGINE SUPER KETAT PENANGKAL BUG 🛡️
         $waktuSekarang = \Carbon\Carbon::now('Asia/Jakarta')->format('Y-m-d H:i:s');
         $batasBatal = \Carbon\Carbon::now('Asia/Jakarta')->subDays(3)->format('Y-m-d H:i:s');
 
-        // 1. Amankan status jadi 'Terlewat' DULU
         Reservasi::where('status_reservasi', 'Menunggu Konfirmasi')
             ->where('check_in', '<', $waktuSekarang)
             ->where('check_in', '>', $batasBatal)
             ->update(['status_reservasi' => 'Terlewat']);
 
-        // 2. Baru Batalkan jika BENAR-BENAR sudah lewat 3 hari
         Reservasi::whereIn('status_reservasi', ['Menunggu Konfirmasi', 'Terlewat'])
             ->where('check_in', '<=', $batasBatal)
             ->update(['status_reservasi' => 'Dibatalkan']);
@@ -311,48 +308,42 @@ class GuestReservationController extends Controller
     {
         $reservasi = Reservasi::with('pembayaran')->findOrFail($id);
 
-        // Kunci jika QRIS sudah pernah diminta
         if ($reservasi->pembayaran && $reservasi->pembayaran->qr_image) {
             return redirect()->route('riwayat.tamu')->with('error', 'Penjadwalan ulang dikunci! Anda sudah membuat kode pembayaran QRIS.');
         }
 
-        // Ambil input dan bersihkan huruf 'T' dari input HTML datetime-local
         $rawCheckIn = str_replace('T', ' ', $request->check_in);
         $rawCheckOut = str_replace('T', ' ', $request->check_out);
 
-        // Parse ke Carbon agar mudah divalidasi dan diformat
-        $checkInCarbon = \Carbon\Carbon::parse($rawCheckIn, 'Asia/Jakarta');
-        $checkOutCarbon = \Carbon\Carbon::parse($rawCheckOut, 'Asia/Jakarta');
+        try {
+            $checkInCarbon = \Carbon\Carbon::parse($rawCheckIn, 'Asia/Jakarta');
+            $checkOutCarbon = \Carbon\Carbon::parse($rawCheckOut, 'Asia/Jakarta');
+        } catch (\Exception $e) {
+            return redirect()->route('riwayat.tamu')->with('error', 'Format waktu tidak valid.');
+        }
 
-        // Validasi Manual Waktu Mundur
         if ($checkInCarbon->isPast()) {
             return redirect()->route('riwayat.tamu')->with('error', 'Waktu check-in tidak valid! Anda tidak dapat memilih waktu di masa lalu.');
         }
 
-        // Validasi Manual Check-out harus setelah Check-in
         if ($checkOutCarbon->lte($checkInCarbon)) {
             return redirect()->route('riwayat.tamu')->with('error', 'Waktu check-out harus setelah waktu check-in.');
         }
 
-        // Format baku untuk MySQL (Y-m-d H:i:s)
         $checkInStr = $checkInCarbon->format('Y-m-d H:i:s');
         $checkOutStr = $checkOutCarbon->format('Y-m-d H:i:s');
 
-        // Pengecekan Tabrakan Jadwal
         $isTabrakan = Reservasi::where('kamar_id', $reservasi->kamar_id)
             ->where('id', '!=', $id)
             ->whereIn('status_reservasi', ['Terkonfirmasi', 'Check-In'])
             ->where(function ($q) use ($checkInStr, $checkOutStr) {
-                $q->where('check_in', '<', $checkOutStr)
-                    ->where('check_out', '>', $checkInStr);
+                $q->where('check_in', '<', $checkOutStr)->where('check_out', '>', $checkInStr);
             })->exists();
 
         if ($isTabrakan) {
-            return redirect()->route('riwayat.tamu')->with('error', 'Kamar pilihan sudah terisi oleh tamu lain pada jadwal tersebut.');
+            return redirect()->route('riwayat.tamu')->with('error', 'Kamar pilihan sudah terisi oleh jadwal tamu lain pada jam tersebut.');
         }
 
-        // EKSEKUSI UPDATE
-        // Gunakan fungsi update langsung agar casting di Model berjalan sempurna
         $reservasi->update([
             'check_in' => $checkInStr,
             'check_out' => $checkOutStr,
@@ -360,39 +351,50 @@ class GuestReservationController extends Controller
         ]);
 
         if ($reservasi->pembayaran) {
-            $reservasi->pembayaran->update([
-                'expired_at' => $checkInStr
-            ]);
+            $reservasi->pembayaran->update(['expired_at' => $checkInStr]);
         }
 
-        // Menggunakan redirect->route() yang absolut, BUKAN back(), agar tidak pernah nyasar.
-        return redirect()->route('riwayat.tamu')->with('success', 'Jadwal menginap Anda berhasil diperbarui! Silakan klik "Generate QRIS" untuk membayar.');
+        return redirect()->route('riwayat.tamu')->with('success', 'Jadwal menginap Anda berhasil diperbarui!');
     }
 
     public function batal($id)
     {
-        $res = Reservasi::findOrFail($id);
-        $res->update(['status_reservasi' => 'Dibatalkan']);
-        return back()->with('success', 'Reservasi berhasil dibatalkan.');
-    }
-
-    public function destroy($id)
-    {
         $reservasi = Reservasi::with('pembayaran')->findOrFail($id);
 
-        // Validasi pengaman: Tolak jika sudah generate QRIS atau dibayar
         if ($reservasi->pembayaran && $reservasi->pembayaran->qr_image) {
             return redirect()->route('riwayat.tamu')->with('error', 'Reservasi tidak dapat dihapus karena kode pembayaran QRIS sudah dibuat.');
         }
 
-        // Hapus data pembayaran terkait terlebih dahulu (jika ada)
+        if (in_array($reservasi->status_reservasi, ['Terkonfirmasi', 'Check-In'])) {
+            return redirect()->route('riwayat.tamu')->with('error', 'Reservasi yang sudah dikonfirmasi tidak dapat dihapus.');
+        }
+
         if ($reservasi->pembayaran) {
             $reservasi->pembayaran->delete();
         }
-
-        // Hapus data reservasi
         $reservasi->delete();
 
-        return redirect()->route('riwayat.tamu')->with('success', 'Reservasi berhasil dihapus dari daftar.');
+        return redirect()->route('riwayat.tamu')->with('success', 'Reservasi berhasil dihapus dari sistem.');
+    }
+
+    // FUNGSI BARU: Untuk cek status terkini via AJAX (Auto-Tab & Auto-Refresh)
+    public function checkUpdates()
+    {
+        if (!Auth::check()) return response()->json(['reservasi' => []]);
+
+        $user = Auth::user();
+        $pesananAktifs = Reservasi::where(function ($q) use ($user) {
+            $q->where('dibuat_oleh_user_id', $user->id);
+            if (!empty($user->no_hp) && $user->no_hp !== '-') {
+                $q->orWhere('no_hp', $user->no_hp);
+            }
+            if (!empty($user->no_ktp) && $user->no_ktp !== '-') {
+                $q->orWhere('no_ktp', $user->no_ktp);
+            }
+        })
+            ->whereIn('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi', 'Check-In', 'Terlewat', 'Selesai', 'Dibatalkan'])
+            ->get(['id', 'status_reservasi']);
+
+        return response()->json(['reservasi' => $pesananAktifs]);
     }
 }

@@ -185,20 +185,24 @@
                                         @endphp
 
                                         @if ($res->status_reservasi === 'Menunggu Konfirmasi')
+                                            
+                                            <!-- TOMBOL BUKA SELALU MUNCUL UNTUK MENGECEK DETAIL -->
+                                            <button type="button" onclick='bukaWalkInEdit(@json($res))' class="cursor-pointer bg-orange-50 text-[#E97609] hover:bg-orange-100 border border-orange-200 px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm">Buka</button>
+
                                             @if($statusBayar === 'berhasil')
-                                                <form action="{{ route('reservasi.konfirmasi', $res->id) }}" method="POST" class="inline" data-confirm="Setujui Reservasi?|Status pesanan tamu ini akan diubah menjadi Terkonfirmasi dan diteruskan ke panel Check-In." data-theme="emerald">
-                                                @csrf
-                                                <button type="submit" class="cursor-pointer bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm">Konfirmasi</button>
-                                            </form>
-                                            @elseif(empty($qrImage))
-                                                <button type="button" onclick='bukaWalkInEdit(@json($res))' class="cursor-pointer bg-orange-50 text-[#E97609] hover:bg-orange-100 border border-orange-200 px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm">Buka</button>
-                                                <form action="{{ route('reservasi.batal', $res->id) }}" method="POST" class="inline" data-confirm="Batalkan Reservasi?|Data akan masuk ke riwayat pembatalan." data-theme="danger">
+                                                <!-- TOMBOL CEPAT KONFIRMASI -->
+                                                <form id="formKonf-{{ $res->id }}" action="{{ route('reservasi.konfirmasi', $res->id) }}" method="POST" class="inline">
                                                     @csrf
-                                                    <button type="submit" class="cursor-pointer bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm">Hapus</button>
+                                                    <button type="button" onclick="showMyConfirm('Setujui Reservasi?', 'Status pesanan tamu ini akan diubah menjadi Terkonfirmasi dan diteruskan ke panel Check-In.', 'emerald', 'Ya, Konfirmasi', 'formKonf-{{ $res->id }}')" class="cursor-pointer bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm">Konfirmasi</button>
                                                 </form>
-                                            @else
-                                                <button type="button" onclick='generateAndOpenPaymentRow(@json($res->id))' class="cursor-pointer bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm">Buka Pembayaran</button>
+                                            @elseif(empty($qrImage))
+                                                <!-- TOMBOL CEPAT HAPUS (Khusus Jika QRIS belum digenerate / Metode Tunai) -->
+                                                <form id="formBatal-{{ $res->id }}" action="{{ route('reservasi.batal', $res->id) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    <button type="button" onclick="showMyConfirm('Batalkan Reservasi?', 'Data pesanan ini akan dibatalkan dan dipindahkan ke riwayat arsip.', 'danger', 'Ya, Hapus', 'formBatal-{{ $res->id }}')" class="cursor-pointer bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm">Hapus</button>
+                                                </form>
                                             @endif
+                                            
                                         @elseif($res->status_reservasi === 'Terkonfirmasi' || $res->status_reservasi === 'Check-In')
                                             <a href="{{ route('checkinout') }}" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1">Teruskan &rarr;</a>
                                         @else
@@ -228,6 +232,8 @@
             <div class="p-6 overflow-y-auto flex-grow">
                 <form id="walkInForm" method="POST" action="{{ route('reservasi.store') }}" class="h-full">
                     @csrf
+                    <!-- TAMBAHKAN INPUT HIDDEN INI AGAR FUNGSI SHOWMYCONFIRM BISA MENYISIPKAN ACTION_TYPE -->
+                    <input type="hidden" id="co_action_type" name="action_type" value="simpan">
                     <input type="hidden" id="edit_reservasi_id"> 
 
                     <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6 items-stretch h-full">
@@ -356,10 +362,10 @@
                                 </ul>
                             </div>
 
-                            <!-- Tombol Aksi Bawah -->
+                            <!-- Tombol Aksi Bawah - MENGGUNAKAN TYPE BUTTON UNTUK MENGAKSES JAVASCRIPT showMyConfirm -->
                             <div class="flex flex-col gap-2 shrink-0">
-                                <button type="submit" name="action_type" value="simpan" id="btnSimpanSaja" class="w-full cursor-pointer border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-bold shadow-sm py-2.5 rounded-lg text-sm transition">Simpan</button>
-                                <button type="submit" name="action_type" value="simpan_checkin" id="btnSimpanCheckin" class="w-full cursor-pointer border border-[#E97609] bg-white text-[#E97609] hover:bg-[#E97609] hover:text-white font-bold shadow-sm py-2.5 rounded-lg text-sm transition">Simpan dan Check-in</button>
+                                <button type="button" id="btnSimpanSaja" class="w-full cursor-pointer border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-bold shadow-sm py-2.5 rounded-lg text-sm transition">Simpan</button>
+                                <button type="button" id="btnSimpanCheckin" class="w-full cursor-pointer border border-[#E97609] bg-white text-[#E97609] hover:bg-[#E97609] hover:text-white font-bold shadow-sm py-2.5 rounded-lg text-sm transition">Simpan dan Check-in</button>
                             </div>
                         </div>
                     </div>
@@ -418,7 +424,7 @@
         </div>
     </div>
 
-    <!-- INI ADALAH MODAL KONFIRMASI LOKAL -->
+    <!-- INI ADALAH MODAL KONFIRMASI LOKAL (Digunakan oleh showMyConfirm) -->
     <div id="localConfirmModal" class="fixed inset-0 z-[999999] hidden pointer-events-none items-center justify-center bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0">
         <div id="localConfirmContent" class="relative p-4 w-full max-w-md transform scale-95 transition-transform duration-300 pointer-events-auto">
             <div class="relative bg-white border border-gray-200 rounded-3xl shadow-2xl p-6 md:p-8 text-center overflow-hidden">

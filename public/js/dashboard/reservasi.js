@@ -1,13 +1,69 @@
 // ==========================================
 // MODULE 1: MANAJEMEN MODAL WALK-IN (RESERVASI BARU / VIEW)
 // ==========================================
+
+// FUNGSI HELPER UNTUK MENGATUR TOMBOL (Aktif / Disabled Hover X)
+function setButtonState(btn, isVisible, isEnabled, text, onClickFunc, isPrimary = false) {
+    if (!btn) return;
+    if (isVisible) {
+        btn.classList.remove('hidden');
+    } else {
+        btn.classList.add('hidden');
+    }
+    
+    if (text) btn.innerText = text;
+    
+    // Hapus class lama
+    btn.classList.remove('cursor-not-allowed', 'opacity-50', 'hover:bg-[#E97609]', 'hover:text-white', 'cursor-pointer', 'hover:bg-gray-50');
+
+    if (isEnabled) {
+        if (isPrimary) {
+            btn.className = "w-full border border-[#E97609] bg-white text-[#E97609] hover:bg-[#E97609] hover:text-white font-bold shadow-sm py-2.5 rounded-lg text-sm transition cursor-pointer";
+        } else {
+            btn.className = "w-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-bold shadow-sm py-2.5 rounded-lg text-sm transition cursor-pointer";
+        }
+        btn.onclick = onClickFunc;
+    } else {
+        if (isPrimary) {
+            btn.className = "w-full border border-[#E97609] bg-white text-[#E97609] font-bold shadow-sm py-2.5 rounded-lg text-sm transition cursor-not-allowed opacity-50";
+        } else {
+            btn.className = "w-full border border-gray-300 bg-white text-gray-800 font-bold shadow-sm py-2.5 rounded-lg text-sm transition cursor-not-allowed opacity-50";
+        }
+        btn.onclick = null;
+    }
+}
+
 function openWalkInModal() {
     document.getElementById("walkInForm").reset();
     document.getElementById("edit_reservasi_id").value = "";
     document.getElementById("modalWalkinTitle").innerText = "Reservasi Baru";
 
+    let form = document.getElementById('walkInForm');
+    let inputs = form.querySelectorAll('input:not([type="hidden"]), select, textarea');
+    inputs.forEach(el => {
+        el.readOnly = false;
+        if (el.tagName === 'SELECT') el.disabled = false;
+        el.classList.remove('bg-gray-100'); 
+    });
+
+    let btnSaja = document.getElementById("btnSimpanSaja");
+    let btnCheckin = document.getElementById("btnSimpanCheckin");
+
+    // Kembalikan ke fungsi Simpan biasa (Walk-in baru)
+    setButtonState(btnSaja, true, true, 'Simpan', () => showMyConfirm('Simpan Reservasi?', 'Simpan data reservasi baru ini?', 'amber', 'Ya, Simpan', 'walkInForm', 'simpan'), false);
+    setButtonState(btnCheckin, true, true, 'Simpan dan Check-in', () => showMyConfirm('Simpan & Check-in?', 'Simpan data dan proses Check-in tamu?', 'emerald', 'Ya, Check-in', 'walkInForm', 'simpan_checkin'), true);
+    
+    let btnBukaQR = document.getElementById("btnBukaPembayaran");
+    if(btnBukaQR) {
+        btnBukaQR.innerText = "Buka Pembayaran";
+        btnBukaQR.onclick = function(e) {
+            e.preventDefault();
+            generateAndOpenPayment();
+        };
+    }
+
     document.getElementById("metode_pembayaran").value = "Tunai";
-    toggleSimpanBtn();
+    toggleSimpanBtn(); // Mengatur ulang visibilitas tombol berdasarkan metode
 
     document.getElementById("wi_img_main").classList.add("hidden");
     document.getElementById("wi_placeholder_txt").classList.remove("hidden");
@@ -34,46 +90,157 @@ function closeWalkInModal() {
 }
 
 function bukaWalkInEdit(dataRes) {
-    document.getElementById("walkInForm").reset();
-    document.getElementById("modalWalkinTitle").innerText = "Tinjau Reservasi";
+    document.getElementById('walkInModal').classList.remove('hidden');
+    document.getElementById('walkInModal').classList.remove('pointer-events-none');
+
+    let form = document.getElementById('walkInForm');
+    form.action = `/reservasi/${dataRes.id}`;
+    
+    if (!document.getElementById('put_method_input')) {
+        let inputPut = document.createElement('input');
+        inputPut.type = 'hidden';
+        inputPut.name = '_method';
+        inputPut.value = 'PUT';
+        inputPut.id = 'put_method_input';
+        form.appendChild(inputPut);
+    }
 
     document.getElementById("edit_reservasi_id").value = dataRes.id;
-    if(document.getElementById("nama_tamu")) document.getElementById("nama_tamu").value = dataRes.nama_tamu;
-    if(document.getElementById("no_hp")) document.getElementById("no_hp").value = dataRes.no_hp;
-    if(document.getElementById("no_ktp")) document.getElementById("no_ktp").value = dataRes.no_ktp === "-" ? "" : dataRes.no_ktp;
+    document.getElementById('nama_tamu').value = dataRes.nama_tamu || '';
+    document.getElementById('no_hp').value = dataRes.no_hp || '';
+    document.getElementById('no_ktp').value = dataRes.no_ktp || '';
 
-    let eks = typeof dataRes.ekstra === "string" ? JSON.parse(dataRes.ekstra) : dataRes.ekstra;
-    if(document.getElementById("extra_bed_qty")) document.getElementById("extra_bed_qty").value = eks["Extra Bed"] || 0;
-    if(document.getElementById("metode_pembayaran")) document.getElementById("metode_pembayaran").value = eks["Metode Pembayaran"] || "Tunai";
+    let cin = new Date(dataRes.check_in);
+    let cout = new Date(dataRes.check_out);
+    document.getElementById('check_in').value = formatDateTimeLocal(cin);
+    document.getElementById('check_out').value = formatDateTimeLocal(cout);
 
-    if(document.getElementById("check_in")) document.getElementById("check_in").value = dataRes.check_in.slice(0, 16);
-    if(document.getElementById("check_out")) document.getElementById("check_out").value = dataRes.check_out.slice(0, 16);
+    let ekstra = typeof dataRes.ekstra === 'string' ? JSON.parse(dataRes.ekstra) : (dataRes.ekstra || {});
+    if(document.getElementById('extra_bed_qty')) document.getElementById('extra_bed_qty').value = ekstra['Extra Bed'] || 0;
+    
+    let metodePembayaran = ekstra['Metode Pembayaran'] || 'Tunai';
+    if(document.getElementById('metode_pembayaran')) document.getElementById('metode_pembayaran').value = metodePembayaran;
 
-    let kelasSelect = document.getElementById("kelas_kamar_id");
-    if (kelasSelect) kelasSelect.value = dataRes.kamar.kelas_kamar_id;
+    let kelasId = dataRes.kamar ? dataRes.kamar.kelas_kamar_id : '';
+    document.getElementById('kelas_kamar_id').value = kelasId;
 
+    let kamarSelect = document.getElementById("kamar_id");
+    if (dataRes.kamar) {
+        kamarSelect.innerHTML = `<option value="${dataRes.kamar_id}">Kamar ${dataRes.kamar.nomor_ruangan}</option>`;
+        kamarSelect.value = dataRes.kamar_id;
+    }
+
+    window.isInitializingEdit = true;
     filterKamarDanHitung().then(() => {
-        let kamarSelect = document.getElementById("kamar_id");
-        if(kamarSelect) {
-            let exist = Array.from(kamarSelect.options).some((opt) => opt.value == dataRes.kamar_id);
-            if (!exist) {
-                let opt = document.createElement("option");
-                opt.value = dataRes.kamar_id;
-                opt.text = "Kamar " + dataRes.kamar.nomor_ruangan;
-                kamarSelect.appendChild(opt);
-            }
-            kamarSelect.value = dataRes.kamar_id;
-        }
+        window.isInitializingEdit = false;
     });
 
-    toggleSimpanBtn();
+    let isOnline = dataRes.tipe_reservasi === 'Online';
+    let isLunas = dataRes.pembayaran && (dataRes.pembayaran.status === 'berhasil' || dataRes.pembayaran.qr_image !== null);
+    let isQRIS = metodePembayaran === 'QRIS';
     
-    let modal = document.getElementById("walkInModal");
-    modal.classList.remove("hidden");
-    modal.classList.remove("pointer-events-none");
+    let inputs = form.querySelectorAll('input:not([type="hidden"]), select, textarea');
+    let btnSimpan = document.getElementById('btnSimpanSaja');
+    let btnSimpanCheckin = document.getElementById('btnSimpanCheckin');
+    let btnBukaQR = document.getElementById("btnBukaPembayaran");
+    
+    inputs.forEach(el => {
+        el.readOnly = false;
+        if(el.tagName === 'SELECT') el.disabled = false;
+        el.classList.remove('bg-gray-100');
+    });
+
+    if (isOnline) {
+        // --- SKENARIO 1: ONLINE ---
+        document.getElementById('modalWalkinTitle').innerText = 'Tinjau Reservasi Online';
+
+        inputs.forEach(el => {
+            el.readOnly = true;
+            if(el.tagName === 'SELECT') el.disabled = true;
+            el.classList.add('bg-gray-100');
+        });
+        
+        if (isQRIS) {
+            if (isLunas) {
+                // QRIS LUNAS: Bisa Konfirmasi & Checkin
+                setButtonState(btnSimpan, true, true, 'Konfirmasi', () => showMyConfirm('Konfirmasi Reservasi?', 'Setujui pesanan ini?', 'emerald', 'Ya, Konfirmasi', 'walkInForm', 'simpan'), false);
+                setButtonState(btnSimpanCheckin, true, true, 'Konfirmasi & Check-in', () => showMyConfirm('Konfirmasi & Check-in?', 'Setujui dan langsung proses Check-in?', 'emerald', 'Ya, Check-in', 'walkInForm', 'simpan_checkin'), true);
+            } else {
+                // QRIS PENDING: Dua-duanya Tidak Bisa Ditekan (Hover X / Disabled)
+                setButtonState(btnSimpan, true, false, 'Konfirmasi', null, false);
+                setButtonState(btnSimpanCheckin, true, false, 'Konfirmasi & Check-in', null, true);
+            }
+        } else {
+            if (isLunas) {
+                setButtonState(btnSimpan, true, true, 'Konfirmasi', () => showMyConfirm('Konfirmasi Reservasi?', 'Setujui pesanan ini?', 'emerald', 'Ya, Konfirmasi', 'walkInForm', 'simpan'), false);
+                setButtonState(btnSimpanCheckin, true, true, 'Konfirmasi & Check-in', () => showMyConfirm('Konfirmasi & Check-in?', 'Setujui dan langsung proses Check-in?', 'emerald', 'Ya, Check-in', 'walkInForm', 'simpan_checkin'), true);
+            } else {
+                // TUNAI PENDING: Hanya bisa konfirmasi, Check-in dilarang (Hover X)
+                setButtonState(btnSimpan, true, true, 'Konfirmasi', () => showMyConfirm('Konfirmasi Reservasi?', 'Setujui pesanan ini?', 'emerald', 'Ya, Konfirmasi', 'walkInForm', 'simpan'), false);
+                setButtonState(btnSimpanCheckin, true, false, 'Konfirmasi & Check-in', null, true);
+            }
+        }
+
+        if (btnBukaQR) {
+            if (isQRIS) {
+                btnBukaQR.classList.remove('hidden');
+                btnBukaQR.innerText = 'Cek Pembayaran';
+                btnBukaQR.onclick = function(e) {
+                    e.preventDefault();
+                    closeWalkInModal();
+                    showOnlinePaymentDetail(dataRes);
+                };
+            } else {
+                btnBukaQR.classList.add('hidden');
+            }
+        }
+
+    } else {
+        // --- SKENARIO 2: WALK-IN / OFFLINE ---
+        document.getElementById('modalWalkinTitle').innerText = 'Detail & Edit Reservasi';
+
+        if (isLunas) {
+            // Jika sudah bayar, matikan form
+            inputs.forEach(el => {
+                el.readOnly = true;
+                if(el.tagName === 'SELECT') el.disabled = true;
+                el.classList.add('bg-gray-100');
+            });
+            
+            setButtonState(btnSimpan, false, false, '', null, false);
+            setButtonState(btnSimpanCheckin, false, false, '', null, false);
+            
+            if (btnBukaQR) {
+                if (isQRIS) {
+                    btnBukaQR.classList.remove('hidden');
+                    btnBukaQR.innerText = 'Cek Pembayaran';
+                    btnBukaQR.onclick = function(e) {
+                        e.preventDefault();
+                        generateAndOpenPayment(); 
+                    };
+                } else {
+                    btnBukaQR.classList.add('hidden');
+                }
+            }
+        } else {
+            // Gunakan fungsi toggle untuk mengatur tombol reguler walk-in
+            toggleSimpanBtn(); 
+            if (btnBukaQR) {
+                btnBukaQR.innerText = "Buka Pembayaran";
+                btnBukaQR.onclick = function(e) {
+                    e.preventDefault();
+                    generateAndOpenPayment(); 
+                };
+            }
+        }
+    }
 }
 
 function toggleSimpanBtn() {
+    // Abaikan fungsi ini jika sedang membuka reservasi online (karena online sudah diatur khusus oleh bukaWalkInEdit)
+    let title = document.getElementById('modalWalkinTitle').innerText;
+    if (title.includes('Online')) return;
+
     let metodeEl = document.getElementById("metode_pembayaran");
     let metode = metodeEl ? metodeEl.value : "Tunai";
     
@@ -82,23 +249,27 @@ function toggleSimpanBtn() {
     let btnBukaQR = document.getElementById("btnBukaPembayaran");
     let editId = document.getElementById("edit_reservasi_id").value;
 
-    if (metode === "QRIS") {
-        if(btnCheckin) btnCheckin.classList.add("hidden");
+    let isEdit = editId !== "";
+    let btnSajaText = isEdit ? 'Simpan Perubahan' : 'Simpan';
 
-        if (editId !== "") {
-            if(btnSaja) btnSaja.classList.add("hidden");
+    // Set Default Untuk Walk-in
+    setButtonState(btnSaja, true, true, btnSajaText, () => showMyConfirm('Simpan Reservasi?', 'Simpan data reservasi ini?', 'amber', 'Ya, Simpan', 'walkInForm', 'simpan'), false);
+    setButtonState(btnCheckin, true, true, 'Simpan dan Check-in', () => showMyConfirm('Simpan & Check-in?', 'Simpan data dan proses Check-in?', 'emerald', 'Ya, Check-in', 'walkInForm', 'simpan_checkin'), true);
+
+    if (metode === "QRIS") {
+        setButtonState(btnCheckin, false, false, '', null, true); // Sembunyikan jika pilih QRIS walk-in
+        if (isEdit) {
+            setButtonState(btnSaja, false, false, '', null, false);
             if(btnBukaQR) btnBukaQR.classList.remove("hidden");
         } else {
-            if(btnSaja) btnSaja.classList.remove("hidden");
+            setButtonState(btnSaja, true, true, 'Simpan', () => showMyConfirm('Simpan Reservasi?', 'Simpan data reservasi ini?', 'amber', 'Ya, Simpan', 'walkInForm', 'simpan'), false);
             if(btnBukaQR) btnBukaQR.classList.add("hidden");
         }
     } else {
-        if(btnCheckin) btnCheckin.classList.remove("hidden");
-        if(btnSaja) btnSaja.classList.remove("hidden");
         if(btnBukaQR) btnBukaQR.classList.add("hidden");
     }
 
-    let isEdit = editId !== "";
+    // Disable input fields when editing Walk-in
     if(document.getElementById("nama_tamu")) document.getElementById("nama_tamu").readOnly = isEdit;
     if(document.getElementById("no_hp")) document.getElementById("no_hp").readOnly = isEdit;
     if(document.getElementById("no_ktp")) document.getElementById("no_ktp").readOnly = isEdit;
@@ -107,6 +278,16 @@ function toggleSimpanBtn() {
     if(document.getElementById("check_in")) document.getElementById("check_in").readOnly = isEdit;
     if(document.getElementById("check_out")) document.getElementById("check_out").readOnly = isEdit;
     if(document.getElementById("metode_pembayaran")) document.getElementById("metode_pembayaran").disabled = isEdit;
+    
+    // Beri gaya warna abu jika disabled
+    ['nama_tamu', 'no_hp', 'no_ktp', 'check_in', 'check_out'].forEach(id => {
+        let el = document.getElementById(id);
+        if (el) isEdit ? el.classList.add('bg-gray-100') : el.classList.remove('bg-gray-100');
+    });
+    ['kelas_kamar_id', 'kamar_id', 'metode_pembayaran'].forEach(id => {
+        let el = document.getElementById(id);
+        if (el) isEdit ? el.classList.add('bg-gray-100') : el.classList.remove('bg-gray-100');
+    });
 }
 
 // ==========================================
@@ -122,11 +303,8 @@ function formatDateTimeLocal(dateObj) {
 }
 
 function adjustDate(inputId, daysToAdd) {
-    let editId = document.getElementById("edit_reservasi_id").value;
-    if (editId !== "") return; 
-
     let input = document.getElementById(inputId);
-    if (!input || !input.value) return;
+    if (!input || !input.value || input.readOnly) return;
 
     let dateObj = new Date(input.value);
     dateObj.setDate(dateObj.getDate() + daysToAdd);
@@ -140,10 +318,7 @@ function syncMinCheckout() {
     let inInput = document.getElementById("check_in");
     let outInput = document.getElementById("check_out");
 
-    if (!inInput || !outInput || !inInput.value || !outInput.value) return;
-    
-    let editId = document.getElementById("edit_reservasi_id").value;
-    if (editId !== "") return; 
+    if (!inInput || !outInput || !inInput.value || !outInput.value || outInput.readOnly) return;
 
     let inDate = new Date(inInput.value);
     let outDate = new Date(outInput.value);
@@ -160,11 +335,8 @@ function syncMinCheckout() {
 // MODULE 3: ENGINE KALKULATOR HARGA & PREVIEW
 // ==========================================
 function adjustQty(inputId, change) {
-    let editId = document.getElementById("edit_reservasi_id").value;
-    if (editId !== "") return; 
-
     let inputField = document.getElementById(inputId);
-    if (!inputField) return;
+    if (!inputField || inputField.readOnly) return;
     
     let currentVal = parseInt(inputField.value) || 0;
     let newVal = currentVal + change;
@@ -255,7 +427,7 @@ async function filterKamarDanHitung() {
     if (document.getElementById("wi_durasi_malam")) document.getElementById("wi_durasi_malam").innerText = diffDays + " Malam";
     if (document.getElementById("wi_total_biaya_kiri")) document.getElementById("wi_total_biaya_kiri").innerText = "Rp " + (totalBiayaKamar + totalAddOn).toLocaleString("id-ID");
 
-    if (document.getElementById("edit_reservasi_id") && document.getElementById("edit_reservasi_id").value === "" && kamarSelect) {
+    if (!window.isInitializingEdit && kamarSelect) {
         kamarSelect.innerHTML = '<option value="">Memuat...</option>';
         if (kelasId && checkInVal && checkOutVal) {
             let res = await fetch(`/api/kamar-tersedia?kelas_id=${kelasId}&check_in=${checkInVal}&check_out=${checkOutVal}`);
@@ -273,6 +445,19 @@ async function filterKamarDanHitung() {
 // ==========================================
 let qrisTimerInterval;
 let paymentCheckerInterval;
+
+function showOnlinePaymentDetail(resData) {
+    let paymentData = resData.pembayaran || {};
+    let mockDataQR = {
+        success: true,
+        qr_image: paymentData.qr_image || '',
+        status: paymentData.status || 'pending',
+        invoice: paymentData.invoice || '',
+        expired_at: paymentData.expired_at || '',
+        reservasi: resData
+    };
+    populatePaymentPanel(mockDataQR);
+}
 
 async function generateAndOpenPayment() {
     let resId = document.getElementById("edit_reservasi_id").value;
@@ -298,7 +483,7 @@ async function generateAndOpenPayment() {
         alert("Server Error.");
     } finally {
         if (btnBukaQR) {
-            btnBukaQR.innerText = "Buka Pembayaran";
+            btnBukaQR.innerText = document.getElementById('modalWalkinTitle').innerText.includes('Online') ? "Cek Pembayaran" : "Buka Pembayaran";
             btnBukaQR.disabled = false;
         }
     }
@@ -317,6 +502,7 @@ function populatePaymentPanel(dataQR) {
         return;
     }
 
+    let isOnline = resData.tipe_reservasi === 'Online';
     let eks = typeof resData.ekstra === "string" ? JSON.parse(resData.ekstra) : resData.ekstra;
     let exBed = eks["Extra Bed"] || 0;
 
@@ -329,7 +515,7 @@ function populatePaymentPanel(dataQR) {
 
     document.getElementById("pay_kelas").innerText = `${namaKelas} (No. ${noKamar})`;
     document.getElementById("pay_bed").innerText = exBed > 0 ? `Ekstra Bed (x${exBed})` : "-";
-    document.getElementById("pay_invoice").innerText = "#" + dataQR.invoice;
+    document.getElementById("pay_invoice").innerText = dataQR.invoice ? "#" + dataQR.invoice : "-";
 
     let cin = new Date(resData.check_in); cin.setHours(0, 0, 0, 0);
     let cout = new Date(resData.check_out); cout.setHours(0, 0, 0, 0);
@@ -339,22 +525,84 @@ function populatePaymentPanel(dataQR) {
 
     document.getElementById("pay_total").innerText = "Total : Rp " + totalBiaya.toLocaleString("id-ID");
 
-    let qrisBox = document.getElementById("pay_qris_box");
-    let qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(dataQR.qr_image)}`;
+    let statusEl = document.getElementById("pay_status");
+    let statusPay = dataQR.status || "pending";
+    statusEl.innerText = statusPay.toUpperCase();
 
-    if (dataQR.status === "berhasil") {
-        renderSuccessQR(qrisBox);
+    if (statusPay === 'berhasil') {
+        statusEl.className = "font-black text-emerald-600 uppercase ml-1";
+    } else if (statusPay === 'gagal') {
+        statusEl.className = "font-black text-red-600 uppercase ml-1";
     } else {
-        qrisBox.innerHTML = `<img src="${qrUrl}" alt="QRIS" class="w-56 h-56 object-contain shadow-sm bg-white p-2 rounded-xl border border-gray-200">`;
-        document.getElementById("pay_timer_container").classList.remove("hidden");
-        startQrisCountdown(dataQR.expired_at, dataQR.invoice);
+        statusEl.className = "font-black text-[#E97609] uppercase ml-1 animate-pulse";
+    }
+
+    let qrisBox = document.getElementById("pay_qris_box");
+    let timerContainer = document.getElementById("pay_timer_container");
+    let btnDownload = document.getElementById("btnDownloadQr");
+    let qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(dataQR.qr_image || '')}`;
+
+    if (statusPay === "berhasil") {
+        renderSuccessQR(qrisBox);
+        timerContainer.classList.add("hidden");
+        if(btnDownload) btnDownload.classList.add("hidden");
+    } else if (statusPay === "gagal") {
+        qrisBox.innerHTML = `<div class="text-center"><span class="text-5xl">❌</span><p class="font-black text-red-600 mt-3 text-lg">Pembayaran Gagal / Kedaluwarsa</p></div>`;
+        timerContainer.classList.add("hidden");
+        if(btnDownload) btnDownload.classList.add("hidden");
+    } else {
+        if (isOnline) {
+            qrisBox.innerHTML = `
+                <div class="text-center w-full flex flex-col items-center">
+                    <div class="w-20 h-20 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <h4 class="font-black text-gray-700 text-lg mb-1">Diproses Oleh Tamu</h4>
+                    <p class="text-[11px] font-medium text-gray-500 max-w-[200px] text-center">QRIS hanya dapat di-generate dan diakses oleh tamu melalui halaman riwayat mereka.</p>
+                </div>`;
+            timerContainer.classList.add("hidden");
+            if(btnDownload) btnDownload.classList.add("hidden");
+            
+            if (dataQR.invoice) {
+                startPaymentCheckOnly(dataQR.invoice, resData.id);
+            }
+        } else {
+            qrisBox.innerHTML = `<img src="${qrUrl}" alt="QRIS" class="w-56 h-56 object-contain shadow-sm bg-white p-2 rounded-xl border border-gray-200">`;
+            timerContainer.classList.remove("hidden");
+            if(btnDownload) {
+                btnDownload.classList.remove("hidden");
+                btnDownload.onclick = () => downloadQrImage(qrUrl, dataQR.invoice);
+            }
+            startQrisCountdown(dataQR.expired_at, dataQR.invoice);
+        }
     }
 
     let modal = document.getElementById("paymentModal");
     modal.classList.remove("hidden");
     modal.classList.remove("pointer-events-none"); 
+}
 
-    document.getElementById("btnDownloadQr").onclick = () => downloadQrImage(qrUrl, dataQR.invoice);
+function startPaymentCheckOnly(invoice, resId) {
+    if (qrisTimerInterval) clearInterval(qrisTimerInterval);
+    if (paymentCheckerInterval) clearInterval(paymentCheckerInterval);
+
+    paymentCheckerInterval = setInterval(async () => {
+        try {
+            const res = await fetch(`/payment/check/${invoice}`);
+            const data = await res.json();
+            if (data.status === "berhasil") {
+                clearInterval(paymentCheckerInterval);
+                document.getElementById("pay_status").innerText = "BERHASIL LUNAS";
+                document.getElementById("pay_status").className = "font-black text-emerald-600 uppercase ml-1";
+                renderSuccessQR(document.getElementById("pay_qris_box"));
+            } else if (data.status === "gagal") {
+                clearInterval(paymentCheckerInterval);
+                document.getElementById("pay_status").innerText = "KEDALUWARSA / GAGAL";
+                document.getElementById("pay_status").className = "font-black text-red-600 uppercase ml-1";
+                document.getElementById("pay_qris_box").innerHTML = `<div class="text-center"><span class="text-5xl">❌</span><p class="font-black text-red-600 mt-3 text-lg">QRIS Kedaluwarsa</p></div>`;
+            }
+        } catch (e) {}
+    }, 5000);
 }
 
 function startQrisCountdown(expiredAtStr, invoice) {
@@ -382,7 +630,6 @@ function startQrisCountdown(expiredAtStr, invoice) {
             document.getElementById("pay_status").className = "font-black text-red-600 uppercase ml-1";
             document.getElementById("pay_qris_box").innerHTML = `<span class="text-5xl">❌</span><p class="font-black text-red-600 mt-3 text-lg">QRIS Kedaluwarsa</p>`;
             
-            // 🔥 INI DIA KUNCINYA: PAKSA BACKEND UNTUK MEMBATALKAN TAGIHAN DI PAKASIR SEKARANG JUGA!
             fetch(`/payment/check/${invoice}?timeout=1`);
         }
     }, 1000);
@@ -476,6 +723,11 @@ function showMyConfirm(title, message, theme, btnText, formId, actionVal = null)
         btn.className = 'text-white font-bold rounded-xl text-sm px-5 py-2.5 transition bg-emerald-600 hover:bg-emerald-700 cursor-pointer';
         iconContainer.className = 'w-16 h-16 rounded-full flex items-center justify-center border-4 border-white shadow-sm ring-2 bg-emerald-50 ring-emerald-100 mx-auto mb-4';
         iconSvg.className = 'w-10 h-10 text-emerald-500';
+        iconSvg.innerHTML = '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 13V8m0 8h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>';
+    } else if (theme === 'danger') {
+        btn.className = 'text-white font-bold rounded-xl text-sm px-5 py-2.5 transition bg-red-600 hover:bg-red-700 cursor-pointer';
+        iconContainer.className = 'w-16 h-16 rounded-full flex items-center justify-center border-4 border-white shadow-sm ring-2 bg-red-50 ring-red-100 mx-auto mb-4';
+        iconSvg.className = 'w-10 h-10 text-red-500';
         iconSvg.innerHTML = '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 13V8m0 8h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>';
     } else {
         btn.className = 'text-white font-bold rounded-xl text-sm px-5 py-2.5 transition bg-[#E97609] hover:bg-[#c96307] cursor-pointer';

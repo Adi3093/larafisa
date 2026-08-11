@@ -51,7 +51,8 @@
 
 <body class="bg-gray-50 antialiased">
 
-    <div id="toast-container" class="fixed top-20 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+    <div id="toast-container" class="fixed top-24 right-5 flex flex-col gap-3 pointer-events-none"
+        style="z-index: 999999;"></div>
 
     <nav class="fixed top-0 z-50 w-full bg-white border-b border-amber-200 shadow-sm">
         <div class="px-3 py-3 lg:px-5 lg:pl-3">
@@ -148,12 +149,15 @@
                             <path fill-rule="evenodd"
                                 d="M5 5a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1h1a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1h2a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h1zm10 6.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"
                                 clip-rule="evenodd" />
-                        </svg><span class="flex-1 ms-3 whitespace-nowrap">Data Reservasi</span>@php $pendingReq = \App\Models\Reservasi::where('status_reservasi', 'Menunggu Konfirmasi')->count(); @endphp
-                        @if ($pendingReq > 0)
-                            <span
-                                class="inline-flex items-center justify-center w-5 h-5 ms-3 text-xs font-medium text-white bg-red-500 rounded-full animate-pulse">{{ $pendingReq }}</span>
-                        @endif
-                    </a></li>
+                        </svg><span class="flex-1 ms-3 whitespace-nowrap">Data Reservasi</span>
+                        @php $pendingReq = \App\Models\Reservasi::where('status_reservasi', 'Menunggu Konfirmasi')->count(); @endphp
+
+                        <span id="sidebar-badge-count"
+                            class="inline-flex items-center justify-center w-5 h-5 ms-3 text-xs font-medium text-white bg-red-500 rounded-full {{ $pendingReq > 0 ? 'animate-pulse' : 'hidden' }}">
+                            {{ $pendingReq }}
+                        </span>
+                    </a>
+                </li>
                 <li><a href="{{ route('checkinout') }}"
                         class="flex items-center p-2 rounded-lg group transition {{ request()->is('checkinout') ? 'bg-amber-50 text-amber-700 font-bold border border-amber-200' : 'text-gray-600 hover:bg-amber-50 hover:text-amber-700' }}"><svg
                             class="w-5 h-5 transition duration-75 {{ request()->is('dtamu') ? 'text-amber-700' : 'text-gray-400 group-hover:text-amber-600' }}"
@@ -262,7 +266,7 @@
                         class="hidden w-16 h-16 bg-green-100 rounded-full flex items-center justify-center border-4 border-white shadow-sm ring-2 ring-green-100 transition-transform duration-500 scale-0">
                         <svg class="w-10 h-10 text-green-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                             <path fill="currentColor"
-                                d="M10.5 15.25A.74.74 0 0 1 10 15l-3-3a.75.75 0 0 1 1-1l2.47 2.47L19 5a.75.75 0 0 1 1-1l-9 9a.74.74 0 0 1-.5.25Z" />
+                                d="M10.5 15.25A.74.74 0 0 1 10 15l-3-3a.75.75 0 0 1 1-1l2.47 2.47L19 5a.75.75 0 0 1 1 1l-9 9a.74.74 0 0 1-.5.25Z" />
                             <path fill="currentColor"
                                 d="M12 21a9 9 0 0 1-7.87-4.66a8.67 8.67 0 0 1-1.07-3.41a9 9 0 0 1 4.6-8.81a8.67 8.67 0 0 1 3.41-1.07a8.86 8.86 0 0 1 3.55.34a.75.75 0 1 1-.43 1.43a7.62 7.62 0 0 0-3-.28a7.43 7.43 0 0 0-2.84.89a7.5 7.5 0 0 0-2.2 1.84a7.42 7.42 0 0 0-1.64 5.51a7.43 7.43 0 0 0 .89 2.84a7.5 7.5 0 0 0 1.84 2.2a7.42 7.42 0 0 0 5.51 1.64a7.43 7.43 0 0 0 2.84-.89a7.5 7.5 0 0 0 2.2-1.84a7.42 7.42 0 0 0 1.64-5.51a.75.75 0 1 1 1.57-.15a9 9 0 0 1-4.61 8.81A8.67 8.67 0 0 1 12.93 21H12Z" />
                         </svg>
@@ -325,71 +329,122 @@
             let icon = '',
                 title = '',
                 desc = '',
-                bgColor = '',
-                textColor = '';
+                borderClass = '',
+                textClass = '';
 
             if (type === 'reservasi') {
                 icon = '🛎️';
-                title = 'Reservasi Online Baru!';
-                desc = customName ? `Ada pesanan kamar baru dari <b>${customName}</b> via Website.` :
+                title = 'Reservasi Baru!';
+                desc = customName ? `Pesanan kamar baru dari <b>${customName}</b> via Website.` :
                     'Ada pesanan kamar baru via Website.';
-                bgColor = 'bg-blue-50';
-                textColor = 'text-blue-900';
+                borderClass = 'border-l-4 border-blue-500';
+                textClass = 'text-blue-700';
             } else if (type === 'checkin') {
                 icon = '🔑';
-                title = 'Waktu Check-In Tiba';
+                title = 'Waktu Check-In';
                 desc = 'Ada jadwal kedatangan tamu hari ini.';
-                bgColor = 'bg-emerald-50';
-                textColor = 'text-emerald-900';
+                borderClass = 'border-l-4 border-emerald-500';
+                textClass = 'text-emerald-700';
             } else if (type === 'checkout') {
                 icon = '⏰';
-                title = 'Peringatan Check-Out';
+                title = 'Batas Check-Out';
                 desc = 'Ada tamu yang telah melewati batas waktu inap.';
-                bgColor = 'bg-rose-50';
-                textColor = 'text-rose-900';
+                borderClass = 'border-l-4 border-rose-500';
+                textClass = 'text-rose-700';
             }
 
+            // PERBAIKAN PENTING: Gunakan bg-white standar tanpa background tailwind arbitrer untuk mencegah di-purge compiler
             toast.className =
-                `flex items-start gap-3 p-4 w-72 md:w-80 rounded-2xl shadow-xl border border-gray-200 pointer-events-auto toast-slide-in ${bgColor}`;
+                `flex items-start gap-3 p-4 w-72 md:w-80 bg-white rounded-xl shadow-2xl pointer-events-auto toast-slide-in ${borderClass}`;
             toast.innerHTML =
-                `<div class="text-2xl">${icon}</div><div class="flex-1"><h4 class="text-sm font-black ${textColor}">${title}</h4><p class="text-xs text-gray-600 mt-1 leading-relaxed">${desc}</p></div>`;
+                `<div class="text-2xl">${icon}</div><div class="flex-1"><h4 class="text-sm font-black ${textClass}">${title}</h4><p class="text-xs text-gray-600 mt-1 leading-relaxed">${desc}</p></div>`;
 
             container.appendChild(toast);
+
             setTimeout(() => {
                 toast.classList.replace('toast-slide-in', 'toast-fade-out');
                 setTimeout(() => toast.remove(), 400);
             }, 4000);
         }
 
+        // ENGINE DETEKSI RESERVASI REAL-TIME & AUTO BADGE COUNTER (SUPER AMAN)
+        let previousPendingCount = null; // Menyimpan status jumlah sebelumnya
+
         setInterval(async () => {
-            if (localStorage.getItem('notif_reservasi') === 'true') {
-                try {
-                    let response = await fetch('/api/cek-notifikasi', {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json'
-                        }
-                    });
-                    if (response.status === 401 || response.status === 419) return;
-                    let data = await response.json();
+            try {
+                let response = await fetch('/api/cek-notifikasi', {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+                if (response.status === 401 || response.status === 419) return;
+                let data = await response.json();
+
+                let shouldReload = false; // Penanda apakah perlu auto-refresh
+
+                // 1. UPDATE ANGKA BADGE DI SIDEBAR SECARA REAL-TIME DARI DATABASE
+                const badge = document.getElementById('sidebar-badge-count');
+                if (badge) {
+                    if (data.total_pending > 0) {
+                        badge.innerText = data.total_pending;
+                        badge.classList.remove('hidden');
+                        badge.classList.add('animate-pulse');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+
+                // 2. DETEKSI PERUBAHAN JUMLAH (Entah Nambah atau Berkurang/Dihapus Tamu)
+                if (previousPendingCount !== null && previousPendingCount !== data.total_pending) {
+                    shouldReload = true;
+                }
+                previousPendingCount = data.total_pending;
+
+                // 3. PROSES MEMUNCULKAN NOTIFIKASI TOAST MELAYANG UNTUK PESANAN BARU
+                let isNotifActive = localStorage.getItem('notif_reservasi');
+                if (isNotifActive === null || isNotifActive === 'true') {
                     if (data.latest_id > 0) {
-                        let lastSavedId = localStorage.getItem('last_notified_res_id') || 0;
-                        if (data.latest_id > parseInt(lastSavedId)) {
-                            showGlobalToast('reservasi', data.nama_tamu);
-                            localStorage.setItem('last_notified_res_id', data.latest_id);
+                        let lastSavedId = localStorage.getItem('last_notified_res_id') || "0";
+
+                        // Hanya panggil toast jika ada ID data yang lebih baru
+                        if (parseInt(data.latest_id) > parseInt(lastSavedId)) {
+                            showGlobalToast('reservasi', data.nama_tamu); // Munculkan Toast kustom
+                            localStorage.setItem('last_notified_res_id', data
+                                .latest_id); // Kunci ID agar tidak spam
+                            shouldReload = true;
                         }
                     }
-                } catch (error) {
-                    console.error("Gagal mendeteksi reservasi baru:", error);
+                } else {
+                    // Walau toggle notifikasi mati, tetap simpan ID agar sinkron
+                    if (data.latest_id > 0) {
+                        let lastSavedId = localStorage.getItem('last_notified_res_id') || "0";
+                        if (parseInt(data.latest_id) > parseInt(lastSavedId)) {
+                            localStorage.setItem('last_notified_res_id', data.latest_id);
+                            shouldReload = true;
+                        }
+                    }
                 }
+
+                // 4. AUTO REFRESH HALAMAN JIKA ADA PERUBAHAN & SEDANG BUKA MENU RESERVASI
+                if (shouldReload && window.location.pathname.includes('/reservasi')) {
+                    // Beri jeda 3 detik agar animasi Toast sempat muncul dan terbaca oleh Admin!
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
+                }
+
+            } catch (error) {
+                console.error("Gagal mendeteksi update real-time:", error);
             }
-        }, 10000);
+        }, 4000); // Polling setiap 4 detik
+
 
         // LOGIKA MODAL CONFIRM NATIVE JS (ANTI ERROR)
         let formToSubmit = null;
 
         function openCustomConfirm(title, message, theme, btnText, formId, hiddenInputName = null, hiddenInputValue =
-        null) {
+            null) {
             formToSubmit = document.getElementById(formId);
 
             // Validasi Input HTML Bawaan Browser

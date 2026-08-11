@@ -235,7 +235,29 @@ class ReservasiController extends Controller
 
     public function update(Request $request, $id)
     {
-        $reservasi = Reservasi::findOrFail($id);
+        $reservasi = Reservasi::with('pembayaran')->findOrFail($id);
+        $actionType = $request->input('action_type', 'simpan'); // Mengambil value tombol yang ditekan
+
+        // JIKA RESERVASI ONLINE: Aksi tombolnya adalah Konfirmasi
+        if ($reservasi->tipe_reservasi === 'Online') {
+            $newStatus = ($actionType === 'simpan_checkin') ? 'Check-In' : 'Terkonfirmasi';
+            $reservasi->update(['status_reservasi' => $newStatus]);
+
+            // Jika langsung check-in, update status kamar
+            if ($newStatus === 'Check-In' && $reservasi->kamar) {
+                $reservasi->kamar->update(['status' => 'Terpakai']);
+                return back()->with('success', 'Reservasi Online disetujui dan Tamu berhasil Check-In!');
+            }
+            return back()->with('success', 'Reservasi Online berhasil Dikonfirmasi!');
+        }
+
+        // JIKA RESERVASI WALK-IN: Validasi & Update Data
+        // Validasi keamanan: Jangan izinkan update jika pembayaran sudah Lunas/QRIS Tergenerate
+        $pembayaran = $reservasi->pembayaran;
+        if ($pembayaran && ($pembayaran->status === 'berhasil' || !empty($pembayaran->qr_image))) {
+            return back()->with('error', 'Gagal! Reservasi ini sudah dibayar atau QRIS sudah di-generate. Data tidak dapat diubah.');
+        }
+
         $request->validate([
             'nama_tamu' => 'required|string|max:45',
             'no_hp' => 'required|string|max:15',
@@ -246,7 +268,7 @@ class ReservasiController extends Controller
         $checkIn = Carbon::parse($request->check_in)->format('Y-m-d H:i:s');
         $checkOut = Carbon::parse($request->check_out)->format('Y-m-d H:i:s');
 
-        // BUG 1 FIX: Pengecekan Tabrakan di fitur Update
+        // Pengecekan Tabrakan di fitur Update
         $isTabrakan = Reservasi::where('kamar_id', $request->kamar_id)
             ->where('id', '!=', $id)
             ->whereIn('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi', 'Check-In'])
@@ -259,12 +281,38 @@ class ReservasiController extends Controller
             return back()->with('error', 'Gagal update! Kamar sudah terisi oleh jadwal tamu lain pada jam tersebut.');
         }
 
-        $dataToUpdate = $request->all();
+        $dataToUpdate = $request->except(['_token', '_method', 'action_type']);
         $dataToUpdate['check_in'] = $checkIn;
         $dataToUpdate['check_out'] = $checkOut;
 
+        // Cek jika metode pembayaran diubah ke QRIS
+        $ekstra = is_array($reservasi->ekstra) ? $reservasi->ekstra : json_decode($reservasi->ekstra, true);
+        if ($request->has('metode_pembayaran')) {
+            $ekstra['Metode Pembayaran'] = $request->metode_pembayaran;
+            $dataToUpdate['ekstra'] = $ekstra;
+
+            // Jika berubah jadi QRIS, status tidak boleh langsung terkonfirmasi
+            if ($request->metode_pembayaran === 'QRIS') {
+                $dataToUpdate['status_reservasi'] = 'Menunggu Konfirmasi';
+            }
+        }
+
+        // Tentukan status jika tombol yang diklik adalah "Simpan & Check-in"
+        if ($actionType === 'simpan_checkin') {
+            $dataToUpdate['status_reservasi'] = 'Check-In';
+            // Update status kamar jadi terpakai
+            if (isset($request->kamar_id)) {
+                $kamarId = $request->kamar_id;
+                Kamar::find($kamarId)->update(['status' => 'Terpakai']);
+            } else {
+                $reservasi->kamar->update(['status' => 'Terpakai']);
+            }
+        }
+
         $reservasi->update($dataToUpdate);
-        return back()->with('success', 'Data reservasi ' . $reservasi->no_reservasi . ' berhasil diupdate!');
+
+        $msg = ($actionType === 'simpan_checkin') ? 'Reservasi diupdate dan Check-In berhasil!' : 'Data reservasi berhasil diupdate!';
+        return back()->with('success', $msg);
     }
 
     public function konfirmasi(Request $request, $id)
@@ -290,13 +338,13 @@ class ReservasiController extends Controller
             ->where('status_reservasi', 'Menunggu Konfirmasi')
             ->orderBy('id', 'desc')
             ->first();
-
+        $totalPending = \App\Models\Reservasi::where('status_reservasi', 'Menunggu Konfirmasi')->count();
         return response()->json([
             'latest_id' => $latestReservasi ? $latestReservasi->id : 0,
             'nama_tamu' => $latestReservasi ? $latestReservasi->nama_tamu : '',
+            'total_pending' => $totalPending
         ]);
     }
-
     public function exportCsv()
     {
         return "Fitur CSV";
