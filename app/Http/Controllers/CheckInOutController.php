@@ -108,8 +108,9 @@ class CheckInOutController extends Controller
             Kamar::where('id', $reservasi->kamar_id)->update(['status' => 'Tersedia']);
         }
 
+        // PERUBAHAN: Flash Session untuk Trigger Auto-Print Pop-Up
         if ($request->has('print_struk') && $request->print_struk == '1') {
-            return redirect()->route('checkinout.print', $reservasi->id);
+            session()->flash('print_struk_id', $reservasi->id);
         }
 
         return back()->with('success', 'Proses Check-Out berhasil! Waktu pulang aktual tercatat: ' . Carbon::now()->format('d M Y H:i') . ' WIB.');
@@ -177,7 +178,6 @@ class CheckInOutController extends Controller
             return back()->with('error', 'Gagal memperpanjang! Tanggal Check-Out baru tidak boleh lebih awal dari waktu Check-In.');
         }
 
-        // BUG 1 FIX: Pengecekan Tabrakan saat extend kamar
         $isTabrakan = Reservasi::where('kamar_id', $reservasi->kamar_id)
             ->where('id', '!=', $id)
             ->whereIn('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi', 'Check-In'])

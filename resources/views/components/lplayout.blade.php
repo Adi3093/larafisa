@@ -84,21 +84,33 @@
 
                         <div class="relative" x-data="{
                             openNotif: false,
-                            unreadCount: {{ auth()->user()->unreadNotifications->count() ?? 0 }},
+                            unreadCount: {{ auth()->check() ? auth()->user()->unreadNotifications->count() : 0 }},
                             notifications: [],
                             async fetchNotif() {
+                                // PERBAIKAN 1: Hentikan fungsi jika tidak ada user yang login
+                                @if(!auth()->check())
+                                    return;
+                                @endif
+
                                 try {
-                                    let response = await fetch('/api/notifikasi-terbaru');
-                                    let data = await response.json();
-                                    this.unreadCount = data.unreadCount;
-                                    this.notifications = data.notifications;
+                                    // PERBAIKAN 2: Tambahkan Headers agar Laravel mengenali ini sebagai AJAX Request
+                                    let response = await fetch('/api/notifikasi-terbaru', {
+                                        headers: {
+                                            'X-Requested-With': 'XMLHttpRequest',
+                                            'Accept': 'application/json'
+                                        }
+                                    });
+                                    
+                                    if (response.ok) {
+                                        let data = await response.json();
+                                        this.unreadCount = data.unreadCount;
+                                        this.notifications = data.notifications;
+                                    }
                                 } catch (e) {
                                     console.error('Gagal mengambil data notifikasi:', e);
                                 }
                             }
-                        }" x-init="fetchNotif();
-                        setInterval(() => fetchNotif(), 10000)"
-                            @click.outside="openNotif = false">
+                        }" x-init="fetchNotif(); setInterval(() => fetchNotif(), 10000)" @click.outside="openNotif = false">
 
                             <button @click="openNotif = !openNotif"
                                 class="relative p-1.5 rounded-full transition focus:outline-none {{ $isSolidBg ? 'hover:bg-white/20' : 'hover:bg-black/10' }}">

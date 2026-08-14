@@ -73,7 +73,8 @@
     </style>
 </head>
 
-<body onload="window.print(); setTimeout(() => window.location.href='{{ route('checkinout') }}', 1000);">
+<!-- PERUBAHAN: Mengubah window.location.href menjadi window.close() -->
+<body onload="window.print(); setTimeout(function(){ window.close(); }, 500);">
 
     <div class="text-center mb-2">
         <h2 style="margin:0; font-size: 16px;">FISA HOTEL</h2>

@@ -82,10 +82,14 @@
                         class="flex items-center gap-2 px-5 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl font-bold text-sm hover:bg-emerald-100 transition shadow-sm">
                         📊 CSV
                     </a>
-                    <button type="button" id="btnPrintLaporan"
-                        class="flex items-center gap-2 px-6 py-2.5 bg-gray-800 text-white rounded-xl font-bold text-sm hover:bg-gray-900 transition shadow-md">
-                        🖨️ Print Laporan
-                    </button>
+                    
+                    <!-- PERUBAHAN: Tombol Print dibungkus form dan dikaitkan dengan Modal Global -->
+                    <form id="formPrintLaporan" action="{{ route('pendapatan.export', array_merge(['format' => 'print'], request()->query())) }}" method="GET" target="_blank" class="inline">
+                        <button type="button" onclick="openCustomConfirm('Cetak Laporan?', 'Apakah Anda ingin mencetak dokumen laporan pendapatan ini sekarang?', 'amber', 'Ya, Cetak', 'formPrintLaporan')"
+                            class="flex items-center gap-2 px-6 py-2.5 bg-gray-800 text-white rounded-xl font-bold text-sm hover:bg-gray-900 transition shadow-md cursor-pointer">
+                            🖨️ Print Laporan
+                        </button>
+                    </form>
                 </div>
             </div>
 
@@ -147,9 +151,7 @@
                             $kamarTotal = $hargaKamar * $diffDays;
 
                             $ekstra = is_array($res->ekstra) ? $res->ekstra : json_decode($res->ekstra, true) ?? [];
-                            $bed = ($ekstra['Extra Bed'] ?? 0) * 100000;
-                            $selimut = ($ekstra['Extra Selimut'] ?? 0) * 25000;
-                            $ekstraTotal = $bed + $selimut;
+                            $ekstraTotal = ($ekstra['Extra Bed'] ?? 0) * 50000;
 
                             $totalBaris = $kamarTotal + $ekstraTotal;
 

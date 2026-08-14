@@ -51,10 +51,9 @@ class PendapatanController extends Controller
             $hargaKamar = $res->kamar->kelasKamar->harga ?? 0;
 
             $ekstra = is_string($res->ekstra) ? json_decode($res->ekstra, true) : $res->ekstra;
-            $bed = ($ekstra['Extra Bed'] ?? 0) * 100000;
-            $selimut = ($ekstra['Extra Selimut'] ?? 0) * 25000;
+            $bed = ($ekstra['Extra Bed'] ?? 0) * 50000;
 
-            $totalPendapatan += ($hargaKamar * $diffDays) + $bed + $selimut;
+            $totalPendapatan += ($hargaKamar * $diffDays) + $bed;
         }
 
         $totalTamu = $allData->count();
@@ -112,15 +111,18 @@ class PendapatanController extends Controller
             $hargaKamar = $res->kamar->kelasKamar->harga ?? 0;
 
             $ekstra = is_array($res->ekstra) ? $res->ekstra : (json_decode($res->ekstra, true) ?? []);
-            $bed = ($ekstra['Extra Bed'] ?? 0) * 100000;
-            $selimut = ($ekstra['Extra Selimut'] ?? 0) * 25000;
+            $bed = ($ekstra['Extra Bed'] ?? 0) * 50000;
 
-            $totalPendapatan += ($hargaKamar * $diffDays) + $bed + $selimut;
+            $totalPendapatan += ($hargaKamar * $diffDays) + $bed;
         }
 
         if ($format === 'pdf') {
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('dashboard.pendapatanpdf', compact('reservasis', 'totalPendapatan', 'teksPeriode'));
             return $pdf->download('Laporan_Pendapatan_FisaHotel.pdf');
+        } elseif ($format === 'print') {
+            // PERUBAHAN: Jika formatnya 'print', maka return view sebagai halaman HTML dengan flag "isPrint"
+            $isPrint = true;
+            return view('dashboard.pendapatanpdf', compact('reservasis', 'totalPendapatan', 'teksPeriode', 'isPrint'));
         } elseif ($format === 'csv') {
             $fileName = 'Laporan_Pendapatan_FisaHotel.csv';
             $headers = [
@@ -131,7 +133,6 @@ class PendapatanController extends Controller
                 "Expires"             => "0"
             ];
 
-            // Header yang sudah dipisah rapi untuk Microsoft Excel
             $columns = [
                 'ID Reservasi',
                 'Tanggal Pelunasan',
@@ -158,9 +159,8 @@ class PendapatanController extends Controller
                     $kamarTotal = $hargaKamar * $diffDays;
 
                     $ekstra = is_array($res->ekstra) ? $res->ekstra : (json_decode($res->ekstra, true) ?? []);
-                    $bed = ($ekstra['Extra Bed'] ?? 0) * 100000;
-                    $selimut = ($ekstra['Extra Selimut'] ?? 0) * 25000;
-                    $ekstraTotal = $bed + $selimut;
+                    $bed = ($ekstra['Extra Bed'] ?? 0) * 50000;
+                    $ekstraTotal = $bed;
 
                     $totalBaris = $kamarTotal + $ekstraTotal;
 

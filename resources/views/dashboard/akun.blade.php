@@ -35,7 +35,7 @@
     <div class="flex items-end pl-0 sm:pl-2 flex-wrap gap-y-2 relative z-10">
         <a href="{{ route('akun', ['tab' => 'admin']) }}"
             class="{{ $tab === 'admin' ? 'px-5 sm:px-6 py-3 bg-white border border-amber-200 border-b-white rounded-t-xl font-bold text-amber-700 text-xs sm:text-sm relative z-10 -mb-[1px] shadow-sm shadow-white transition' : 'px-5 sm:px-6 py-2.5 bg-amber-50 border border-amber-200 rounded-t-xl font-bold text-amber-800/60 hover:text-amber-700 hover:bg-amber-100 text-xs sm:text-sm transition relative z-0 ml-1' }}">
-            Akun Admin & Resepsionis
+            Akun Staf & Owner
         </a>
         <a href="{{ route('akun', ['tab' => 'tamu']) }}"
             class="{{ $tab === 'tamu' ? 'px-5 sm:px-6 py-3 bg-white border border-amber-200 border-b-white rounded-t-xl font-bold text-amber-700 text-xs sm:text-sm relative z-10 -mb-[1px] shadow-sm shadow-white transition ml-1' : 'px-5 sm:px-6 py-2.5 bg-amber-50 border border-amber-200 rounded-t-xl font-bold text-amber-800/60 hover:text-amber-700 hover:bg-amber-100 text-xs sm:text-sm transition relative z-0 ml-1' }}">
@@ -147,7 +147,7 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <span
-                                        class="inline-flex items-center justify-center rounded-lg {{ $user->role === 'tamu' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-blue-50 text-blue-700 border-blue-200' }} border px-3 py-1 text-[10px] font-bold uppercase tracking-wider">
+                                        class="inline-flex items-center justify-center rounded-lg {{ match($user->role) { 'tamu' => 'bg-orange-50 text-orange-700 border-orange-200', 'owner' => 'bg-emerald-50 text-emerald-700 border-emerald-200', default => 'bg-blue-50 text-blue-700 border-blue-200' } }} border px-3 py-1 text-[10px] font-bold uppercase tracking-wider">
                                         {{ $user->role }}
                                     </span>
                                 </td>
@@ -261,6 +261,8 @@
                                 class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm bg-white transition">
                                 <option value="admin" {{ $tab === 'admin' ? 'selected' : '' }}>Administrator</option>
                                 <option value="resepsionis">Staf Resepsionis</option>
+                                <!-- PENAMBAHAN: Opsi Role Owner -->
+                                <option value="owner">Pemilik (Owner)</option>
                                 <option value="tamu" {{ $tab === 'tamu' ? 'selected' : '' }}>Tamu Pengunjung
                                 </option>
                             </select>

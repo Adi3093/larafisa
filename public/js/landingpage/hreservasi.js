@@ -1,19 +1,13 @@
-// ==========================================
 // MODULE 1: GLOBAL STATE VARIABLES
-// ==========================================
 let currentHarga = 0;
 
-// ==========================================
 // MODULE 2: INITIALIZATION ON LOAD
-// ==========================================
 document.addEventListener("DOMContentLoaded", () => {
     updateUIKamar();
     syncMinCheckout();
 });
 
-// ==========================================
 // MODULE 3: GUEST & CAPACITY MANAGEMENT
-// ==========================================
 function adjustAnggota(val) {
     let input = document.getElementById("jumlah_anggota");
     let current = parseInt(input.value) || 1;
@@ -26,36 +20,79 @@ function adjustAnggota(val) {
 }
 
 function checkKapasitas() {
-    let select = document.getElementById("kelas_kamar_id");
-    let wrapper = document.getElementById("anggota_wrapper");
-    let warningIcon = document.getElementById("kapasitas_warning");
+    let tooltip = document.getElementById("kapasitas_tooltip");
+    if (!tooltip) return;
 
-    if (select.value === "") {
-        wrapper.classList.remove("border-red-500", "bg-red-50");
-        wrapper.classList.add("border-amber-300", "bg-white");
-        warningIcon.classList.add("hidden");
-        return;
-    }
+    let anggota = parseInt(document.getElementById("jumlah_anggota").value) || 1;
 
-    let option = select.options[select.selectedIndex];
-    let kapasitas = parseInt(option.getAttribute("data-kapasitas")) || 2;
-    let anggota =
-        parseInt(document.getElementById("jumlah_anggota").value) || 1;
-
-    if (anggota > kapasitas) {
-        wrapper.classList.add("border-red-500", "bg-red-50");
-        wrapper.classList.remove("border-amber-300", "bg-white");
-        warningIcon.classList.remove("hidden");
+    // HANYA MENGATUR TOOLTIP: Tampilkan tooltip otomatis jika anggota lebih dari 3 (mulai angka 4)
+    if (anggota > 3) {
+        showWarningTooltip();
     } else {
-        wrapper.classList.remove("border-red-500", "bg-red-50");
-        wrapper.classList.add("border-amber-300", "bg-white");
-        warningIcon.classList.add("hidden");
+        hideWarningTooltip();
+    }
+    
+    // Ikon (!) tidak diapa-apakan di sini karena sudah diset selalu muncul di HTML (class 'flex')
+}
+
+// LOGIKA TOGGLE TOOLTIP KLIK MANUAL
+function toggleWarningTooltip(e) {
+    if(e) e.stopPropagation();
+    let tooltip = document.getElementById("kapasitas_tooltip");
+    if (!tooltip) return;
+    if (tooltip.classList.contains("opacity-0")) {
+        showWarningTooltip();
+    } else {
+        hideWarningTooltip();
     }
 }
 
-// ==========================================
+function showWarningTooltip() {
+    let tooltip = document.getElementById("kapasitas_tooltip");
+    if (tooltip) {
+        tooltip.classList.remove("opacity-0", "invisible");
+        tooltip.classList.add("opacity-100", "visible");
+    }
+}
+
+function hideWarningTooltip() {
+    let tooltip = document.getElementById("kapasitas_tooltip");
+    if (tooltip) {
+        tooltip.classList.add("opacity-0", "invisible");
+        tooltip.classList.remove("opacity-100", "visible");
+    }
+}
+
+function toggleInfoTooltip(e) {
+    if(e) e.stopPropagation();
+    let tooltip = document.getElementById("info_tooltip");
+    if (!tooltip) return;
+    if (tooltip.classList.contains("opacity-0")) {
+        tooltip.classList.remove("opacity-0", "invisible");
+        tooltip.classList.add("opacity-100", "visible");
+    } else {
+        tooltip.classList.add("opacity-0", "invisible");
+        tooltip.classList.remove("opacity-100", "visible");
+    }
+}
+
+// Tutup Tooltip jika tamu nge-klik bagian kosong di luar Ikon
+document.addEventListener('click', function(e) {
+    let warnBtn = document.getElementById("kapasitas_warning");
+    let warnTooltip = document.getElementById("kapasitas_tooltip");
+    if (warnBtn && warnTooltip && !warnBtn.contains(e.target) && !warnTooltip.contains(e.target)) {
+        hideWarningTooltip();
+    }
+
+    let infoTooltip = document.getElementById("info_tooltip");
+    let infoBtn = document.getElementById("info_btn");
+    if (infoBtn && infoTooltip && !infoBtn.contains(e.target) && !infoTooltip.contains(e.target)) {
+        infoTooltip.classList.add("opacity-0", "invisible");
+        infoTooltip.classList.remove("opacity-100", "visible");
+    }
+});
+
 // MODULE 4: DATE & CALENDAR MANAGEMENT
-// ==========================================
 function adjustDate(inputId, daysToAdd) {
     let input = document.getElementById(inputId);
     if (!input.value) return;
@@ -100,9 +137,7 @@ function syncMinCheckout() {
     }
 }
 
-// ==========================================
 // MODULE 5: EXTRA SERVICES & PRICING LOGIC
-// ==========================================
 function adjustEkstra(id, val) {
     let input = document.getElementById(id);
     let current = parseInt(input.value) || 0;
@@ -142,9 +177,7 @@ function hitungTotal() {
         "Rp " + total.toLocaleString("id-ID");
 }
 
-// ==========================================
 // MODULE 6: UI UPDATE & LIVE PREVIEW KAMAR
-// ==========================================
 function updateUIKamar() {
     let select = document.getElementById("kelas_kamar_id");
     let btnLihat = document.getElementById("btnLihatKamar");
@@ -154,10 +187,12 @@ function updateUIKamar() {
 
     if (select.value === "") {
         btnLihat.classList.add("hidden");
+        btnLihat.classList.remove("flex");
         contentDesk.classList.add("hidden");
         placeholderDesk.classList.remove("hidden");
     } else {
         btnLihat.classList.remove("hidden");
+        btnLihat.classList.add("flex");
         placeholderDesk.classList.add("hidden");
         contentDesk.classList.remove("hidden");
 
@@ -206,9 +241,7 @@ function updateUIKamar() {
     hitungTotal();
 }
 
-// ==========================================
 // EXPORT TO GLOBAL WINDOW FOR BLADE
-// ==========================================
 window.adjustAnggota = adjustAnggota;
 window.checkKapasitas = checkKapasitas;
 window.adjustDate = adjustDate;
@@ -216,3 +249,5 @@ window.syncMinCheckout = syncMinCheckout;
 window.adjustEkstra = adjustEkstra;
 window.hitungTotal = hitungTotal;
 window.updateUIKamar = updateUIKamar;
+window.toggleWarningTooltip = toggleWarningTooltip;
+window.toggleInfoTooltip = toggleInfoTooltip;

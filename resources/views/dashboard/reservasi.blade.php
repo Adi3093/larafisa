@@ -1,5 +1,4 @@
 <x-dblayout>
-    <!-- MENGHILANGKAN PANAH BAWAAN BROWSER & STYLING DATETIME -->
     <style>
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -12,7 +11,7 @@
         <p class="text-sm text-gray-500 mt-1">Kelola data reservasi walk-in, persetujuan online, dan pelacakan riwayat.</p>
     </div>
 
-    <!-- STATISTIK CARD -->
+    <!-- MODULE: STATISTIK CARD (Tersedia untuk semua) -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 relative z-10">
         <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
             <div class="bg-emerald-100 p-3 rounded-xl text-emerald-600">
@@ -43,6 +42,7 @@
         </div>
     </div>
 
+    <!-- MODULE: ALERTS -->
     @if (session('success'))
         <div class="mb-6 flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl shadow-sm">
             <svg class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -56,22 +56,29 @@
         </div>
     @endif
 
-    <!-- NAVIGASI TAB -->
+    <!-- MODULE: NAVIGASI TAB (DIKUNCI BERDASARKAN ROLE) -->
     <div class="relative z-10 flex gap-2 sm:gap-4 mb-4">
-        <a href="{{ route('reservasi', ['tab' => 'aktif']) }}" class="px-5 py-2.5 rounded-t-xl text-sm font-bold border-t border-l border-r transition {{ $tab === 'aktif' ? 'bg-[#E97609] text-white border-[#E97609] shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50' }}">Reservasi Aktif</a>
-        <a href="{{ route('reservasi', ['tab' => 'riwayat']) }}" class="px-5 py-2.5 rounded-t-xl text-sm font-bold border-t border-l border-r transition {{ $tab === 'riwayat' ? 'bg-[#E97609] text-white border-[#E97609] shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50' }}">Riwayat Reservasi</a>
+        @if(in_array($role, ['admin', 'resepsionis']))
+            <a href="{{ route('reservasi', ['tab' => 'aktif']) }}" class="px-5 py-2.5 rounded-t-xl text-sm font-bold border-t border-l border-r transition {{ $tab === 'aktif' ? 'bg-[#E97609] text-white border-[#E97609] shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50' }}">Reservasi Aktif</a>
+        @endif
+        
+        @if(in_array($role, ['admin', 'owner']))
+            <a href="{{ route('reservasi', ['tab' => 'riwayat']) }}" class="px-5 py-2.5 rounded-t-xl text-sm font-bold border-t border-l border-r transition {{ $tab === 'riwayat' ? 'bg-[#E97609] text-white border-[#E97609] shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50' }}">Riwayat Reservasi</a>
+        @endif
     </div>
 
-    <!-- KONTEN UTAMA -->
+    <!-- MODULE: KONTEN UTAMA TABLE -->
     <div class="relative z-20 bg-white p-5 lg:p-6 rounded-b-2xl rounded-tr-2xl border border-gray-200 shadow-sm mb-6 -mt-4">
+        
+        <!-- HEADER AKSI (Tambah Data / Export) -->
         <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-100 pb-5">
-            @if ($tab === 'aktif')
+            @if ($tab === 'aktif' && in_array($role, ['admin', 'resepsionis']))
                 <!-- TOMBOL TAMBAH RESERVASI -->
                 <button type="button" onclick="openWalkInModal()" class="cursor-pointer relative z-50 w-full sm:w-auto bg-[#E97609] hover:bg-[#c96307] text-white px-5 py-3 rounded-xl text-sm font-bold transition shadow-sm flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                     Tambah Reservasi Baru
                 </button>
-            @else
+            @elseif ($tab === 'riwayat' && in_array($role, ['admin', 'owner']))
                 <div class="flex gap-2 w-full sm:w-auto">
                     <a href="{{ route('reservasi.pdf') }}" class="flex-1 sm:flex-none justify-center bg-red-50 text-red-700 border border-red-200 px-4 py-3 rounded-xl text-sm font-bold hover:bg-red-100 transition flex items-center gap-1.5 shadow-sm">📄 Export PDF</a>
                     <a href="{{ route('reservasi.csv') }}" class="flex-1 sm:flex-none justify-center bg-emerald-50 text-emerald-700 border border-emerald-200 px-4 py-3 rounded-xl text-sm font-bold hover:bg-emerald-100 transition flex items-center gap-1.5 shadow-sm">📊 Export CSV</a>
@@ -79,6 +86,7 @@
             @endif
         </div>
 
+        <!-- FORM PENCARIAN -->
         <form method="GET" action="{{ route('reservasi') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end w-full mb-6 pb-6 border-b border-gray-50">
             <input type="hidden" name="tab" value="{{ $tab }}">
             <div class="col-span-1 sm:col-span-2 lg:col-span-1">
@@ -126,6 +134,7 @@
             </div>
         </form>
 
+        <!-- TABLE HASIL PENCARIAN -->
         <div class="border border-gray-200 rounded-xl overflow-hidden mb-6 shadow-sm">
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left">
@@ -134,9 +143,12 @@
                             <th class="px-6 py-4 whitespace-nowrap">No. Reservasi</th>
                             <th class="px-6 py-4 whitespace-nowrap">Nama Tamu & Kontak</th>
                             <th class="px-6 py-4 whitespace-nowrap">Ruangan & Kelas</th>
-                            <th class="px-6 py-4 whitespace-nowrap">Durasi Menginap</th>
+                            <th class="px-6 py-4 whitespace-nowrap">Waktu Menginap</th>
                             <th class="px-6 py-4 whitespace-nowrap">Status</th>
+                            
+                            @if(in_array($role, ['admin', 'resepsionis']))
                             <th class="px-6 py-4 whitespace-nowrap text-right">Aksi</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 text-gray-800">
@@ -174,6 +186,8 @@
                                         {{ $res->status_reservasi }}
                                     </span>
                                 </td>
+                                
+                                @if(in_array($role, ['admin', 'resepsionis']))
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex justify-end gap-2 relative z-50">
                                         @php
@@ -210,9 +224,10 @@
                                         @endif
                                     </div>
                                 </td>
+                                @endif
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="px-6 py-12 text-center text-gray-400 font-medium">Tidak ada data reservasi ditemukan.</td></tr>
+                            <tr><td colspan="{{ in_array($role, ['admin', 'resepsionis']) ? '6' : '5' }}" class="px-6 py-12 text-center text-gray-400 font-medium">Tidak ada data reservasi ditemukan.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -221,7 +236,8 @@
         <div>{{ $reservasis->links() }}</div>
     </div>
 
-    <!-- MODAL 1: PANEL RESERVASI BARU (VIEW/EDIT WALK-IN) -->
+    <!-- MODULE: MODAL 1: PANEL RESERVASI BARU (HANYA UNTUK ADMIN/RESEPSIONIS) -->
+    @if(in_array($role, ['admin', 'resepsionis']))
     <div id="walkInModal" class="fixed inset-0 z-[60] hidden pointer-events-none flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
         <div class="bg-[#f0f4f8] rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col overflow-hidden max-h-[95vh] pointer-events-auto">
             <div class="bg-[#E97609] px-6 py-4 flex justify-between items-center shrink-0">
@@ -356,13 +372,12 @@
                                 <p class="text-sm font-bold text-[#E97609] mb-3 border-b border-gray-200 pb-2"><span id="wi_harga">Rp 000.000</span> <span class="font-medium text-[10px] text-gray-500">/ Malam</span></p>
                                 
                                 <p class="text-[11px] text-gray-500 mb-1">Fasilitas Kamar</p>
-                                <!-- GRID FASILITAS RAPAT DIATAS (TIDAK SOCIAL DISTANCING LAGI) -->
                                 <ul id="wi_fasilitas" class="grid grid-cols-2 gap-x-2 gap-y-1.5 text-[11px] font-medium text-gray-800 flex-grow content-start">
                                     <li class="text-gray-400 italic">Pilih kamar...</li>
                                 </ul>
                             </div>
 
-                            <!-- Tombol Aksi Bawah - MENGGUNAKAN TYPE BUTTON UNTUK MENGAKSES JAVASCRIPT showMyConfirm -->
+                            <!-- Tombol Aksi Bawah -->
                             <div class="flex flex-col gap-2 shrink-0">
                                 <button type="button" id="btnSimpanSaja" class="w-full cursor-pointer border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-bold shadow-sm py-2.5 rounded-lg text-sm transition">Simpan</button>
                                 <button type="button" id="btnSimpanCheckin" class="w-full cursor-pointer border border-[#E97609] bg-white text-[#E97609] hover:bg-[#E97609] hover:text-white font-bold shadow-sm py-2.5 rounded-lg text-sm transition">Simpan dan Check-in</button>
@@ -374,7 +389,7 @@
         </div>
     </div>
 
-    <!-- MODAL 2: PANEL PEMBAYARAN QRIS -->
+    <!-- MODULE: MODAL 2: PANEL PEMBAYARAN QRIS -->
     <div id="paymentModal" class="fixed inset-0 z-[70] hidden pointer-events-none flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
         <div class="bg-[#e6f0e9] rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col overflow-hidden pointer-events-auto">
             <div class="bg-white px-6 py-4 flex justify-between items-center border-b border-gray-200">
@@ -423,8 +438,9 @@
             </div>
         </div>
     </div>
+    @endif
 
-    <!-- INI ADALAH MODAL KONFIRMASI LOKAL (Digunakan oleh showMyConfirm) -->
+    <!-- MODULE: MODAL KONFIRMASI LOKAL (Digunakan oleh showMyConfirm) -->
     <div id="localConfirmModal" class="fixed inset-0 z-[999999] hidden pointer-events-none items-center justify-center bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0">
         <div id="localConfirmContent" class="relative p-4 w-full max-w-md transform scale-95 transition-transform duration-300 pointer-events-auto">
             <div class="relative bg-white border border-gray-200 rounded-3xl shadow-2xl p-6 md:p-8 text-center overflow-hidden">
@@ -449,6 +465,7 @@
         </div>
     </div>
 
+    <link rel="stylesheet" href="{{ asset('css/hreservasi.css') }}?v={{ time() }}">
     <script>
         window.kelasDataWalkin = @json($kelasKamars);
         window.LaravelCSRFToken = '{{ csrf_token() }}';

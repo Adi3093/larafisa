@@ -15,16 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 2. Aksi ketika Tombol "Print Laporan" ditekan
-    const btnPrintLaporan = document.getElementById('btnPrintLaporan');
-    if (btnPrintLaporan) {
-        btnPrintLaporan.addEventListener('click', () => {
-            // Memanggil fungsi dialog print bawaan browser
-            window.print();
-        });
-    }
-
-    // 3. Aksi ketika Dropdown Jumlah Baris Data (Pagination) diubah
+    // 2. Aksi ketika Dropdown Jumlah Baris Data (Pagination) diubah
     const filterPerPage = document.getElementById('filterPerPage');
     const formPerPage = document.getElementById('formPerPage');
     

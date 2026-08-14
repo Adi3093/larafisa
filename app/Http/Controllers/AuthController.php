@@ -31,10 +31,12 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            if (Auth::user()->role === 'admin') {
+            // PERBAIKAN: Mengarahkan Admin, Resepsionis, dan Owner ke halaman Dashboard
+            if (in_array(Auth::user()->role, ['admin', 'resepsionis', 'owner'])) {
                 return redirect()->intended('/dashboard');
             }
 
+            // Jika Tamu, arahkan ke Landing Page
             return redirect()->intended('/');
         }
 
@@ -76,6 +78,7 @@ class AuthController extends Controller
         Auth::login($user);
         return redirect('/');
     }
+    
     public function logout(Request $request)
     {
         Auth::logout();

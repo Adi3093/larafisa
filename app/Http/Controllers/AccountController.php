@@ -18,7 +18,8 @@ class AccountController extends Controller
         if ($tab === 'tamu') {
             $query->where('role', 'tamu');
         } else {
-            $query->whereIn('role', ['admin', 'resepsionis']);
+            // PERBAIKAN: Menampilkan Admin, Resepsionis, dan Owner di Tab Staf
+            $query->whereIn('role', ['admin', 'resepsionis', 'owner']);
         }
 
         // Fitur Pencarian
@@ -41,9 +42,11 @@ class AccountController extends Controller
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users',
             'email' => 'required|email|max:255|unique:users',
-            'role' => 'required|in:admin,resepsionis',
+            // PERBAIKAN: Memasukkan 'owner' ke dalam validasi Role
+            'role' => 'required|in:admin,resepsionis,owner',
             'password' => 'required|min:8',
         ]);
+        
         User::create([
             'name' => $request->name,
             'username' => $request->username,

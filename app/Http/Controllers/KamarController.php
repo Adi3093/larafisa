@@ -11,6 +11,10 @@ use Carbon\Carbon;
 
 class KamarController extends Controller
 {
+    // =====================================================================
+    // MODULE 1: LANDING PAGE (SISI TAMU)
+    // Menampilkan daftar kelas kamar beserta ketersediaannya di halaman depan
+    // =====================================================================
     public function landingPage(Request $request)
     {
         $checkin = $request->input('filter_checkin', date('Y-m-d\TH:i'));
@@ -23,9 +27,10 @@ class KamarController extends Controller
         $kelasKamars = collect();
 
         foreach ($semuaKelas as $kelas) {
-            // FIX: Filter kapasitas dicabut dari backend agar view bisa mengelola rekomendasi 3-4 orang.
-
+            // Menghitung jumlah ruangan fisik yang ada untuk kelas ini (kecuali yang Maintenance)
             $totalKamar = Kamar::where('kelas_kamar_id', $kelas->id)->where('status', '!=', 'Maintenance')->count();
+            
+            // Menghitung ruangan yang sedang terpakai/dibooking pada rentang tanggal tersebut
             $terpakai = Reservasi::whereIn('status_reservasi', ['Terkonfirmasi', 'Check-In'])
                 ->whereHas('kamar', fn($q) => $q->where('kelas_kamar_id', $kelas->id))
                 ->where('check_in', '<', $checkoutDate)
@@ -44,9 +49,15 @@ class KamarController extends Controller
         return view('landing_page.home', compact('kelasKamars', 'searchData'));
     }
 
+    // =====================================================================
+    // MODULE 2: DASHBOARD MANAJEMEN KAMAR (SISI ADMIN & RESEPSIONIS)
+    // Mengambil data Kelas Kamar dan Ruangan dengan filter, pencarian, & paginasi
+    // =====================================================================
     public function index(Request $request)
     {
         $activeTab = $request->tab ?? 'kelas';
+        
+        // --- LOGIKA TAB: KELAS KAMAR ---
         $kelasQuery = KelasKamar::withCount('kamars');
 
         if ($request->filled('kelas_search')) {
@@ -60,16 +71,19 @@ class KamarController extends Controller
             $kelasQuery->latest();
         }
 
-        $kelasPerPage = $request->kelas_per_page ?? 5;
+        // Default pagination menjadi 10 (Sesuai Permintaan)
+        $kelasPerPage = $request->kelas_per_page ?? 10;
         $kelasKamars = $kelasQuery->paginate($kelasPerPage, ['*'], 'kelas_page')->appends($request->all());
 
+        // --- LOGIKA TAB: RUANGAN FISIK ---
         $kamarQuery = Kamar::with('kelasKamar');
 
         if ($request->filled('ruangan_search')) $kamarQuery->where('nomor_ruangan', 'like', '%' . $request->ruangan_search . '%');
         if ($request->filled('ruangan_kelas')) $kamarQuery->where('kelas_kamar_id', $request->ruangan_kelas);
         if ($request->filled('ruangan_status')) $kamarQuery->where('status', $request->ruangan_status);
 
-        $ruanganPerPage = $request->ruangan_per_page ?? 5;
+        // Default pagination menjadi 10 (Sesuai Permintaan)
+        $ruanganPerPage = $request->ruangan_per_page ?? 10;
         $kamars = $kamarQuery->latest()->paginate($ruanganPerPage, ['*'], 'ruangan_page')->appends($request->all());
 
         $semuaKelas = KelasKamar::orderBy('nama_kelas', 'asc')->get();
@@ -77,6 +91,10 @@ class KamarController extends Controller
         return view('dashboard.kamar', compact('kelasKamars', 'kamars', 'semuaKelas', 'activeTab'));
     }
 
+    // =====================================================================
+    // MODULE 3: FUNGSI CRUD KELAS KAMAR (HANYA ADMIN)
+    // Menambah, Memperbarui, dan Menghapus Katalog Kelas Kamar
+    // =====================================================================
     public function storeKelas(Request $request)
     {
         $request->validate([
@@ -152,6 +170,10 @@ class KamarController extends Controller
         return back()->with('success', 'Kelas kamar dan semua ruangannya berhasil dihapus!');
     }
 
+    // =====================================================================
+    // MODULE 4: FUNGSI CRUD RUANGAN FISIK (HANYA ADMIN)
+    // Menambah, Memperbarui, dan Menghapus unit Ruangan Fisik
+    // =====================================================================
     public function storeKamar(Request $request)
     {
         $request->validate([

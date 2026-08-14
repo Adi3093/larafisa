@@ -4,7 +4,7 @@
     <div class="relative z-10 min-h-screen pt-24 lg:pt-32 pb-24 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
 
         <div class="mb-8">
-            <h1 class="text-white text-3xl font-extrabold tracking-tight">Riwayat & Status Perjalanan</h1>
+            <h1 class="text-white text-3xl font-extrabold tracking-tight">Riwayat & Reservasi Aktif</h1>
             <p class="text-amber-100 mt-1">Pantau perkembangan reservasi kamar Anda secara real-time.</p>
         </div>
 
@@ -129,7 +129,7 @@
                         class="flex-1 py-3 sm:py-4 transition-all duration-300 flex flex-col items-center gap-1 sm:gap-2 border-l border-gray-100">
                         <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
                         </svg>
                         <span class="text-[9px] sm:text-xs font-bold truncate w-full text-center px-0.5">Check-in</span>
                     </button>
@@ -139,7 +139,7 @@
                         class="flex-1 py-3 sm:py-4 transition-all duration-300 flex flex-col items-center gap-1 sm:gap-2 border-l border-gray-100">
                         <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
                         </svg>
                         <span
                             class="text-[9px] sm:text-xs font-bold truncate w-full text-center px-0.5">Check-out</span>
@@ -156,109 +156,87 @@
                     </button>
                 </div>
 
-                <div class="p-4 sm:p-8 min-h-[400px]">
+                <div class="p-4 sm:p-8 min-h-[400px] overflow-hidden">
                     @php
                         $renderActiveCard = function ($pesananData) use ($pembayaranAktifs) {
                             if (!$pesananData) {
                                 return '';
                             }
-                            $ekstra = is_array($pesananData->ekstra)
-                                ? $pesananData->ekstra
-                                : json_decode($pesananData->ekstra, true) ?? [];
-                            $bed = $ekstra['Extra Bed'] ?? 0;
-                            $selimut = $ekstra['Extra Selimut'] ?? 0;
+                            
                             $fotoKamar = $pesananData->kamar?->kelasKamar?->thumbnail
                                 ? asset('storage/' . $pesananData->kamar->kelasKamar->thumbnail)
                                 : asset('storage/landingpage/room-placeholder.jpg');
 
-                            // Tombol Hapus: Hanya jika QRIS belum di-generate DAN belum dikonfirmasi Resepsionis
                             $pembayaranItem = $pembayaranAktifs[$pesananData->id] ?? null;
                             $sudahGenerateQris = $pembayaranItem && !empty($pembayaranItem->qr_image);
                             $bisaDihapus =
                                 !$sudahGenerateQris &&
                                 in_array($pesananData->status_reservasi, ['Menunggu Konfirmasi', 'Terlewat']);
 
-                            $tombolHapus = '';
+                            $pillClass = match ($pesananData->status_reservasi) {
+                                'Batal', 'Dibatalkan' => 'text-red-700 border-red-500 bg-red-50',
+                                'Terlewat' => 'text-amber-700 border-amber-500 bg-amber-50',
+                                default => 'text-emerald-700 border-emerald-500 bg-emerald-50',
+                            };
+
+                            $deleteFormHtml = '';
+                            $deleteBtnDesktop = ''; 
+                            
                             if ($bisaDihapus) {
-                                $tombolHapus =
-                                    '
-                                <form action="' .
-                                    route('reservasi.tamu.batal', $pesananData->id) .
-                                    '" method="POST" class="m-0" data-confirm="Hapus Reservasi?|Apakah Anda yakin ingin menghapus data reservasi ini?" data-theme="danger" data-btn="Ya, Hapus">
-                                    ' .
-                                    csrf_field() .
-                                    '
-                                    ' .
-                                    method_field('PUT') .
-                                    '
-                                    <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition transform hover:-translate-y-0.5 duration-300 shadow-sm border border-red-200">Hapus</button>
+                                $deleteFormHtml = '
+                                <div class="absolute inset-0 bg-red-500 flex items-center justify-end px-6 rounded-2xl sm:rounded-3xl z-0">
+                                    <span class="text-white font-bold flex flex-col items-center text-xs">
+                                        <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        Hapus
+                                    </span>
+                                </div>
+                                <form id="form-hapus-' . $pesananData->id . '" action="' . route('reservasi.tamu.batal', $pesananData->id) . '" method="POST" class="hidden">
+                                    ' . csrf_field() . method_field('PUT') . '
                                 </form>';
+                                
+                                $deleteBtnDesktop = '
+                                <button type="button" onclick="event.stopPropagation(); triggerDeleteMobile(\'' . $pesananData->id . '\')" class="hidden sm:flex absolute top-3 right-3 w-8 h-8 items-center justify-center bg-red-50 text-red-500 border border-red-200 rounded-full hover:bg-red-500 hover:text-white transition-colors z-20 shadow-sm" title="Batalkan Reservasi">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>';
                             }
 
                             return '
-                            <div class="bg-white border-2 border-amber-200 rounded-3xl p-4 sm:p-5 flex flex-col md:flex-row gap-6 items-center md:items-stretch mb-4 hover:shadow-xl hover:border-amber-400 transition-all duration-300">
-                                <div class="w-full md:w-56 h-56 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center bg-gray-50 relative shadow-inner">
-                                    <img src="' .
-                                $fotoKamar .
-                                '" class="w-full h-full object-cover">
-                                </div>
-                                <div class="flex-1 w-full flex flex-col h-full justify-between py-2">
-                                    <div>
-                                        <div class="flex justify-between items-start mb-1">
-                                            <div>
-                                                <h3 class="text-xl font-black text-amber-950">' .
-                                ($pesananData->kamar?->kelasKamar?->nama_kelas ?? 'Tipe Kamar') .
-                                '</h3>
-                                                <p class="text-xs text-amber-600 font-bold mb-4">#' .
-                                $pesananData->no_reservasi .
-                                '</p>
-                                            </div>
-                                        </div>
-                                        <div class="flex text-sm text-gray-700 mb-5">
-                                            <div class="w-32 font-bold text-amber-800/70 uppercase tracking-wider text-[10px]">Layanan Extra :</div>
-                                            <div class="flex-1 font-medium space-y-1 text-xs">
-                                                ' .
-                                ($bed > 0 ? "<p class='text-amber-900'>Extra Bed (x$bed)</p>" : '') .
-                                '
-                                                ' .
-                                ($selimut > 0 ? "<p class='text-amber-900'>Extra Selimut (x$selimut)</p>" : '') .
-                                '
-                                                ' .
-                                ($bed == 0 && $selimut == 0
-                                    ? '<p class="text-gray-400 italic">Tidak ada tambahan</p>'
-                                    : '') .
-                                '
-                                            </div>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-4 max-w-sm mb-6">
-                                            <div>
-                                                <span class="block text-[10px] font-bold text-amber-800/70 uppercase tracking-wider mb-1">Check-in :</span>
-                                                <span class="text-xs font-black text-amber-950">' .
-                                \Carbon\Carbon::parse($pesananData->check_in)->format('d-m-Y H:i') .
-                                '</span>
-                                            </div>
-                                            <div>
-                                                <span class="block text-[10px] font-bold text-amber-800/70 uppercase tracking-wider mb-1">Check-out :</span>
-                                                <span class="text-xs font-black text-amber-950">' .
-                                \Carbon\Carbon::parse($pesananData->check_out)->format('d-m-Y H:i') .
-                                '</span>
-                                            </div>
-                                        </div>
+                            <div class="relative overflow-hidden rounded-2xl sm:rounded-3xl mb-4 group swipe-container bg-red-50" data-id="' . $pesananData->id . '" data-can-delete="' . ($bisaDihapus ? 'true' : 'false') . '">
+                                ' . $deleteFormHtml . '
+                                
+                                <div class="swipe-element relative z-10 bg-white border sm:border-2 border-amber-200 rounded-2xl sm:rounded-3xl p-3 sm:p-5 flex flex-row gap-3 sm:gap-6 items-stretch transition-transform duration-300 ease-out cursor-pointer hover:border-amber-400 hover:shadow-lg shadow-sm"
+                                     onclick="if(!this.classList.contains(\'swiping\')) document.getElementById(\'modalDetail-' . $pesananData->id . '\').classList.remove(\'hidden\')">
+                                    
+                                    ' . $deleteBtnDesktop . '
+                                    
+                                    <div class="w-24 sm:w-40 rounded-xl overflow-hidden flex-shrink-0 relative shadow-inner bg-gray-50">
+                                        <img src="' . $fotoKamar . '" class="absolute inset-0 w-full h-full object-cover ' . ($pesananData->status_reservasi == 'Selesai' || $pesananData->status_reservasi == 'Batal' || $pesananData->status_reservasi == 'Dibatalkan' ? 'grayscale-[20%]' : '') . '">
                                     </div>
-                                    <div class="flex flex-wrap items-center gap-3">
-                                        <button onclick="document.getElementById(\'modalDetail-' .
-                                $pesananData->id .
-                                '\').classList.remove(\'hidden\')" class="w-full sm:w-auto px-8 py-2.5 bg-amber-600 rounded-xl text-sm font-bold text-white hover:bg-amber-700 focus:bg-amber-600 transition transform hover:-translate-y-0.5 duration-300 shadow-sm border-none">Detail Reservasi</button>
-                                        ' .
-                                $tombolHapus .
-                                '
+                                    
+                                    <div class="flex-1 min-w-0 flex flex-col justify-center py-1">
+                                        <div class="mb-3 pr-6">
+                                            <h3 class="text-sm sm:text-xl font-black text-amber-950 leading-tight line-clamp-2 mb-1">' . ($pesananData->kamar?->kelasKamar?->nama_kelas ?? 'Tipe Kamar') . '</h3>
+                                            
+                                            <span id="card-badge-' . $pesananData->id . '" class="inline-block border px-2 py-0.5 rounded text-[8px] sm:text-[10px] font-black uppercase tracking-wider transition-colors duration-300 ' . $pillClass . '">' . $pesananData->status_reservasi . '</span>
+                                        </div>
+                                        
+                                        <div class="space-y-1 sm:space-y-2 mt-auto">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-[9px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider w-[55px] sm:w-20 shrink-0">Check-in</span>
+                                                <span class="text-[10px] sm:text-sm font-black text-amber-950 whitespace-nowrap">' . \Carbon\Carbon::parse($pesananData->check_in)->format('d M Y, H:i') . '</span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-[9px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider w-[55px] sm:w-20 shrink-0">Check-out</span>
+                                                <span class="text-[10px] sm:text-sm font-black text-amber-950 whitespace-nowrap">' . \Carbon\Carbon::parse($pesananData->check_out)->format('d M Y, H:i') . '</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>';
                         };
                     @endphp
 
-                    <div x-show="tab === 'pembayaran'" x-cloak class="animate-fade-in space-y-4">
+                    <div x-show="tab === 'pembayaran'" x-cloak class="animate-fade-in space-y-2 sm:space-y-4">
                         @forelse($tabPembayaran as $pesan)
                             {!! $renderActiveCard($pesan) !!}
                         @empty
@@ -276,7 +254,8 @@
                             </div>
                         @endforelse
                     </div>
-                    <div x-show="tab === 'konfirmasi'" x-cloak class="animate-fade-in space-y-4">
+                    
+                    <div x-show="tab === 'konfirmasi'" x-cloak class="animate-fade-in space-y-2 sm:space-y-4">
                         @forelse($tabKonfirmasi as $pesan)
                             {!! $renderActiveCard($pesan) !!}
                         @empty
@@ -291,7 +270,8 @@
                             </div>
                         @endforelse
                     </div>
-                    <div x-show="tab === 'checkin'" x-cloak class="animate-fade-in space-y-4">
+
+                    <div x-show="tab === 'checkin'" x-cloak class="animate-fade-in space-y-2 sm:space-y-4">
                         @forelse($tabCheckin as $pesan)
                             {!! $renderActiveCard($pesan) !!}
                         @empty
@@ -300,13 +280,14 @@
                                     class="w-20 h-20 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                            d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
                                     </svg></div>
                                 <h3 class="text-lg font-extrabold text-amber-950">Belum Ada Jadwal Check-In</h3>
                             </div>
                         @endforelse
                     </div>
-                    <div x-show="tab === 'checkout'" x-cloak class="animate-fade-in space-y-4">
+
+                    <div x-show="tab === 'checkout'" x-cloak class="animate-fade-in space-y-2 sm:space-y-4">
                         @forelse($tabCheckout as $pesan)
                             {!! $renderActiveCard($pesan) !!}
                         @empty
@@ -315,86 +296,16 @@
                                     class="w-20 h-20 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
                                     </svg></div>
                                 <h3 class="text-lg font-extrabold text-amber-950">Belum Waktunya Check-Out</h3>
                             </div>
                         @endforelse
                     </div>
 
-                    <div x-show="tab === 'riwayat'" x-cloak class="animate-fade-in space-y-4">
+                    <div x-show="tab === 'riwayat'" x-cloak class="animate-fade-in space-y-2 sm:space-y-4">
                         @forelse($arsipReservasi as $history)
-                            @php
-                                $ekstraHist = is_array($history->ekstra)
-                                    ? $history->ekstra
-                                    : json_decode($history->ekstra, true) ?? [];
-                                $bedHist = $ekstraHist['Extra Bed'] ?? 0;
-                                $selimutHist = $ekstraHist['Extra Selimut'] ?? 0;
-                                $fotoHist = $history->kamar?->kelasKamar?->thumbnail
-                                    ? asset('storage/' . $history->kamar->kelasKamar->thumbnail)
-                                    : asset('storage/landingpage/room-placeholder.jpg');
-                                $pillClass =
-                                    $history->status_reservasi === 'Selesai'
-                                        ? 'border-emerald-500 text-emerald-600'
-                                        : 'border-red-500 text-red-600';
-                            @endphp
-                            <div
-                                class="bg-white border-2 border-amber-200 rounded-3xl p-4 sm:p-5 flex flex-col md:flex-row gap-6 items-center md:items-stretch hover:shadow-xl hover:border-amber-400 transition-all duration-300">
-                                <div
-                                    class="w-full md:w-56 h-56 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center bg-gray-50 relative shadow-inner">
-                                    <img src="{{ $fotoHist }}" class="w-full h-full object-cover grayscale-[20%]">
-                                </div>
-                                <div class="flex-1 w-full flex flex-col h-full justify-between py-2">
-                                    <div>
-                                        <div class="flex justify-between items-start mb-1 gap-2">
-                                            <div>
-                                                <h3 class="text-xl font-black text-amber-950">
-                                                    {{ $history->kamar?->kelasKamar?->nama_kelas ?? 'Tipe Kamar' }}</h3>
-                                                <p class="text-xs text-amber-600 font-bold mb-4">
-                                                    #{{ $history->no_reservasi }}</p>
-                                            </div>
-                                            <span
-                                                class="px-4 py-1.5 rounded-full border-2 text-[10px] font-black uppercase tracking-wider {{ $pillClass }} whitespace-nowrap bg-white">{{ $history->status_reservasi }}</span>
-                                        </div>
-                                        <div class="flex text-sm text-gray-700 mb-5">
-                                            <div
-                                                class="w-32 font-bold text-amber-800/70 uppercase tracking-wider text-[10px]">
-                                                Layanan Extra :</div>
-                                            <div class="flex-1 font-medium space-y-1 text-xs">
-                                                @if ($bedHist > 0)
-                                                    <p class="text-amber-900">Extra Bed (x{{ $bedHist }})</p>
-                                                @endif
-                                                @if ($selimutHist > 0)
-                                                    <p class="text-amber-900">Extra Selimut (x{{ $selimutHist }})</p>
-                                                @endif
-                                                @if ($bedHist == 0 && $selimutHist == 0)
-                                                    <p class="text-gray-400 italic">Tidak ada tambahan</p>
-                                                @endif
-                                            </div>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-4 max-w-sm mb-6">
-                                            <div>
-                                                <span
-                                                    class="block text-[10px] font-bold text-amber-800/70 uppercase tracking-wider mb-1">Check-in:</span>
-                                                <span
-                                                    class="text-xs font-black text-amber-950">{{ \Carbon\Carbon::parse($history->check_in)->format('d-m-Y H:i') }}</span>
-                                            </div>
-                                            <div>
-                                                <span
-                                                    class="block text-[10px] font-bold text-amber-800/70 uppercase tracking-wider mb-1">Check-out:</span>
-                                                <span
-                                                    class="text-xs font-black text-amber-950">{{ \Carbon\Carbon::parse($history->check_out)->format('d-m-Y H:i') }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <button
-                                            onclick="document.getElementById('modalDetail-{{ $history->id }}').classList.remove('hidden')"
-                                            class="w-full sm:w-auto px-8 py-2.5 bg-amber-600 rounded-xl text-sm font-bold text-white hover:bg-amber-700 focus:bg-amber-600 transition transform hover:-translate-y-0.5 duration-300 shadow-sm border-none">Detail
-                                            Reservasi</button>
-                                    </div>
-                                </div>
-                            </div>
+                            {!! $renderActiveCard($history) !!}
                         @empty
                             <div
                                 class="text-center py-16 border-2 border-dashed border-amber-200 bg-amber-50/50 rounded-3xl">
@@ -455,6 +366,16 @@
                 $pembayaranAktif = $isPesananAktif ? $pembayaranAktifs[$res->id] ?? null : null;
                 $ekstra = is_array($res->ekstra) ? $res->ekstra : json_decode($res->ekstra, true) ?? [];
                 $isQrisRequested = isset($pembayaranAktif) && $pembayaranAktif->qr_image;
+                
+                $metode = $ekstra['Metode Pembayaran'] ?? 'Bayar di Tempat';
+                $invoiceNo = '-';
+                if ($metode === 'QRIS') {
+                    if (isset($pembayaranAktif) && !empty($pembayaranAktif->invoice)) {
+                        $invoiceNo = '#' . $pembayaranAktif->invoice;
+                    } elseif (isset($res->pembayaran) && !empty($res->pembayaran->invoice)) {
+                        $invoiceNo = '#' . $res->pembayaran->invoice;
+                    }
+                }
             @endphp
 
             <div id="modalDetail-{{ $res->id }}"
@@ -614,33 +535,37 @@
                                 <div class="space-y-2 text-sm text-amber-950 font-medium mb-6">
                                     <div class="flex justify-between">
                                         <span class="text-amber-700">Kelas Kamar</span>
-                                        <span>{{ $res->kamar?->kelasKamar?->nama_kelas ?? '-' }}</span>
+                                        <span class="text-right">{{ $res->kamar?->kelasKamar?->nama_kelas ?? '-' }}</span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-amber-700">Tanggal Check-in</span>
-                                        <span>{{ \Carbon\Carbon::parse($res->check_in)->translatedFormat('d M Y') }}</span>
+                                        <span class="text-right">{{ \Carbon\Carbon::parse($res->check_in)->translatedFormat('d M Y') }}</span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-amber-700">Tanggal Check-out</span>
-                                        <span>{{ \Carbon\Carbon::parse($res->check_out)->translatedFormat('d M Y') }}</span>
+                                        <span class="text-right">{{ \Carbon\Carbon::parse($res->check_out)->translatedFormat('d M Y') }}</span>
                                     </div>
-                                    <div
-                                        class="flex justify-between font-bold text-amber-600 pt-3 mt-3 border-t-2 border-amber-100">
-                                        <span>Status Pembayaran</span>
+                                    
+                                    <div class="flex justify-between pt-3 mt-3 border-t-2 border-amber-100">
+                                        <span class="text-amber-700">Metode Pembayaran</span>
+                                        <span class="text-right uppercase">{{ $metode }}</span>
+                                    </div>
 
+                                    <div class="flex justify-between font-bold text-amber-600">
+                                        <span>Status Pembayaran</span>
                                         <span id="statusPaymentDisplay-{{ $res->id }}"
-                                            class="uppercase tracking-wider {{ $res->status_reservasi === 'Terlewat' ? 'text-red-600 font-bold animate-pulse' : '' }}">
+                                            class="uppercase tracking-wider text-right {{ $res->status_reservasi === 'Terlewat' ? 'text-red-600 font-bold animate-pulse' : '' }}">
                                             {{ $res->status_reservasi === 'Terlewat' ? 'TERLEWAT' : ($isPesananAktif ? $pembayaranAktif->status ?? $res->status_reservasi : $res->status_reservasi) }}
                                         </span>
+                                    </div>
+                                    
+                                    <div class="flex justify-between">
+                                        <span class="text-amber-700">Kode Pembayaran</span>
+                                        <span class="text-right font-bold text-amber-900">{{ $invoiceNo }}</span>
                                     </div>
                                 </div>
 
                                 <div class="mb-5">
-                                    @if ($isPesananAktif && isset($pembayaranAktif))
-                                        <p class="text-[10px] text-amber-600 font-bold mb-1 uppercase tracking-wider">
-                                            Nomor Pembayaran: <br><span
-                                                class="text-amber-900">#{{ $pembayaranAktif->invoice }}</span></p>
-                                    @endif
                                     <h3 class="text-lg font-black text-amber-950 border-b-2 border-amber-200 pb-4">
                                         Total Bayar : Rp. {{ number_format($ekstra['Total Bayar'] ?? 0, 0, ',', '.') }}
                                     </h3>

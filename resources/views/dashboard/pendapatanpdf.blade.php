@@ -128,14 +128,13 @@
                     $out = \Carbon\Carbon::parse($res->check_out)->startOfDay();
                     $diffDays = max(1, (int) $in->diffInDays($out));
 
-                    // Hitung Uang
+                    // Hitung Uang Kamar
                     $hargaKamar = $res->kamar->kelasKamar->harga ?? 0;
                     $kamarTotal = $hargaKamar * $diffDays;
 
+                    // Hitung Ekstra Bed (Dikoreksi menjadi 50000, Selimut dihapus)
                     $ekstra = is_array($res->ekstra) ? $res->ekstra : json_decode($res->ekstra, true) ?? [];
-                    $bed = ($ekstra['Extra Bed'] ?? 0) * 100000;
-                    $selimut = ($ekstra['Extra Selimut'] ?? 0) * 25000;
-                    $ekstraTotal = $bed + $selimut;
+                    $ekstraTotal = ($ekstra['Extra Bed'] ?? 0) * 50000;
 
                     $totalBaris = $kamarTotal + $ekstraTotal;
 
@@ -186,8 +185,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="text-center" style="padding: 20px;">Tidak ada data pendapatan pada periode
-                        yang dipilih.</td>
+                    <td colspan="7" class="text-center" style="padding: 20px;">Tidak ada data pendapatan pada periode yang dipilih.</td>
                 </tr>
             @endforelse
 
@@ -200,6 +198,14 @@
         </tbody>
     </table>
 
+    <!-- SCRIPT TRIGGER PRINT (Hanya muncul ketika diklik dari tombol Print) -->
+    @if(isset($isPrint) && $isPrint)
+    <script>
+        window.onload = function() {
+            window.print();
+        }
+    </script>
+    @endif
 </body>
 
 </html>

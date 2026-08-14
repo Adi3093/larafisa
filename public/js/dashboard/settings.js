@@ -1,11 +1,13 @@
 // ==========================================
 // MODULE 1: GLOBAL STATE VARIABLES
+// Variabel global untuk menyimpan state Kalender Maintenance
 // ==========================================
 let selectedMaintenanceDates = [];
 let calendarInstance = null;
 
 // ==========================================
 // MODULE 2: INITIALIZATION ON LOAD
+// Fungsi yang dijalankan saat halaman pertama kali dimuat
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Membaca status Toggles Notifikasi Local Storage
@@ -41,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ==========================================
 // MODULE 3: PREFERENSI TAMPILAN SISTEM
+// Fungsi untuk memanipulasi DOM berdasarkan Accessibility Settings
 // ==========================================
 function changeFontSize(val) {
     document.documentElement.style.fontSize = val + '%';
@@ -73,6 +76,7 @@ function saveClientSettings(key, value) {
 
 // ==========================================
 // MODULE 4: FOTO PROFIL DAN PASSWORD
+// Fungsi interaktif pada form Profil (Mata intip & Preview Foto)
 // ==========================================
 function peekPassword(inputId) {
     let input = document.getElementById(inputId);
@@ -106,6 +110,7 @@ function previewImage(event) {
 
 // ==========================================
 // MODULE 5: PENGATURAN TAB KONTEN
+// Logika untuk berpindah antar tab (Profil, Umum, Jadwal)
 // ==========================================
 function switchTab(tabName) {
     const btnProfil = document.getElementById('tab-btn-profil');
@@ -116,34 +121,35 @@ function switchTab(tabName) {
     const secUmum = document.getElementById('section-umum');
     const secJadwal = document.getElementById('section-jadwal');
 
-    // Sembunyikan semua section
-    secProfil.classList.add('hidden');
-    secUmum.classList.add('hidden');
-    secJadwal.classList.add('hidden');
+    // Sembunyikan semua section yang ada
+    if (secProfil) secProfil.classList.add('hidden');
+    if (secUmum) secUmum.classList.add('hidden');
+    if (secJadwal) secJadwal.classList.add('hidden');
 
     const inactiveStyle = "px-5 sm:px-6 py-2.5 bg-amber-50 border border-amber-200 rounded-t-xl font-bold text-amber-800/60 hover:text-amber-700 hover:bg-amber-100 text-xs sm:text-sm transition relative z-0 ml-1";
-    btnProfil.className = inactiveStyle;
-    btnUmum.className = inactiveStyle;
-    btnJadwal.className = inactiveStyle;
+    if (btnProfil) btnProfil.className = inactiveStyle;
+    if (btnUmum) btnUmum.className = inactiveStyle;
+    if (btnJadwal) btnJadwal.className = inactiveStyle;
 
     const activeStyle = "px-5 sm:px-6 py-3 bg-white border border-amber-200 border-b-white rounded-t-xl font-bold text-amber-700 text-xs sm:text-sm relative z-10 -mb-[1px] shadow-sm shadow-white transition";
 
     // Tampilkan section yang dipilih
-    if (tabName === 'profil') {
+    if (tabName === 'profil' && secProfil) {
         secProfil.classList.remove('hidden');
         btnProfil.className = activeStyle;
         showTooltip('default');
-    } else if (tabName === 'umum') {
+    } else if (tabName === 'umum' && secUmum) {
         secUmum.classList.remove('hidden');
         btnUmum.className = activeStyle;
         showTooltip('umum_intro');
-    } else {
+    } else if (tabName === 'jadwal' && secJadwal) {
         secJadwal.classList.remove('hidden');
         btnJadwal.className = activeStyle;
         showTooltip('jadwal_intro');
         
         // Load kalender (beri delay sedikit agar DOM div-nya tampil sempurna dulu)
-        if (document.getElementById('toggle_jadwal_maintenance').checked) {
+        const toggleJadwal = document.getElementById('toggle_jadwal_maintenance');
+        if (toggleJadwal && toggleJadwal.checked) {
             setTimeout(() => initCalendar(), 100);
         }
     }
@@ -151,6 +157,7 @@ function switchTab(tabName) {
 
 // ==========================================
 // MODULE 6: TOOLTIP PANDUAN INTERAKTIF
+// Menampilkan box panduan di sebelah kanan layar
 // ==========================================
 function showTooltip(type) {
     let title = '';
@@ -231,29 +238,38 @@ function showTooltip(type) {
 }
 
 // ==========================================
-// MODULE 7: MAINTENANCE SERVER & KALENDER
+// MODULE 7: MAINTENANCE SERVER & KALENDER (HANYA ADMIN)
+// Logika AJAX untuk mengirim jadwal maintenance ke server
 // ==========================================
 function toggleMaintenanceOptions(isChecked) {
     const div = document.getElementById('instant_maintenance_div');
-    if (isChecked) div.classList.remove('hidden');
-    else div.classList.add('hidden');
-    updateServerMaintenance();
+    if(div) {
+        if (isChecked) div.classList.remove('hidden');
+        else div.classList.add('hidden');
+        updateServerMaintenance();
+    }
 }
 
 function toggleJadwalOptions(isChecked) {
     const div = document.getElementById('scheduled_maintenance_div');
-    if (isChecked) {
-        div.classList.remove('hidden');
-        setTimeout(() => {
-            initCalendar();
-        }, 100);
-    } else {
-        div.classList.add('hidden');
+    if(div) {
+        if (isChecked) {
+            div.classList.remove('hidden');
+            setTimeout(() => {
+                initCalendar();
+            }, 100);
+        } else {
+            div.classList.add('hidden');
+        }
+        updateServerMaintenance();
     }
-    updateServerMaintenance();
 }
 
 function updateServerMaintenance() {
+    // Validasi apakah tombol toggle ada di halaman (Hanya Admin yang punya)
+    const toggleMaster = document.getElementById('toggle_maintenance_mode');
+    if(!toggleMaster) return; 
+
     fetch(window.maintenanceRouteUrl, {
         method: 'POST',
         headers: {
@@ -261,7 +277,7 @@ function updateServerMaintenance() {
             'X-CSRF-TOKEN': window.LaravelCSRFToken
         },
         body: JSON.stringify({
-            maintenance_mode: document.getElementById('toggle_maintenance_mode').checked,
+            maintenance_mode: toggleMaster.checked,
             main_online: document.getElementById('toggle_main_online').checked,
             main_walkin: document.getElementById('toggle_main_walkin').checked,
             jadwal_maintenance: document.getElementById('toggle_jadwal_maintenance').checked,
@@ -324,6 +340,7 @@ function resetMaintenanceDates() {
 
 // ==========================================
 // MODULE 8: EXPORT TO GLOBAL WINDOW
+// Mengekspos fungsi agar bisa dipanggil dari HTML tag
 // ==========================================
 window.changeFontSize = changeFontSize;
 window.toggleDarkMode = toggleDarkMode;

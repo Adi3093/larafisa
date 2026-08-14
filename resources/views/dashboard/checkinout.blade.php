@@ -248,7 +248,6 @@
                             $totalAdd = $pembayaranTambahan ? (int) $pembayaranTambahan->total : 0;
                         @endphp
 
-                        <!-- BUG 2 FIX: Jumlah parameter disesuaikan persis dengan checkinout.js (17 Parameter) -->
                         <button type="button"
                             class="flex-1 bg-white border border-orange-200 text-[#E97609] px-3 py-2.5 rounded-xl text-xs font-bold hover:bg-orange-50 transition text-center shadow-sm"
                             onclick="bukaModalCheckout('{{ $res->id }}', '{{ $res->no_reservasi }}', '{{ addslashes($res->nama_tamu) }}', '{{ $res->no_hp }}', '{{ $kelasName }}', '{{ $kamarName }}', {{ $qtyBed }}, '{{ $res->check_in }}', '{{ $checkOutDate->format('Y-m-d\TH:i') }}', {{ $hargaKamar }}, {{ $totalSudahDibayar }}, '{{ $invoiceAwal }}', '{{ addslashes($pesanTamu) }}', '{{ $invAdd }}', '{{ $qrAdd }}', '{{ $statusAdd }}', {{ $totalAdd }})">Detail
@@ -516,6 +515,16 @@
             </div>
         </div>
     </div>
+
+    <!-- PERUBAHAN: Script Trigger Print Pop-up -->
+    @if(session('print_struk_id'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Membuka tab kecil khusus struk print
+            window.open("{{ route('checkinout.print', session('print_struk_id')) }}", "_blank", "width=400,height=600,toolbar=no,scrollbars=no,resizable=no");
+        });
+    </script>
+    @endif
 
     <script>
         window.kelasDataWalkin = @json($kelasKamars);

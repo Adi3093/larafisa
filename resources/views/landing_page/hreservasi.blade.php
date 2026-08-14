@@ -51,7 +51,19 @@
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-2">Jumlah Penginap</label>
+                                    <label class="flex items-center gap-1.5 text-xs font-bold text-gray-700 mb-2 relative group w-max z-20">
+                                        Jumlah Penginap
+                                        <!-- PERUBAHAN: Ikon (!) class 'hidden' dihapus dan diganti 'flex' agar selalu muncul -->
+                                        <button type="button" id="kapasitas_warning" onclick="toggleWarningTooltip(event)" class="flex w-4 h-4 bg-amber-500 text-white rounded-full items-center justify-center text-[10px] font-black shadow-sm focus:outline-none transition-transform hover:scale-110 cursor-pointer">!</button>
+                                        
+                                        <!-- Tooltip Gelembung Komik -->
+                                        <div id="kapasitas_tooltip" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2.5 bg-white border border-amber-300 text-amber-900 text-[10px] font-bold text-center rounded-xl shadow-xl transition-all opacity-0 invisible pointer-events-none group-hover:opacity-100 group-hover:visible">
+                                            Jumlah penginap lebih dari 2 orang disarankan untuk menambahkan layanan ekstra bed atau memesan dua kamar.
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-amber-300"></div>
+                                            <div class="absolute top-[calc(100%-1.5px)] left-1/2 -translate-x-1/2 border-4 border-transparent border-t-white"></div>
+                                        </div>
+                                    </label>
+                                    
                                     <div class="relative w-full sm:w-1/2 md:w-3/4">
                                         <div id="anggota_wrapper"
                                             class="flex items-center justify-between border border-amber-300 rounded-xl bg-white shadow-sm w-full transition-colors overflow-hidden">
@@ -65,10 +77,6 @@
                                                     class="px-3 py-2.5 font-bold text-gray-600 hover:bg-amber-50 border-l border-gray-200 transition">&gt;</button>
                                             </div>
                                         </div>
-                                        <div id="kapasitas_warning"
-                                            onclick="alert('Jumlah penginap melebihi kapasitas standar kamar. Anda disarankan menambah layanan ekstra bed atau memesan 2 kamar.')"
-                                            class="hidden absolute -right-2 -top-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-black shadow-md cursor-pointer hover:scale-110 transition animate-bounce">
-                                            !</div>
                                     </div>
                                 </div>
                                 <div>
@@ -93,32 +101,39 @@
                                         </select>
                                         <button type="button" id="btnLihatKamar"
                                             onclick="document.getElementById('mobilePreviewModal').classList.remove('hidden')"
-                                            class="hidden lg:hidden bg-amber-50 text-amber-700 font-bold px-4 py-2.5 rounded-xl border border-amber-300 text-xs whitespace-nowrap shadow-sm hover:bg-amber-100 transition">Lihat
-                                            Kamar</button>
+                                            class="hidden bg-amber-50 text-amber-700 font-bold px-3 py-2.5 rounded-xl border border-amber-300 whitespace-nowrap shadow-sm hover:bg-amber-100 transition flex items-center justify-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 32 32"><path fill="currentColor" d="M19 3C13.488 3 9 7.488 9 13c0 2.395.84 4.59 2.25 6.313L3.281 27.28l1.439 1.44l7.968-7.969A9.922 9.922 0 0 0 19 23c5.512 0 10-4.488 10-10S24.512 3 19 3zm0 2c4.43 0 8 3.57 8 8s-3.57 8-8 8s-8-3.57-8-8s3.57-8 8-8z"/></svg>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
+                            
                             {{-- Layanan Ekstra --}}
                             <div class="mb-5">
-                                <label class="block text-xs font-bold text-gray-700 mb-2">Layanan Ekstra</label>
-                                <div
-                                    class="flex items-center justify-between border border-amber-300 rounded-xl bg-white shadow-sm w-full overflow-hidden transition-colors">
-                                    <div class="flex flex-col sm:flex-row sm:items-center px-4 py-2 flex-1">
-                                        <span class="text-sm font-bold text-gray-800">Ekstra Bed</span>
-                                        <span
-                                            class="text-xs font-bold text-amber-600 mt-1 sm:mt-0 sm:ml-auto block sm:inline">Rp
-                                            50.000</span>
+                                <label class="flex items-center gap-1.5 text-xs font-bold text-gray-700 mb-2 relative group w-max cursor-help z-10">
+                                    Layanan Ekstra
+                                    <button type="button" id="info_btn" onclick="toggleInfoTooltip(event)" class="flex w-4 h-4 bg-amber-100 border border-amber-300 text-amber-600 rounded-full items-center justify-center text-[10px] font-black shadow-sm focus:outline-none transition-transform hover:scale-110 cursor-pointer">i</button>
+                                    
+                                    <div id="info_tooltip" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2.5 bg-white border border-amber-300 text-amber-900 text-[10px] font-bold text-center rounded-xl shadow-xl transition-all opacity-0 invisible pointer-events-none group-hover:opacity-100 group-hover:visible">
+                                        Layanan ekstra bed sudah termasuk bantal dan selimut.
+                                        <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-amber-300"></div>
+                                        <div class="absolute top-[calc(100%-1.5px)] left-1/2 -translate-x-1/2 border-4 border-transparent border-t-white"></div>
                                     </div>
-                                    <div class="flex border-l border-gray-200">
+                                </label>
+                                
+                                <div class="flex items-center justify-between border border-amber-300 rounded-xl bg-white shadow-sm w-full sm:w-3/4 lg:w-1/2 overflow-hidden transition-colors">
+                                    <div class="flex flex-col px-4 py-2 flex-1">
+                                        <span class="text-sm font-bold text-gray-800">Ekstra Bed</span>
+                                        <span class="text-xs font-bold text-amber-600 mt-0.5">Rp 50.000</span>
+                                    </div>
+                                    <div class="flex items-center border-l border-gray-200">
                                         <input type="hidden" name="extra_selimut" id="extra_selimut" value="0">
+                                        <button type="button" onclick="adjustEkstra('extra_bed', -1)"
+                                            class="px-3 py-2.5 font-bold text-gray-600 hover:bg-amber-50 transition border-r border-gray-200">&lt;</button>
                                         <input type="number" name="extra_bed" id="extra_bed" value="0" readonly
-                                            class="w-12 text-center bg-transparent border-none text-sm font-bold text-amber-950 p-2.5 focus:ring-0">
-                                        <div class="flex flex-col sm:flex-row border-l border-gray-200">
-                                            <button type="button" onclick="adjustEkstra('extra_bed', -1)"
-                                                class="px-3 py-2.5 font-bold text-gray-600 hover:bg-amber-50 transition h-full">&lt;</button>
-                                            <button type="button" onclick="adjustEkstra('extra_bed', 1)"
-                                                class="px-3 py-2.5 font-bold text-gray-600 hover:bg-amber-50 border-t sm:border-t-0 sm:border-l border-gray-200 transition h-full">&gt;</button>
-                                        </div>
+                                            class="w-10 text-center bg-transparent border-none text-sm font-bold text-amber-950 p-1.5 focus:ring-0">
+                                        <button type="button" onclick="adjustEkstra('extra_bed', 1)"
+                                            class="px-3 py-2.5 font-bold text-gray-600 hover:bg-amber-50 transition border-l border-gray-200">&gt;</button>
                                     </div>
                                 </div>
                             </div>
@@ -204,7 +219,7 @@
                                 </div>
                             </div>
                         @endif
-                        {{-- Metode Pembayran --}}
+                        {{-- Metode Pembayaran --}}
                         <div class="border border-amber-200 rounded-2xl p-5 mb-8">
                             <h3 class="font-bold text-amber-950 mb-4 text-lg">Metode Pembayaran</h3>
                             <div>
@@ -255,7 +270,7 @@
         </div>
     </div>
 
-    {{-- Preview Kamar (Mobile View) --}}
+    {{-- Preview Kamar (Mobile View Modal) --}}
     <div id="mobilePreviewModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/70 backdrop-blur-sm"
         aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex min-h-screen items-center justify-center p-4 text-center">

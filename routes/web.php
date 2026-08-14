@@ -11,8 +11,6 @@ use App\Http\Controllers\ReservasiController;
 use App\Http\Middleware\UpdateLastSeen;
 use Illuminate\Support\Facades\Route;
 
-
-
 Route::get('/', [KamarController::class, 'landingPage']);
 Route::get('/reservasi-online', [App\Http\Controllers\GuestReservationController::class, 'index'])->name('reservasi.tamu');
 Route::get('/riwayat-tamu', [App\Http\Controllers\GuestReservationController::class, 'riwayat'])->name('riwayat.tamu');
@@ -89,15 +87,65 @@ Route::middleware('auth')->group(function () {
     })->name('api.notifikasi.terbaru');
 });
 
-// ADMIN AREA
-Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function () {
-
-    // Dashboard Utama
+// =========================================================================
+// ZONA 1: AKSES UMUM DASHBOARD (ADMIN, RESEPSIONIS, OWNER)
+// =========================================================================
+Route::middleware(['auth', 'role:admin,resepsionis,owner', UpdateLastSeen::class])->group(function () {
+    // Dashboard Utama & API Harian
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/api/jadwal-harian', [App\Http\Controllers\DashboardController::class, 'getJadwalHarian'])->name('api.jadwal.harian');
 
-    // Kelola Kamar & Ruangan
+    // Pengaturan Dasar (View Settings & Profil)
+    Route::get('/settings', function () { return view('dashboard.settings'); })->name('settings');
+    Route::get('/settings/profil', [ProfileController::class, 'index'])->name('settings.profil');
+    Route::put('/settings/profil', [ProfileController::class, 'update'])->name('settings.profil.update');
+
+    // Reservasi (Melihat & Export Laporan Reservasi)
+    Route::get('/reservasi', [App\Http\Controllers\ReservasiController::class, 'index'])->name('reservasi');
+    Route::get('/reservasi/export/csv', [App\Http\Controllers\ReservasiController::class, 'exportCsv'])->name('reservasi.csv');
+    Route::get('/reservasi/export/pdf', [App\Http\Controllers\ReservasiController::class, 'exportPdf'])->name('reservasi.pdf');
+
+    // API Internal Notifikasi
+    Route::get('/api/cek-notifikasi', [ReservasiController::class, 'cekNotifikasi']);
+});
+
+// =========================================================================
+// ZONA 2: AKSES LAPORAN KEUANGAN (HANYA ADMIN & OWNER)
+// =========================================================================
+Route::middleware(['auth', 'role:admin,owner', UpdateLastSeen::class])->group(function () {
+    Route::get('/pendapatan', [App\Http\Controllers\PendapatanController::class, 'index'])->name('pendapatan');
+    Route::get('/pendapatan/export/{format}', [App\Http\Controllers\PendapatanController::class, 'export'])->name('pendapatan.export');
+});
+
+// =========================================================================
+// ZONA 3: AKSES OPERASIONAL TAMU (HANYA ADMIN & RESEPSIONIS)
+// =========================================================================
+Route::middleware(['auth', 'role:admin,resepsionis', UpdateLastSeen::class])->group(function () {
+    // Kelola Kamar (Resepsionis HANYA bisa GET/Melihat index kamar)
     Route::get('/kamar', [KamarController::class, 'index'])->name('kamar');
+
+    // Aksi Reservasi (Tambah, Konfirmasi, Batal)
+    Route::post('/reservasi', [App\Http\Controllers\ReservasiController::class, 'store'])->name('reservasi.store');
+    Route::put('/reservasi/{id}', [App\Http\Controllers\ReservasiController::class, 'update'])->name('reservasi.update');
+    Route::post('/reservasi/{id}/konfirmasi', [App\Http\Controllers\ReservasiController::class, 'konfirmasi'])->name('reservasi.konfirmasi');
+    Route::post('/reservasi/{id}/batal', [App\Http\Controllers\ReservasiController::class, 'batal'])->name('reservasi.batal');
+    Route::get('/reservasi/{id}/generate-qris', [App\Http\Controllers\ReservasiController::class, 'generateQrisWalkin'])->name('reservasi.generate.qris');
+
+    // Modul Check-In & Check-Out
+    Route::get('/checkinout', [App\Http\Controllers\CheckInOutController::class, 'index'])->name('checkinout');
+    Route::post('/checkinout/{id}/checkin', [App\Http\Controllers\CheckInOutController::class, 'checkin'])->name('checkinout.checkin');
+    Route::post('/checkinout/{id}/checkout', [App\Http\Controllers\CheckInOutController::class, 'checkout'])->name('checkinout.checkout');
+    Route::get('/checkinout/{id}/print', [App\Http\Controllers\CheckInOutController::class, 'printStruk'])->name('checkinout.print');
+    Route::put('/checkinout/{id}/extend', [App\Http\Controllers\CheckInOutController::class, 'extend'])->name('checkinout.extend');
+    Route::post('/checkinout/{id}/qris-tambahan', [App\Http\Controllers\CheckInOutController::class, 'generateQrisTambahan'])->name('checkinout.qris.tambahan');
+    Route::post('/checkinout/{id}/generate-qris-tambahan', [App\Http\Controllers\CheckInOutController::class, 'generateQrisTambahan'])->name('checkinout.qris.tambahan'); // Duplicate yang anda buat saya biarkan aman
+});
+
+// =========================================================================
+// ZONA 4: AKSES SAKTI TERTINGGI (HANYA ADMIN)
+// =========================================================================
+Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function () {
+    // Aksi Manajemen Struktur Kamar (Tambah, Edit, Hapus)
     Route::post('/kelas-kamar', [KamarController::class, 'storeKelas'])->name('kelas.store');
     Route::put('/kelas-kamar/{id}', [KamarController::class, 'updateKelas'])->name('kelas.update');
     Route::delete('/kelas-kamar/{id}', [KamarController::class, 'destroyKelas'])->name('kelas.destroy');
@@ -105,49 +153,11 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
     Route::put('/kamar/{id}', [KamarController::class, 'updateKamar'])->name('kamar.update');
     Route::delete('/kamar/{id}', [KamarController::class, 'destroyKamar'])->name('kamar.destroy');
 
-    // Reservasi (Walk-in/online)
-    Route::get('/reservasi', [App\Http\Controllers\ReservasiController::class, 'index'])->name('reservasi');
-    Route::post('/reservasi', [App\Http\Controllers\ReservasiController::class, 'store'])->name('reservasi.store');
-    Route::put('/reservasi/{id}', [App\Http\Controllers\ReservasiController::class, 'update'])->name('reservasi.update');
-    Route::post('/reservasi/{id}/konfirmasi', [App\Http\Controllers\ReservasiController::class, 'konfirmasi'])->name('reservasi.konfirmasi');
-    Route::post('/reservasi/{id}/batal', [App\Http\Controllers\ReservasiController::class, 'batal'])->name('reservasi.batal');
-    Route::get('/reservasi/{id}/generate-qris', [App\Http\Controllers\ReservasiController::class, 'generateQrisWalkin'])->name('reservasi.generate.qris');
-
-    // Export Riwayat
-    Route::get('/reservasi/export/csv', [App\Http\Controllers\ReservasiController::class, 'exportCsv'])->name('reservasi.csv');
-    Route::get('/reservasi/export/pdf', [App\Http\Controllers\ReservasiController::class, 'exportPdf'])->name('reservasi.pdf');
-
-    // Check-In & Check-Out
-    Route::get('/checkinout', [App\Http\Controllers\CheckInOutController::class, 'index'])->name('checkinout');
-    Route::post('/checkinout/{id}/checkin', [App\Http\Controllers\CheckInOutController::class, 'checkin'])->name('checkinout.checkin');
-    Route::post('/checkinout/{id}/checkout', [App\Http\Controllers\CheckInOutController::class, 'checkout'])->name('checkinout.checkout');
-    Route::get('/checkinout/{id}/print', [App\Http\Controllers\CheckInOutController::class, 'printStruk'])->name('checkinout.print');
-    Route::put('/checkinout/{id}/extend', [App\Http\Controllers\CheckInOutController::class, 'extend'])->name('checkinout.extend');
-    // (Letakkan di area Route Admin)
-    Route::post('/checkinout/{id}/qris-tambahan', [App\Http\Controllers\CheckInOutController::class, 'generateQrisTambahan'])->name('checkinout.qris.tambahan');
-
-    // Kelola Akun
+    // Manajemen Akun Pegawai & Tamu
     Route::get('/akun', [AccountController::class, 'index'])->name('akun');
     Route::post('/akun', [AccountController::class, 'store'])->name('akun.store');
     Route::put('/akun/{id}', [AccountController::class, 'update'])->name('akun.update');
 
-    // Letakkan di bawah rute Check-in & Check-Out yang sudah ada
-    Route::post('/checkinout/{id}/generate-qris-tambahan', [App\Http\Controllers\CheckInOutController::class, 'generateQrisTambahan'])->name('checkinout.qris.tambahan');
-
-    // Pengaturan dan Laporan
-    Route::get('/settings', function () {
-        return view('dashboard.settings');
-    })->name('settings');
-
-    Route::get('/settings/profil', [ProfileController::class, 'index'])->name('settings.profil');
-    Route::put('/settings/profil', [ProfileController::class, 'update'])->name('settings.profil.update');
-
-    //Laporan Pendapatan
-    Route::get('/pendapatan', [App\Http\Controllers\PendapatanController::class, 'index'])->name('pendapatan');
-    Route::get('/pendapatan/export/{format}', [App\Http\Controllers\PendapatanController::class, 'export'])->name('pendapatan.export');
-    // Rute API untuk menyimpan status Maintenance ke Server
+    // Mode Maintenance Web
     Route::post('/settings/maintenance', [App\Http\Controllers\ProfileController::class, 'updateMaintenance'])->name('settings.maintenance');
-
-    // Rute API internal untuk mengecek notifikasi reservasi baru (Nebeng di Web)
-    Route::get('/api/cek-notifikasi', [ReservasiController::class, 'cekNotifikasi']);
 });

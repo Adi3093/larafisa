@@ -101,14 +101,20 @@
                                 <p class="text-sm text-gray-900 font-bold" role="none">{{ Auth::user()?->name }}</p>
                                 <p class="text-sm font-medium text-gray-500 truncate" role="none">
                                     {{ Auth::user()?->email }}</p>
+                                <p class="text-[10px] font-bold text-amber-600 uppercase mt-1">Role: {{ Auth::user()?->role }}</p>
                             </div>
                             <ul class="py-1" role="none">
                                 <li><a href="{{ route('settings.profil') }}"
                                         class="block px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-600"
                                         role="menuitem">Profil Saya</a></li>
+                                
+                                {{-- Kelola Akun hanya untuk Admin & Owner --}}
+                                @if(in_array(Auth::user()->role, ['admin', 'owner']))
                                 <li><a href="{{ route('akun') }}"
                                         class="block px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-600"
                                         role="menuitem">Kelola Akun Sistem</a></li>
+                                @endif
+                                
                                 <li class="border-t border-gray-100 mt-1">
                                     <form id="formLogoutSidebar" action="{{ route('logout') }}" method="POST">
                                         @csrf
@@ -131,6 +137,7 @@
         aria-label="Sidebar">
         <div class="h-full px-3 pb-4 overflow-y-auto bg-white">
             <ul class="space-y-2 font-medium">
+                {{-- AKSES UNTUK SEMUA (ADMIN, RESEPSIONIS, OWNER) --}}
                 <li><a href="{{ route('dashboard') }}"
                         class="flex items-center p-2 rounded-lg group transition {{ request()->is('dashboard') ? 'bg-amber-50 text-amber-700 font-bold border border-amber-200' : 'text-gray-600 hover:bg-amber-50 hover:text-amber-700' }}"><svg
                             class="w-5 h-5 transition duration-75 {{ request()->is('dashboard') ? 'text-amber-700' : 'text-gray-400 group-hover:text-amber-600' }}"
@@ -141,6 +148,7 @@
                             <path
                                 d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" />
                         </svg><span class="ms-3">Dashboard Utama</span></a></li>
+                
                 <li><a href="{{ route('reservasi') }}"
                         class="flex items-center p-2 rounded-lg group transition {{ request()->is('reservasi*') ? 'bg-amber-50 text-amber-700 font-bold border border-amber-200' : 'text-gray-600 hover:bg-amber-50 hover:text-amber-700' }}"><svg
                             class="w-5 h-5 transition duration-75 {{ request()->is('reservasi*') ? 'text-amber-700' : 'text-gray-400 group-hover:text-amber-600' }}"
@@ -158,6 +166,9 @@
                         </span>
                     </a>
                 </li>
+
+                {{-- AKSES KHUSUS ADMIN & RESEPSIONIS --}}
+                @if(in_array(Auth::user()->role, ['admin', 'resepsionis']))
                 <li><a href="{{ route('checkinout') }}"
                         class="flex items-center p-2 rounded-lg group transition {{ request()->is('checkinout') ? 'bg-amber-50 text-amber-700 font-bold border border-amber-200' : 'text-gray-600 hover:bg-amber-50 hover:text-amber-700' }}"><svg
                             class="w-5 h-5 transition duration-75 {{ request()->is('dtamu') ? 'text-amber-700' : 'text-gray-400 group-hover:text-amber-600' }}"
@@ -174,6 +185,10 @@
                             <path
                                 d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6zm3 4a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm4 0h8v-2h-8v2zm0 4h8v-2h-8v2zm-4 4h12v-2H6v2z" />
                         </svg><span class="flex-1 ms-3 whitespace-nowrap">Kelola Kamar</span></a></li>
+                @endif
+
+                {{-- AKSES KHUSUS ADMIN & OWNER --}}
+                @if(in_array(Auth::user()->role, ['admin', 'owner']))
                 <li><a href="/pendapatan"
                         class="flex items-center p-2 rounded-lg group transition {{ request()->is('pendapatan') ? 'bg-amber-50 text-amber-700 font-bold border border-amber-200' : 'text-gray-600 hover:bg-amber-50 hover:text-amber-700' }}"><svg
                             class="w-5 h-5 transition duration-75 {{ request()->is('pendapatan') ? 'text-amber-700' : 'text-gray-400 group-hover:text-amber-600' }}"
@@ -183,9 +198,12 @@
                                 d="M12 2a1 1 0 0 1 1 1v1h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-4v2h3a4 4 0 0 1 4 4v3a4 4 0 0 1-4 4h-2v1a1 1 0 1 1-2 0v-1H9a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h4v-2H10a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h2V3a1 1 0 0 1 1-1z"
                                 clip-rule="evenodd" />
                         </svg><span class="flex-1 ms-3 whitespace-nowrap">Pendapatan</span></a></li>
+                @endif
             </ul>
 
             <ul class="pt-4 mt-4 space-y-2 font-medium border-t border-amber-100">
+                {{-- MENU DROPDOWN PENGATURAN HANYA UNTUK ADMIN --}}
+                @if(Auth::user()->role === 'admin')
                 <li>
                     <button type="button"
                         class="flex items-center w-full p-2 text-base text-gray-600 transition duration-75 rounded-lg group hover:bg-amber-50 hover:text-amber-700"
@@ -195,7 +213,7 @@
                             aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
                             viewBox="0 0 24 24">
                             <path
-                                d="M19.985 11.082l-2.073-.615a7.994 7.994 0 0 0-1.12-2.708l1.106-1.854a1.002 1.002 0 0 0-.25-1.258l-1.414-1.414a1 1 0 0 0-1.258-.25l-1.854 1.106a7.994 7.994 0 0 0-2.708-1.12l-.615-2.073a1 1 0 0 0-.961-.716h-2a1 1 0 0 0-.961.716l-.615 2.073a7.994 7.994 0 0 0-2.708 1.12l-1.854-1.106a1 1 0 0 0-1.258.25l-1.414 1.414a1.002 1.002 0 0 0-.25 1.258l1.106 1.854a7.994 7.994 0 0 0-1.12 2.708l-2.073.615A1 1 0 0 0 2 12.04v2a1 1 0 0 0 .716.961l2.073.615a7.994 7.994 0 0 0 1.12 2.708l-1.106 1.854a1.002 1.002 0 0 0 .25 1.258l1.414 1.414a1 1 0 0 0 1.258.25l1.854-1.106a7.994 7.994 0 0 0 2.708 1.12l.615 2.073a1 1 0 0 0 .961.716h2a1 1 0 0 0 .961-.716l.615-2.073a7.994 7.994 0 0 0 2.708-1.12l1.854 1.106a1 1 0 0 0 1.258-.25l1.414-1.414a1.002 1.002 0 0 0 .25-1.258l-1.106-1.854a7.994 7.994 0 0 0 1.12-2.708l2.073-.615A1 1 0 0 0 22 14.04v-2a1 1 0 0 0-.716-.961c-.431-.128-.865-.252-1.299-.397zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8z" />
+                                d="M19.985 11.082l-2.073-.615a7.994 7.994 0 0 0-1.12-2.708l1.106-1.854a1.002 1.002 0 0 0-.25-1.258l-1.414-1.414a1 1 0 0 0-1.258-.25l-1.854 1.106a7.994 7.994 0 0 0-2.708-1.12l-.615-2.073a1 1 0 0 0-.961-.716h-2a1 1 0 0 0-.961.716l-.615 2.073a7.994 7.994 0 0 0-2.708 1.12l-1.854-1.106a1 1 0 0 0-1.258.25l-1.414 1.414a1.002 1.002 0 0 0 .25 1.258l1.106 1.854a7.994 7.994 0 0 0-1.12 2.708l-2.073.615A1 1 0 0 0 2 12.04v2a1 1 0 0 0 .716.961l2.073.615a7.994 7.994 0 0 0 1.12 2.708l-1.106 1.854a1.002 1.002 0 0 0 .25 1.258l1.414 1.414a1 1 0 0 0 1.258.25l1.854-1.106a7.994 7.994 0 0 0 2.708 1.12l.615 2.073a1 1 0 0 0 .961.716h2a1 1 0 0 0 .961-.716l.615-2.073a7.994 7.994 0 0 0 2.708-1.12l1.854 1.106a1 1 0 0 0 1.258-.25l1.414-1.414a1.002 1.002 0 0 0 .25-1.258l-1.106-1.854a7.994 7.994 0 0 0 1.12-2.708l2.073-.615A1 1 0 0 0 22 14.04v-2a1 1 0 0 0-.716-.961c-.431-.128-.865-.252-1.299-.397zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8z" />
                         </svg>
                         <span class="flex-1 ms-3 text-left rtl:text-right whitespace-nowrap">Pengaturan</span>
                         <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -214,6 +232,8 @@
                                 Akun</a></li>
                     </ul>
                 </li>
+                @endif
+                
                 <li>
                     <a href="{{ url('/') }}" target="_blank"
                         class="flex items-center p-2 text-gray-600 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 group transition">
@@ -248,7 +268,7 @@
                 <button type="button" onclick="closeCustomConfirm()" id="btnXCustom"
                     class="absolute top-4 right-4 text-gray-400 bg-transparent hover:bg-gray-100 hover:text-gray-900 rounded-xl text-sm w-8 h-8 ms-auto inline-flex justify-center items-center transition">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        <path stroke-currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M6 18 17.94 6M18 18 6.06 6" />
                     </svg>
                 </button>

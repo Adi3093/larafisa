@@ -84,9 +84,13 @@ async function executeGenerateQris(resId, url) {
                 <div class="p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-bold rounded-xl text-center shadow-inner mb-4">🔒 Jadwal telah terkunci karena QRIS pembayaran sudah diminta.</div>`;
             }
 
-            // HILANGKAN TOMBOL HAPUS BEGITU QRIS TERGENERATE
-            const deleteForm = document.querySelector('form[action*="' + resId + '/batal"]');
-            if(deleteForm) deleteForm.remove();
+            // HILANGKAN SWIPE DELETE KARENA SUDAH BAYAR
+            let cardSwipe = document.querySelector(`.swipe-container[data-id="${resId}"]`);
+            if(cardSwipe) {
+                cardSwipe.setAttribute('data-can-delete', 'false');
+                let delForm = cardSwipe.querySelector('.bg-red-500');
+                if(delForm) delForm.remove();
+            }
 
             startPaymentCheck(data.invoice, resId);
             startCountdown(data.expired_at, resId);
@@ -182,6 +186,13 @@ setInterval(() => {
                     statusDisplay.innerText = "TERLEWAT";
                     statusDisplay.className = "text-red-600 font-bold uppercase tracking-wider animate-pulse";
                 }
+
+                // --- PERBAIKAN: UPDATE JUGA STATUS BADGE DI CARD UTAMA ---
+                const cardBadge = document.getElementById('card-badge-' + resId);
+                if (cardBadge) {
+                    cardBadge.innerText = 'TERLEWAT';
+                    cardBadge.className = 'inline-block border px-2 py-0.5 rounded text-[8px] sm:text-[10px] font-black uppercase tracking-wider transition-colors duration-300 text-amber-700 border-amber-500 bg-amber-50 animate-pulse';
+                }
             }
 
             const qrisPlaceholder = document.getElementById('qrisPlaceholder-' + resId);
@@ -266,7 +277,6 @@ function validateRescheduleTime(resId) {
     const selectedTime = new Date(checkinInput.value).getTime();
     const nowTime = new Date().getTime();
 
-    // Validasi Waktu Mundur
     if (selectedTime < (nowTime - 60000)) {
         window.dispatchEvent(new CustomEvent('open-confirm', {
             detail: {
@@ -279,16 +289,14 @@ function validateRescheduleTime(resId) {
         return; 
     }
     
-    // Jika valid, eksekusi event 'submit' agar ditangkap oleh modal <x-confirm> di lplayout
     const form = document.getElementById('formRescheduleEl-' + resId);
     if (form) {
         form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     }
 }
 
-// MODULE 10: AUTO REFRESH JIKA STATUS BERUBAH OLEH RESEPSIONIS (Tanpa Toast Jeda)
+// MODULE 10: AUTO REFRESH JIKA STATUS BERUBAH OLEH RESEPSIONIS
 setInterval(async () => {
-    // Jika tidak ada data inisialisasi di window, abaikan
     if (!window.initialReservations) return;
 
     try {
@@ -298,25 +306,115 @@ setInterval(async () => {
         if (data.reservasi) {
             let hasChanged = false;
             data.reservasi.forEach(r => {
-                // Jika status saat ini berbeda dengan status saat pertama kali load
                 if (window.initialReservations[r.id] && window.initialReservations[r.id] !== r.status_reservasi) {
                     hasChanged = true;
                 }
             });
 
-            // Jika ada perubahan, refresh halaman secara instan tanpa toast!
             if (hasChanged) {
                 window.location.reload();
             }
         }
-    } catch (e) {
-        // Abaikan error jika koneksi terputus sesaat
-    }
-}, 5000); // Cek setiap 5 detik
+    } catch (e) {}
+}, 5000); 
 
+// MODULE 11: GLOBAL DELETE CONFIRM TRIGGER
+window.triggerDeleteMobile = function(resId) {
+    window.dispatchEvent(new CustomEvent('open-confirm', {
+        detail: {
+            title: "Hapus Reservasi?",
+            message: "Apakah Anda yakin ingin menghapus data reservasi ini?",
+            confirmText: "Ya, Hapus",
+            theme: "danger"
+        }
+    }));
+
+    const successHandler = () => {
+        document.removeEventListener('confirm-success-once', successHandler);
+        document.getElementById('form-hapus-' + resId).submit();
+    };
+    document.addEventListener('confirm-success-once', successHandler, { once: true });
+}
+
+// MODULE 12: SWIPE GESTURE UNTUK HAPUS (HANYA TOUCH SCREEN)
+function initSwipeToDelete() {
+    const containers = document.querySelectorAll('.swipe-container');
+
+    containers.forEach(container => {
+        const el = container.querySelector('.swipe-element');
+        const canDelete = container.getAttribute('data-can-delete') === 'true';
+        const resId = container.getAttribute('data-id');
+
+        if (!el || !canDelete) return;
+
+        let startX = 0;
+        let startY = 0;
+        let isDragging = false;
+
+        const handleStart = (e) => {
+            // Deteksi HANYA Lakukan pada layar sentuh (mencegah klik mouse error)
+            if (!e.touches) return; 
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            isDragging = true;
+            el.style.transition = 'none'; 
+        };
+
+        const handleMove = (e) => {
+            if (!isDragging || !e.touches) return;
+            const x = e.touches[0].clientX;
+            const y = e.touches[0].clientY;
+            
+            const deltaX = x - startX;
+            const deltaY = Math.abs(y - startY);
+
+            // Batalkan horizontal swipe jika user sedang scroll ke bawah layar
+            if (deltaY > Math.abs(deltaX)) return;
+
+            // PERBAIKAN: Hanya tambahkan class 'swiping' jika tarikan lebih besar dari 10px
+            if (deltaX < -10) {
+                el.classList.add('swiping');
+            }
+
+            if (deltaX < 0 && deltaX > -120) {
+                el.style.transform = `translateX(${deltaX}px)`;
+            } else if (deltaX <= -120) {
+                el.style.transform = `translateX(-120px)`;
+            }
+        };
+
+        const handleEnd = (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            
+            el.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+
+            const x = e.changedTouches ? e.changedTouches[0].clientX : startX;
+            const deltaX = x - startX;
+
+            if (deltaX < -60) {
+                el.style.transform = `translateX(-120px)`;
+                window.triggerDeleteMobile(resId);
+                setTimeout(() => el.style.transform = `translateX(0px)`, 1000);
+            } else {
+                el.style.transform = `translateX(0px)`;
+            }
+
+            // Hapus class 'swiping' agar kartu bisa kembali diklik untuk memunculkan detail
+            setTimeout(() => el.classList.remove('swiping'), 50);
+        };
+
+        // HANYA pasang event sentuh, abaikan event mouse (mouse click akan tembus ke onClick di elemen kartu)
+        el.addEventListener('touchstart', handleStart, { passive: true });
+        el.addEventListener('touchmove', handleMove, { passive: true });
+        el.addEventListener('touchend', handleEnd);
+    });
+}
 
 // Global Event Handlers
 document.addEventListener('DOMContentLoaded', () => {
+    initSwipeToDelete();
+
     const observer = new MutationObserver(() => {
         const confirmBtn = document.querySelector('[x-show="isOpen"] button.bg-amber-600, [x-show="isOpen"] button.bg-red-600');
         if (confirmBtn && !confirmBtn.hasAttribute('data-listened')) {

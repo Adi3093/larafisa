@@ -12,12 +12,26 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Routing\Controller;
 use App\Services\PakasirPaymentService;
+use Barryvdh\DomPDF\Facade\Pdf; 
 
 class ReservasiController extends Controller
 {
+    // =====================================================================
+    // MODULE 1: INDEX DASHBOARD RESERVASI
+    // =====================================================================
     public function index(Request $request)
     {
-        $tab = $request->tab ?? 'aktif';
+        $role = Auth::user()->role;
+        $tab = $request->tab;
+
+        if ($role === 'resepsionis') {
+            $tab = 'aktif'; 
+        } elseif ($role === 'owner') {
+            $tab = 'riwayat'; 
+        } else {
+            $tab = $tab ?? 'aktif'; 
+        }
+
         $query = Reservasi::query()->with(['kamar.kelasKamar', 'pembayaran']);
 
         if ($tab === 'aktif') {
@@ -78,16 +92,18 @@ class ReservasiController extends Controller
         $kamarTerpakai = Kamar::whereIn('status', ['Terpakai', 'Dibooking'])->count();
         $kamarPerbaikan = Kamar::where('status', 'Maintenance')->count();
 
-        return view('dashboard.reservasi', compact('reservasis', 'kelasKamars', 'tab', 'kamarTersedia', 'kamarTerpakai', 'kamarPerbaikan'));
+        return view('dashboard.reservasi', compact('reservasis', 'kelasKamars', 'tab', 'kamarTersedia', 'kamarTerpakai', 'kamarPerbaikan', 'role'));
     }
 
+    // =====================================================================
+    // MODULE 2: API INTERNAL (FRONT-END REQUIREMENTS)
+    // =====================================================================
     public function getKamarTersedia(Request $request)
     {
         $checkIn = Carbon::parse($request->check_in)->format('Y-m-d H:i:s');
         $checkOut = Carbon::parse($request->check_out)->format('Y-m-d H:i:s');
         $kelasId = $request->kelas_id;
 
-        // BUG 1 FIX: Masukkan 'Menunggu Konfirmasi' ke array agar kamar terkunci saat pending pembayaran
         $reservedKamarIds = Reservasi::whereIn('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi', 'Check-In'])
             ->where(function ($q) use ($checkIn, $checkOut) {
                 $q->where('check_in', '<', $checkOut)->where('check_out', '>', $checkIn);
@@ -100,6 +116,23 @@ class ReservasiController extends Controller
         return response()->json($availableKamars);
     }
 
+    public function cekNotifikasi()
+    {
+        $latestReservasi = \App\Models\Reservasi::where('tipe_reservasi', 'Online')
+            ->where('status_reservasi', 'Menunggu Konfirmasi')
+            ->orderBy('id', 'desc')
+            ->first();
+        $totalPending = \App\Models\Reservasi::where('status_reservasi', 'Menunggu Konfirmasi')->count();
+        return response()->json([
+            'latest_id' => $latestReservasi ? $latestReservasi->id : 0,
+            'nama_tamu' => $latestReservasi ? $latestReservasi->nama_tamu : '',
+            'total_pending' => $totalPending
+        ]);
+    }
+
+    // =====================================================================
+    // MODULE 3: FUNGSI CRUD RESERVASI
+    // =====================================================================
     public function store(Request $request)
     {
         $request->validate([
@@ -116,7 +149,6 @@ class ReservasiController extends Controller
         $checkOut = Carbon::parse($request->check_out)->format('Y-m-d H:i:s');
         $kamarId = $request->kamar_id;
 
-        // BUG 1 FIX: Pengecekan Tabrakan saat membuat reservasi
         $isTabrakan = Reservasi::where('kamar_id', $kamarId)
             ->whereIn('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi', 'Check-In'])
             ->where(function ($q) use ($checkIn, $checkOut) {
@@ -181,69 +213,15 @@ class ReservasiController extends Controller
         return back()->with('success', "Reservasi Walk-in $noReservasi berhasil disimpan.");
     }
 
-    public function generateQrisWalkin($id, PakasirPaymentService $pakasirService)
-    {
-        $reservasi = Reservasi::with('kamar.kelasKamar')->findOrFail($id);
-        $pembayaran = Pembayaran::where('reservasi_id', $reservasi->id)->first();
-
-        if ($pembayaran && $pembayaran->qr_image) {
-            return response()->json([
-                'success' => true,
-                'qr_image' => $pembayaran->qr_image,
-                'status' => $pembayaran->status,
-                'invoice' => $pembayaran->invoice,
-                'expired_at' => $pembayaran->expired_at,
-                'reservasi' => $reservasi
-            ]);
-        }
-
-        $ekstra = is_array($reservasi->ekstra) ? $reservasi->ekstra : json_decode($reservasi->ekstra, true);
-        $totalBayar = $ekstra['Total Bayar'] ?? 0;
-
-        $pembayaranBaru = $pakasirService->createQrisPayment($pembayaran->invoice, $totalBayar);
-
-        if ($pembayaranBaru && $pembayaranBaru->qr_image) {
-            return response()->json([
-                'success' => true,
-                'qr_image' => $pembayaranBaru->qr_image,
-                'status' => $pembayaranBaru->status,
-                'invoice' => $pembayaranBaru->invoice,
-                'expired_at' => $pembayaranBaru->expired_at,
-                'reservasi' => $reservasi
-            ]);
-        }
-
-        return response()->json(['success' => false, 'message' => 'Gagal memuat QRIS.']);
-    }
-
-    public function batal($id, PakasirPaymentService $pakasirService)
-    {
-        $reservasi = Reservasi::findOrFail($id);
-        $reservasi->update(['status_reservasi' => 'Dibatalkan']);
-
-        $pembayaran = Pembayaran::where('reservasi_id', $id)->first();
-        if ($pembayaran) {
-            if ($pembayaran->status === 'pending' && $pembayaran->invoice) {
-                $pakasirService->cancelPayment($pembayaran->invoice);
-                $pakasirService->recordHistory($pembayaran->id, 'gagal', 'Dibatalkan manual oleh Resepsionis. Tagihan di Gateway telah dihapus.');
-            }
-            $pembayaran->update(['status' => 'gagal']);
-        }
-
-        return back()->with('success', 'Reservasi berhasil dibatalkan dan tagihan di Gateway telah dihapus.');
-    }
-
     public function update(Request $request, $id)
     {
         $reservasi = Reservasi::with('pembayaran')->findOrFail($id);
-        $actionType = $request->input('action_type', 'simpan'); // Mengambil value tombol yang ditekan
+        $actionType = $request->input('action_type', 'simpan');
 
-        // JIKA RESERVASI ONLINE: Aksi tombolnya adalah Konfirmasi
         if ($reservasi->tipe_reservasi === 'Online') {
             $newStatus = ($actionType === 'simpan_checkin') ? 'Check-In' : 'Terkonfirmasi';
             $reservasi->update(['status_reservasi' => $newStatus]);
 
-            // Jika langsung check-in, update status kamar
             if ($newStatus === 'Check-In' && $reservasi->kamar) {
                 $reservasi->kamar->update(['status' => 'Terpakai']);
                 return back()->with('success', 'Reservasi Online disetujui dan Tamu berhasil Check-In!');
@@ -251,8 +229,6 @@ class ReservasiController extends Controller
             return back()->with('success', 'Reservasi Online berhasil Dikonfirmasi!');
         }
 
-        // JIKA RESERVASI WALK-IN: Validasi & Update Data
-        // Validasi keamanan: Jangan izinkan update jika pembayaran sudah Lunas/QRIS Tergenerate
         $pembayaran = $reservasi->pembayaran;
         if ($pembayaran && ($pembayaran->status === 'berhasil' || !empty($pembayaran->qr_image))) {
             return back()->with('error', 'Gagal! Reservasi ini sudah dibayar atau QRIS sudah di-generate. Data tidak dapat diubah.');
@@ -268,42 +244,33 @@ class ReservasiController extends Controller
         $checkIn = Carbon::parse($request->check_in)->format('Y-m-d H:i:s');
         $checkOut = Carbon::parse($request->check_out)->format('Y-m-d H:i:s');
 
-        // Pengecekan Tabrakan di fitur Update
         $isTabrakan = Reservasi::where('kamar_id', $request->kamar_id)
             ->where('id', '!=', $id)
             ->whereIn('status_reservasi', ['Menunggu Konfirmasi', 'Terkonfirmasi', 'Check-In'])
             ->where(function ($q) use ($checkIn, $checkOut) {
-                $q->where('check_in', '<', $checkOut)
-                    ->where('check_out', '>', $checkIn);
+                $q->where('check_in', '<', $checkOut)->where('check_out', '>', $checkIn);
             })->exists();
 
-        if ($isTabrakan) {
-            return back()->with('error', 'Gagal update! Kamar sudah terisi oleh jadwal tamu lain pada jam tersebut.');
-        }
+        if ($isTabrakan) return back()->with('error', 'Gagal update! Kamar sudah terisi tamu lain.');
 
         $dataToUpdate = $request->except(['_token', '_method', 'action_type']);
         $dataToUpdate['check_in'] = $checkIn;
         $dataToUpdate['check_out'] = $checkOut;
 
-        // Cek jika metode pembayaran diubah ke QRIS
         $ekstra = is_array($reservasi->ekstra) ? $reservasi->ekstra : json_decode($reservasi->ekstra, true);
         if ($request->has('metode_pembayaran')) {
             $ekstra['Metode Pembayaran'] = $request->metode_pembayaran;
             $dataToUpdate['ekstra'] = $ekstra;
 
-            // Jika berubah jadi QRIS, status tidak boleh langsung terkonfirmasi
             if ($request->metode_pembayaran === 'QRIS') {
                 $dataToUpdate['status_reservasi'] = 'Menunggu Konfirmasi';
             }
         }
 
-        // Tentukan status jika tombol yang diklik adalah "Simpan & Check-in"
         if ($actionType === 'simpan_checkin') {
             $dataToUpdate['status_reservasi'] = 'Check-In';
-            // Update status kamar jadi terpakai
             if (isset($request->kamar_id)) {
-                $kamarId = $request->kamar_id;
-                Kamar::find($kamarId)->update(['status' => 'Terpakai']);
+                Kamar::find($request->kamar_id)->update(['status' => 'Terpakai']);
             } else {
                 $reservasi->kamar->update(['status' => 'Terpakai']);
             }
@@ -315,6 +282,22 @@ class ReservasiController extends Controller
         return back()->with('success', $msg);
     }
 
+    public function batal($id, PakasirPaymentService $pakasirService)
+    {
+        $reservasi = Reservasi::findOrFail($id);
+        $reservasi->update(['status_reservasi' => 'Dibatalkan']);
+
+        $pembayaran = Pembayaran::where('reservasi_id', $id)->first();
+        if ($pembayaran) {
+            if ($pembayaran->status === 'pending' && $pembayaran->invoice) {
+                $pakasirService->cancelPayment($pembayaran->invoice);
+                $pakasirService->recordHistory($pembayaran->id, 'gagal', 'Dibatalkan manual oleh Resepsionis.');
+            }
+            $pembayaran->update(['status' => 'gagal']);
+        }
+        return back()->with('success', 'Reservasi berhasil dibatalkan.');
+    }
+
     public function konfirmasi(Request $request, $id)
     {
         $reservasi = Reservasi::findOrFail($id);
@@ -324,33 +307,92 @@ class ReservasiController extends Controller
             $ekstra['Detail Pembayaran'] = $request->detail_pembayaran;
         }
 
-        $reservasi->update([
-            'status_reservasi' => 'Terkonfirmasi',
-            'ekstra' => $ekstra
-        ]);
-
-        return back()->with('success', 'Reservasi berhasil dikonfirmasi! Data telah diteruskan ke menu Check-In/Out.');
+        $reservasi->update(['status_reservasi' => 'Terkonfirmasi', 'ekstra' => $ekstra]);
+        return back()->with('success', 'Reservasi dikonfirmasi!');
     }
 
-    public function cekNotifikasi()
+    // =====================================================================
+    // MODULE 4: PEMBAYARAN & EXPORT
+    // =====================================================================
+    public function generateQrisWalkin($id, PakasirPaymentService $pakasirService)
     {
-        $latestReservasi = \App\Models\Reservasi::where('tipe_reservasi', 'Online')
-            ->where('status_reservasi', 'Menunggu Konfirmasi')
-            ->orderBy('id', 'desc')
-            ->first();
-        $totalPending = \App\Models\Reservasi::where('status_reservasi', 'Menunggu Konfirmasi')->count();
-        return response()->json([
-            'latest_id' => $latestReservasi ? $latestReservasi->id : 0,
-            'nama_tamu' => $latestReservasi ? $latestReservasi->nama_tamu : '',
-            'total_pending' => $totalPending
+        $reservasi = Reservasi::with('kamar.kelasKamar')->findOrFail($id);
+        $pembayaran = Pembayaran::where('reservasi_id', $reservasi->id)->first();
+
+        if ($pembayaran && $pembayaran->qr_image) {
+            return response()->json([
+                'success' => true, 'qr_image' => $pembayaran->qr_image, 'status' => $pembayaran->status,
+                'invoice' => $pembayaran->invoice, 'expired_at' => $pembayaran->expired_at, 'reservasi' => $reservasi
+            ]);
+        }
+
+        $ekstra = is_array($reservasi->ekstra) ? $reservasi->ekstra : json_decode($reservasi->ekstra, true);
+        $totalBayar = $ekstra['Total Bayar'] ?? 0;
+
+        $pembayaranBaru = $pakasirService->createQrisPayment($pembayaran->invoice, $totalBayar);
+
+        if ($pembayaranBaru && $pembayaranBaru->qr_image) {
+            return response()->json([
+                'success' => true, 'qr_image' => $pembayaranBaru->qr_image, 'status' => $pembayaranBaru->status,
+                'invoice' => $pembayaranBaru->invoice, 'expired_at' => $pembayaranBaru->expired_at, 'reservasi' => $reservasi
+            ]);
+        }
+        return response()->json(['success' => false, 'message' => 'Gagal memuat QRIS.']);
+    }
+
+    // =====================================================================
+    // EKSPOR RIWAYAT KE PDF
+    // =====================================================================
+    public function exportPdf(Request $request)
+    {
+        // Menggunakan nama variabel $riwayats agar cocok dengan view riwayatpdf.blade.php
+        $riwayats = Reservasi::with(['kamar.kelasKamar'])
+            ->whereIn('status_reservasi', ['Selesai', 'Batal', 'Dibatalkan'])
+            ->orderBy('updated_at', 'desc')
+            ->get();
+        
+        $pdf = Pdf::loadView('dashboard.riwayatpdf', compact('riwayats'));
+        
+        return $pdf->download('Laporan_Riwayat_Reservasi_FisaHotel.pdf');
+    }
+
+    // =====================================================================
+    // EKSPOR RIWAYAT KE CSV (EXCEL)
+    // =====================================================================
+    public function exportCsv(Request $request)
+    {
+        $riwayats = Reservasi::with(['kamar.kelasKamar'])
+            ->whereIn('status_reservasi', ['Selesai', 'Batal', 'Dibatalkan'])
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        $filename = "Laporan_Riwayat_Reservasi_FisaHotel.csv";
+        
+        $callback = function() use ($riwayats) {
+            $handle = fopen('php://output', 'w');
+            
+            // Header Baris Pertama CSV
+            fputcsv($handle, ['No', 'No Reservasi', 'Nama Tamu', 'No NIK', 'No HP', 'Kamar & Kelas', 'Check-In', 'Check-Out', 'Status']);
+
+            foreach ($riwayats as $index => $log) {
+                fputcsv($handle, [
+                    $index + 1,
+                    $log->no_reservasi,
+                    $log->nama_tamu,
+                    $log->no_ktp ?? '-',
+                    $log->no_hp ?? '-',
+                    'Kamar #' . ($log->kamar->nomor_ruangan ?? '-') . ' (' . ($log->kamar->kelasKamar->nama_kelas ?? 'Dihapus') . ')',
+                    \Carbon\Carbon::parse($log->check_in)->format('d/m/Y'),
+                    \Carbon\Carbon::parse($log->check_out)->format('d/m/Y'),
+                    $log->status_reservasi
+                ]);
+            }
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
-    }
-    public function exportCsv()
-    {
-        return "Fitur CSV";
-    }
-    public function exportPdf()
-    {
-        return "Fitur PDF";
     }
 }
