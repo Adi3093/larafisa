@@ -21,7 +21,6 @@ class AccountController extends Controller
             $query->whereIn('role', ['admin', 'resepsionis', 'owner']);
         }
 
-        // Fitur Pencarian
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -34,14 +33,12 @@ class AccountController extends Controller
         return view('dashboard.akun', compact('users', 'perPage', 'search', 'tab'));
     }
 
-    // Tambah Akun Baru (Aman dari pembuatan akun Tamu palsu)
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users',
             'email' => 'required|email|max:255|unique:users',
-            // VALIDASI KEAMANAN: Memaksa input Role hanya dari 3 list ini.
             'role' => 'required|in:admin,resepsionis,owner', 
             'password' => 'required|min:8',
         ]);
@@ -57,12 +54,10 @@ class AccountController extends Controller
         return back()->with('success', 'Akun ' . $request->name . ' berhasil ditambahkan!');
     }
 
-    // Edit data (Aman dari pembobolan akun Tamu)
     public function update(Request $request, $id)
     {
         $targetUser = User::findOrFail($id);
 
-        // VALIDASI KEAMANAN PRIVASI: Cegah siapapun (termasuk admin) mengedit data Tamu melalui Panel ini.
         if ($targetUser->role === 'tamu') {
             return back()->withErrors(['Akses Ditolak: Anda tidak diizinkan untuk mengubah data privasi milik Tamu.']);
         }

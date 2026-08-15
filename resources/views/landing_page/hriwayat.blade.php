@@ -31,24 +31,20 @@
 
         @if (!$isLoggedIn)
             <div class="bg-white rounded-3xl shadow-xl border border-amber-100 p-10 text-center">
-                <div
-                    class="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm ring-4 ring-amber-50">
-                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                </div>
-                <h3 class="text-2xl font-extrabold text-amber-950">Akses Riwayat Terkunci</h3>
-                <p class="text-gray-500 mt-2">Silakan masuk ke akun Anda untuk melihat detail perjalanan dan tagihan.
-                </p>
-                <div class="mt-8 flex justify-center gap-3">
-                    <a href="{{ route('login') }}"
-                        class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-8 rounded-xl transition shadow-md shadow-amber-600/20">Log
-                        In</a>
-                    <a href="{{ route('register') }}"
-                        class="bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold py-3 px-8 rounded-xl border border-amber-200 transition">Daftar
-                        Akun</a>
-                </div>
+                <div class="text-center py-16">
+                        <span class="text-6xl block mb-6">🔐</span>
+                        <h3 class="text-2xl font-black text-amber-950 mb-2">Login Diperlukan</h3>
+                        <p class="text-base text-gray-500 max-w-md mx-auto leading-relaxed mb-8">Untuk melanjutkan
+                            proses pemesanan kamar hotel, silakan masuk ke dalam akun Anda.</p>
+                        <div class="flex flex-col sm:flex-row justify-center gap-3">
+                            <a href="{{ route('login') }}"
+                                class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-8 rounded-xl transition shadow-md shadow-amber-600/30">Log
+                                In Sekarang</a>
+                            <a href="{{ route('register') }}"
+                                class="bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold py-3 px-8 rounded-xl border border-amber-200 transition">Daftar
+                                Akun Baru</a>
+                        </div>
+                    </div>
             </div>
         @else
             @php
@@ -205,7 +201,7 @@
                                 ' . $deleteFormHtml . '
                                 
                                 <div class="swipe-element relative z-10 bg-white border sm:border-2 border-amber-200 rounded-2xl sm:rounded-3xl p-3 sm:p-5 flex flex-row gap-3 sm:gap-6 items-stretch transition-transform duration-300 ease-out cursor-pointer hover:border-amber-400 hover:shadow-lg shadow-sm"
-                                     onclick="if(!this.classList.contains(\'swiping\')) document.getElementById(\'modalDetail-' . $pesananData->id . '\').classList.remove(\'hidden\')">
+                                    onclick="if(!this.classList.contains(\'swiping\')) document.getElementById(\'modalDetail-' . $pesananData->id . '\').classList.remove(\'hidden\')">
                                     
                                     ' . $deleteBtnDesktop . '
                                     
@@ -701,7 +697,6 @@
 
     @if ($isLoggedIn)
         <script>
-            // Simpan status awal ke window agar JS bisa baca dan compare (Untuk Fitur Auto-Update Status Tanpa Refresh)
             window.initialReservations = @json($pesananAktifs->pluck('status_reservasi', 'id'));
 
             document.addEventListener('DOMContentLoaded', function() {

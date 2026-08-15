@@ -50,7 +50,6 @@
 </head>
 
 <body class="bg-gray-50 antialiased">
-
     <div id="toast-container" class="fixed top-24 right-5 flex flex-col gap-3 pointer-events-none"
         style="z-index: 999999;"></div>
 

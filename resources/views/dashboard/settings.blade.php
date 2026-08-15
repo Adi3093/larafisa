@@ -1,10 +1,6 @@
 <x-dblayout>
-    <!-- PEMANGGILAN CSS CHROME TAB (MENGGUNAKAN kamar.css KARENA WARNA AMBER NYA SAMA) -->
     <link rel="stylesheet" href="{{ asset('css/kamar.css') }}?v={{ time() }}">
 
-    <!-- ========================================================================= -->
-    <!-- MODULE 1: HEADER & ALERTS -->
-    <!-- ========================================================================= -->
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-amber-950 tracking-tight">Pengaturan Sistem</h1>
         <p class="text-sm text-amber-900/70 mt-1">Kelola data personal akun dan preferensi sistem administrator.</p>
@@ -35,39 +31,36 @@
         </div>
     @endif
 
-    <!-- ========================================================================= -->
-    <!-- MODULE 2: TAB NAVIGATION BARS (EFEK CHROME) -->
-    <!-- ========================================================================= -->
+    <!-- Tab Navigasi -->
     <div class="flex items-end ml-[30px] flex-wrap relative z-10">
-        <!-- TAB 1: PROFIL SAYA -->
+        <!-- Profil -->
         <button type="button" onclick="switchTab('profil')" id="tab-btn-profil"
             class="chrome-tab-active px-5 sm:px-6 py-3 bg-white border border-amber-200 border-b-white rounded-t-xl font-bold text-amber-700 text-xs sm:text-sm relative z-10 -mb-[1px] shadow-sm shadow-white transition">
             Profil Saya
         </button>
         
-        <!-- TAB 2: PENGATURAN UMUM -->
+        <!-- Umum -->
         <button type="button" onclick="switchTab('umum')" id="tab-btn-umum"
             class="px-4 sm:px-5 py-1.5 bg-amber-50/70 border border-amber-200/70 rounded-xl font-bold text-amber-800/50 hover:text-amber-700 hover:bg-amber-100 text-xs sm:text-sm transition relative z-0 ml-1 mb-[4px] shadow-inner">
             Pengaturan Umum
         </button>
         
-        <!-- HANYA ADMIN YANG BISA MELIHAT TAB PENJADWALAN -->
+        <!-- Hanya admin yang bisa melihat aowkoakwoakoawk -->
         @if(auth()->user()->role === 'admin')
-        <!-- TAB 3: PENJADWALAN -->
+        <!-- Maintenance -->
         <button type="button" onclick="switchTab('jadwal')" id="tab-btn-jadwal"
             class="px-4 sm:px-5 py-1.5 bg-amber-50/70 border border-amber-200/70 rounded-xl font-bold text-amber-800/50 hover:text-amber-700 hover:bg-amber-100 text-xs sm:text-sm transition relative z-0 ml-1 mb-[4px] shadow-inner">
-            Penjadwalan
+            Maintenenace
         </button>
         @endif
     </div>
 
-    <!-- PERUBAHAN: Menghapus rounded-tl-none menjadi rounded-2xl -->
     <div class="bg-white border border-amber-200 rounded-2xl shadow-sm p-6 lg:p-8 mb-6 relative z-0 -mt-[1px]">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
 
-            <!-- ========================================================================= -->
-            <!-- MODULE 3: TAB KONTEN PROFIL PRIBADI -->
-            <!-- ========================================================================= -->
+    
+            <!-- Profil -->
+    
             <form id="section-profil" action="{{ route('settings.profil.update') }}" method="POST"
                 enctype="multipart/form-data" class="lg:col-span-2 block">
                 @csrf @method('PUT')
@@ -138,9 +131,8 @@
                 </div>
             </form>
 
-            <!-- ========================================================================= -->
-            <!-- MODULE 4: TAB KONTEN PENGATURAN UMUM -->
-            <!-- ========================================================================= -->
+    
+            <!-- Pengaturan Umum -->
             <div id="section-umum" class="lg:col-span-2 hidden">
                 <h3 class="text-xl font-bold text-amber-950 mb-6 border-b border-amber-100 pb-3">Pengaturan Notifikasi Sistem</h3>
                 <div class="space-y-4">
@@ -227,9 +219,8 @@
                 </div>
             </div>
 
-            <!-- ========================================================================= -->
-            <!-- MODULE 5: TAB KONTEN JADWAL MAINTENANCE (HANYA ADMIN) -->
-            <!-- ========================================================================= -->
+    
+            <!-- Penjadwalan Maintenance -->
             @if(auth()->user()->role === 'admin')
             <div id="section-jadwal" class="lg:col-span-2 hidden">
                 <h3 class="text-xl font-bold text-amber-950 mb-6 border-b border-amber-100 pb-3">Penjadwalan Maintenance</h3>
@@ -321,9 +312,9 @@
             </div>
             @endif
 
-            <!-- ========================================================================= -->
-            <!-- MODULE 6: TOOLTIP PANDUAN SAMPING -->
-            <!-- ========================================================================= -->
+    
+            <!-- Tooltip helper -->
+    
             <div class="lg:col-span-1 sticky top-24 pt-6 lg:pt-0">
                 <div class="bg-amber-50/50 rounded-2xl border border-amber-200 p-6 shadow-inner transition-all duration-300" id="tooltip-box">
                     <div class="flex items-center gap-3 mb-4 border-b border-amber-200 pb-3">
@@ -338,11 +329,9 @@
         </div>
     </div>
 
-    <!-- Jangan lupa pastikan baris CSS ini terhubung ke file .css yang sama atau yang baru -->
     <link rel="stylesheet" href="{{ asset('css/settings.css') }}?v={{ time() }}">
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
     <script>
-        // Mengirim data dari Server (Blade/PHP) ke Global Window JS
         window.maintenanceRouteUrl = "{{ route('settings.maintenance') }}";
         window.LaravelCSRFToken = "{{ csrf_token() }}";
         window.savedMaintenanceDates = {!! Cache::get('jadwal_tersimpan') ? Cache::get('jadwal_tersimpan') : '[]' !!};

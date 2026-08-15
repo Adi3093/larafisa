@@ -13,10 +13,8 @@
             </div>
         @endif
 
-        <!-- LAYOUT PROFIL ATAS (SESUAI MOCKUP) -->
         <div class="bg-white rounded-3xl shadow-xl shadow-amber-900/10 p-6 lg:p-8 mb-8 border border-amber-100">
             @auth
-                <!-- Foto di kiri, Teks di Kanan, Rata Tengah Vertikal -->
                 <div class="flex flex-col md:flex-row items-center justify-start gap-6 md:gap-8">
                     <div class="relative shrink-0">
                         @if (auth()->user()->avatar)
@@ -48,7 +46,7 @@
         <div
             class="bg-white rounded-3xl shadow-sm border border-amber-200 overflow-hidden mb-8 p-3 sm:p-5 flex flex-col gap-3">
             @auth
-                <!-- MENU 1: EDIT PROFILE -->
+                <!-- Edit Profil -->
                 <a href="{{ route('profil.tamu.edit') }}"
                     class="flex items-center justify-between p-4 rounded-2xl border border-amber-100 hover:border-amber-400 hover:bg-amber-50/50 transition-all duration-300 group shadow-sm">
                     <div class="flex items-center gap-4">
@@ -64,7 +62,7 @@
                     </div>
                 </a>
 
-                <!-- MENU 2: UBAH PASSWORD -->
+                <!-- Ubah Password -->
                 <a href="{{ route('profil.tamu.password') }}"
                     class="flex items-center justify-between p-4 rounded-2xl border border-amber-100 hover:border-amber-400 hover:bg-amber-50/50 transition-all duration-300 group shadow-sm">
                     <div class="flex items-center gap-4">
@@ -83,7 +81,7 @@
                     </div>
                 </a>
 
-                <!-- MENU 3: LOG OUT -->
+                <!-- Logout -->
                 <form method="POST" action="{{ route('logout') }}" class="m-0"
                     data-confirm="Yakin mau keluar?|Sesi login Anda akan diakhiri dan harus masuk kembali."
                     data-theme="danger" data-btn="Ya, Keluar Akun">

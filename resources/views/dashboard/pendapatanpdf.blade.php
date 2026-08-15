@@ -123,22 +123,15 @@
         <tbody>
             @forelse($reservasis as $index => $res)
                 @php
-                    // Logika Perhitungan Hari yang Benar (Midnight to Midnight)
                     $in = \Carbon\Carbon::parse($res->check_in)->startOfDay();
                     $out = \Carbon\Carbon::parse($res->check_out)->startOfDay();
                     $diffDays = max(1, (int) $in->diffInDays($out));
-
-                    // Hitung Uang Kamar
                     $hargaKamar = $res->kamar->kelasKamar->harga ?? 0;
                     $kamarTotal = $hargaKamar * $diffDays;
-
-                    // Hitung Ekstra Bed (Dikoreksi menjadi 50000, Selimut dihapus)
                     $ekstra = is_array($res->ekstra) ? $res->ekstra : json_decode($res->ekstra, true) ?? [];
                     $ekstraTotal = ($ekstra['Extra Bed'] ?? 0) * 50000;
-
                     $totalBaris = $kamarTotal + $ekstraTotal;
 
-                    // Tanggal Pelunasan / Checkout Aktual
                     $tglSelesai = \Carbon\Carbon::parse($res->updated_at)->format('d/m/Y');
                 @endphp
                 <tr>
@@ -198,7 +191,6 @@
         </tbody>
     </table>
 
-    <!-- SCRIPT TRIGGER PRINT (Hanya muncul ketika diklik dari tombol Print) -->
     @if(isset($isPrint) && $isPrint)
     <script>
         window.onload = function() {

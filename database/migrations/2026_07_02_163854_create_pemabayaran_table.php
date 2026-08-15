@@ -19,10 +19,7 @@ return new class extends Migration
             $table->text('qr_image')->nullable();
             $table->json('raw_response')->nullable();
             $table->enum('status', ['pending', 'berhasil', 'gagal', 'dibatalkan'])->default('pending');
-
-            // PERBAIKAN DI SINI: Menggunakan 'timestamp' (singular) dan 'nullable()' dengan tanda kurung
             $table->timestamp('expired_at')->nullable();
-
             $table->timestamps();
         });
     }
@@ -32,7 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // PERBAIKAN DI SINI: Menyesuaikan nama tabel agar bisa di-rollback dengan aman
         Schema::dropIfExists('pembayarans');
     }
 };

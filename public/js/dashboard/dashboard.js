@@ -1,13 +1,8 @@
-// ==========================================
-// MODULE 1: CHART.JS & ALPINE MANAGER
-// ==========================================
 let myChart = null;
-
-// Fungsi ini dipanggil secara otomatis oleh Alpine.js via x-data="chartManager()"
 function chartManager() {
     return {
-        viewMode: 'Mingguan', // State: 'Mingguan' atau 'Bulanan'
-        dataType: 'pendapatan', // State: 'pendapatan' atau 'tamu'
+        viewMode: 'Mingguan', 
+        dataType: 'pendapatan', 
 
         formatRupiah(number) {
             return new Intl.NumberFormat('id-ID', {
@@ -30,16 +25,12 @@ function chartManager() {
 
         renderChart() {
             const ctx = document.getElementById('mainChart').getContext('2d');
-
-            // Ambil data dari Window Global yang dikirim oleh Blade
             const rawData = window.chartDataRaw;
 
             let isUang = this.dataType === 'pendapatan';
             let isBulan = this.viewMode === 'Bulanan';
-
             let labels = isBulan ? rawData.labels_bulan : rawData.labels_minggu;
             let dataPoints = [];
-
             if (isBulan) dataPoints = isUang ? rawData.data_uang_bulan : rawData.data_tamu_bulan;
             else dataPoints = isUang ? rawData.data_uang_minggu : rawData.data_tamu_minggu;
 
@@ -97,23 +88,15 @@ function chartManager() {
         }
     }
 }
-
-// Mendaftarkan fungsi Alpine agar bisa diakses HTML
 window.chartManager = chartManager;
 
 
-// ==========================================
-// MODULE 2: FULLCALENDAR INITIALIZATION
-// ==========================================
+// KAlender
 document.addEventListener('DOMContentLoaded', function() {
-    // Pastikan DOM sudah dimuat sebelum memanggil ID 'calendar'
     const calendarEl = document.getElementById('calendar');
     if (!calendarEl) return;
 
-    // Ambil data tanggal dari Window Global yang dikirim oleh Blade
     const markedDates = window.markedDates || [];
-    
-    // Mapping format tanggal database menjadi format Object FullCalendar
     const calendarEvents = markedDates.map(date => {
         return {
             title: 'Jadwal',
@@ -133,8 +116,6 @@ document.addEventListener('DOMContentLoaded', function() {
             right: 'next'
         },
         events: calendarEvents,
-        
-        // Logika ketika tanggal diklik oleh admin
         dateClick: async function(info) {
             const clickedDate = info.dateStr;
             const dateObj = new Date(clickedDate);
@@ -152,7 +133,6 @@ document.addEventListener('DOMContentLoaded', function() {
             container.innerHTML = '<div class="col-span-1 md:col-span-2 text-center py-8"><p class="text-sm font-bold text-amber-700 animate-pulse">Memuat daftar tiket reservasi...</p></div>';
 
             try {
-                // Fetch AJAX ke Backend Laravel
                 let res = await fetch(`/api/jadwal-harian?tanggal=${clickedDate}`);
                 let data = await res.json();
 

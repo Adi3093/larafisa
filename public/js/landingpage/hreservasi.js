@@ -1,18 +1,14 @@
-// MODULE 1: GLOBAL STATE VARIABLES
 let currentHarga = 0;
-
-// MODULE 2: INITIALIZATION ON LOAD
 document.addEventListener("DOMContentLoaded", () => {
     updateUIKamar();
     syncMinCheckout();
 });
 
-// MODULE 3: GUEST & CAPACITY MANAGEMENT
+// Kapastas tamu
 function adjustAnggota(val) {
     let input = document.getElementById("jumlah_anggota");
     let current = parseInt(input.value) || 1;
     let newVal = current + val;
-    // Maksimal 10 orang menyesuaikan
     if (newVal >= 1 && newVal <= 10) {
         input.value = newVal;
         checkKapasitas();
@@ -24,18 +20,14 @@ function checkKapasitas() {
     if (!tooltip) return;
 
     let anggota = parseInt(document.getElementById("jumlah_anggota").value) || 1;
-
-    // HANYA MENGATUR TOOLTIP: Tampilkan tooltip otomatis jika anggota lebih dari 3 (mulai angka 4)
     if (anggota > 3) {
         showWarningTooltip();
     } else {
         hideWarningTooltip();
     }
-    
-    // Ikon (!) tidak diapa-apakan di sini karena sudah diset selalu muncul di HTML (class 'flex')
 }
 
-// LOGIKA TOGGLE TOOLTIP KLIK MANUAL
+// tootip klick manual
 function toggleWarningTooltip(e) {
     if(e) e.stopPropagation();
     let tooltip = document.getElementById("kapasitas_tooltip");
@@ -76,7 +68,7 @@ function toggleInfoTooltip(e) {
     }
 }
 
-// Tutup Tooltip jika tamu nge-klik bagian kosong di luar Ikon
+// tooltip tertutup jika tamu menekan diluar bubble tooltip
 document.addEventListener('click', function(e) {
     let warnBtn = document.getElementById("kapasitas_warning");
     let warnTooltip = document.getElementById("kapasitas_tooltip");
@@ -92,7 +84,7 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// MODULE 4: DATE & CALENDAR MANAGEMENT
+//Datetime managenem
 function adjustDate(inputId, daysToAdd) {
     let input = document.getElementById(inputId);
     if (!input.value) return;
@@ -120,8 +112,6 @@ function syncMinCheckout() {
 
     let inDate = new Date(inInput.value);
     let outDate = new Date(outInput.value);
-
-    // Jika Checkout mendahului/sama dengan Checkin, otomatis majukan + Set ke jam 11:00
     if (outDate <= inDate) {
         let newOut = new Date(inDate);
         newOut.setDate(newOut.getDate() + 1);
@@ -137,7 +127,7 @@ function syncMinCheckout() {
     }
 }
 
-// MODULE 5: EXTRA SERVICES & PRICING LOGIC
+// layanan ekstra dan pengjitung
 function adjustEkstra(id, val) {
     let input = document.getElementById(id);
     let current = parseInt(input.value) || 0;
@@ -152,8 +142,6 @@ function hitungTotal() {
     let select = document.getElementById("kelas_kamar_id");
     let inDate = new Date(document.getElementById("check_in").value);
     let outDate = new Date(document.getElementById("check_out").value);
-
-    // Reset ke jam 00:00 untuk hitungan murni "hari kalender"
     inDate.setHours(0, 0, 0, 0);
     outDate.setHours(0, 0, 0, 0);
 
@@ -168,8 +156,6 @@ function hitungTotal() {
                 select.options[select.selectedIndex].getAttribute("data-harga"),
             ) || 0;
     }
-
-    // Hanya Ekstra Bed saja dengan harga Rp 50.000
     let bed = parseInt(document.getElementById("extra_bed").value) || 0;
     let total = hargaKamar * diffDays + bed * 50000;
 
@@ -177,7 +163,7 @@ function hitungTotal() {
         "Rp " + total.toLocaleString("id-ID");
 }
 
-// MODULE 6: UI UPDATE & LIVE PREVIEW KAMAR
+// preview kamar
 function updateUIKamar() {
     let select = document.getElementById("kelas_kamar_id");
     let btnLihat = document.getElementById("btnLihatKamar");
@@ -241,7 +227,6 @@ function updateUIKamar() {
     hitungTotal();
 }
 
-// EXPORT TO GLOBAL WINDOW FOR BLADE
 window.adjustAnggota = adjustAnggota;
 window.checkKapasitas = checkKapasitas;
 window.adjustDate = adjustDate;

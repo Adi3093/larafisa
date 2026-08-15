@@ -32,7 +32,6 @@ class User extends Authenticatable
         return $this->hasMany(Reservasi::class, 'user_id');
     }
 
-    // Mengambil semua reservasi walk-in yang pernah dibuat oleh resepsionis ini
     public function reservasiDibuat()
     {
         return $this->hasMany(Reservasi::class, 'dibuat_oleh_user_id');

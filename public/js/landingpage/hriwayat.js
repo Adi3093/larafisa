@@ -1,9 +1,6 @@
-// MODULE 1: GLOBAL STATE & CACHE VARIABLES
 const paymentIntervals = {};
 const timerIntervals = {};
 const paymentExpiredFlags = {};
-
-// MODULE 2: MODAL WINDOW CONTROL
 function handleCloseModal() { window.location.reload(); }
 
 function openMobileWizard(id) {
@@ -24,7 +21,7 @@ function closeMobileWizard(id) {
     document.getElementById("backBtn-" + id).classList.add("hidden");
 }
 
-// MODULE 3: LAZY QRIS GENERATOR & CUSTOM CONFIRM TRIGGER
+// QRIS generatot
 function triggerQrisConfirm(resId, url) {
     let form = document.getElementById('dummy-qris-' + resId);
     if (!form) {
@@ -84,7 +81,6 @@ async function executeGenerateQris(resId, url) {
                 <div class="p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-bold rounded-xl text-center shadow-inner mb-4">🔒 Jadwal telah terkunci karena QRIS pembayaran sudah diminta.</div>`;
             }
 
-            // HILANGKAN SWIPE DELETE KARENA SUDAH BAYAR
             let cardSwipe = document.querySelector(`.swipe-container[data-id="${resId}"]`);
             if(cardSwipe) {
                 cardSwipe.setAttribute('data-can-delete', 'false');
@@ -108,7 +104,7 @@ async function executeGenerateQris(resId, url) {
     }
 }
 
-// MODULE 4: DATE ADJUSTER (< > BUTTONS)
+// DATETIME ADJUSTER 
 function adjustDateRiwayat(inputId, daysToAdd) {
     let input = document.getElementById(inputId);
     if (!input || !input.value || input.disabled) return;
@@ -122,7 +118,7 @@ function adjustDateRiwayat(inputId, daysToAdd) {
     input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
-// MODULE 5: COUNTDOWN TIMER ENGINE
+// Countdown timer
 function startCountdown(expiredAtStr, resId) {
     if (timerIntervals[resId]) clearInterval(timerIntervals[resId]);
     const safeDateStr = expiredAtStr.replace(" ", "T");
@@ -166,7 +162,7 @@ function startCountdown(expiredAtStr, resId) {
     }, 1000);
 }
 
-// MODULE 6: REALTIME CHECK-IN STATUS CHECKER 
+// Realtime check-in checker 
 setInterval(() => {
     const now = new Date().getTime();
     document.querySelectorAll('[data-checkin-time]').forEach(el => {
@@ -187,7 +183,6 @@ setInterval(() => {
                     statusDisplay.className = "text-red-600 font-bold uppercase tracking-wider animate-pulse";
                 }
 
-                // --- PERBAIKAN: UPDATE JUGA STATUS BADGE DI CARD UTAMA ---
                 const cardBadge = document.getElementById('card-badge-' + resId);
                 if (cardBadge) {
                     cardBadge.innerText = 'TERLEWAT';
@@ -210,7 +205,7 @@ setInterval(() => {
     });
 }, 1000);
 
-// MODULE 7: REALTIME TRANSACTION CHECKER
+// Realtime Transaction checker
 function startPaymentCheck(invoice, resId) {
     if (paymentIntervals[resId]) clearInterval(paymentIntervals[resId]);
     const statusDisplay = document.getElementById("statusPaymentDisplay-" + resId);
@@ -242,7 +237,7 @@ function startPaymentCheck(invoice, resId) {
     }, 5000);
 }
 
-// MODULE 8: QR CODE DOWNLOADER
+// Dowwnload QRIS
 async function forceDownloadQR(btn, imageUrl, invoiceNo) {
     if (btn.disabled) return;
     const textSpan = btn.querySelector(".btn-text");
@@ -269,7 +264,7 @@ async function forceDownloadQR(btn, imageUrl, invoiceNo) {
     }
 }
 
-// MODULE 9: VALIDASI WAKTU RESCHEDULE MUNDUR (X-CONFIRM)
+// Validasi rescheduling
 function validateRescheduleTime(resId) {
     const checkinInput = document.getElementById('checkin-' + resId);
     if (!checkinInput) return;
@@ -295,7 +290,7 @@ function validateRescheduleTime(resId) {
     }
 }
 
-// MODULE 10: AUTO REFRESH JIKA STATUS BERUBAH OLEH RESEPSIONIS
+// Auto refresh status
 setInterval(async () => {
     if (!window.initialReservations) return;
 
@@ -318,7 +313,7 @@ setInterval(async () => {
     } catch (e) {}
 }, 5000); 
 
-// MODULE 11: GLOBAL DELETE CONFIRM TRIGGER
+// delete confirm trigger
 window.triggerDeleteMobile = function(resId) {
     window.dispatchEvent(new CustomEvent('open-confirm', {
         detail: {
@@ -336,7 +331,7 @@ window.triggerDeleteMobile = function(resId) {
     document.addEventListener('confirm-success-once', successHandler, { once: true });
 }
 
-// MODULE 12: SWIPE GESTURE UNTUK HAPUS (HANYA TOUCH SCREEN)
+// Swipe Gesture (Hapus)
 function initSwipeToDelete() {
     const containers = document.querySelectorAll('.swipe-container');
 
@@ -352,7 +347,6 @@ function initSwipeToDelete() {
         let isDragging = false;
 
         const handleStart = (e) => {
-            // Deteksi HANYA Lakukan pada layar sentuh (mencegah klik mouse error)
             if (!e.touches) return; 
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
@@ -364,14 +358,9 @@ function initSwipeToDelete() {
             if (!isDragging || !e.touches) return;
             const x = e.touches[0].clientX;
             const y = e.touches[0].clientY;
-            
             const deltaX = x - startX;
             const deltaY = Math.abs(y - startY);
-
-            // Batalkan horizontal swipe jika user sedang scroll ke bawah layar
             if (deltaY > Math.abs(deltaX)) return;
-
-            // PERBAIKAN: Hanya tambahkan class 'swiping' jika tarikan lebih besar dari 10px
             if (deltaX < -10) {
                 el.classList.add('swiping');
             }
@@ -399,19 +388,14 @@ function initSwipeToDelete() {
             } else {
                 el.style.transform = `translateX(0px)`;
             }
-
-            // Hapus class 'swiping' agar kartu bisa kembali diklik untuk memunculkan detail
             setTimeout(() => el.classList.remove('swiping'), 50);
         };
-
-        // HANYA pasang event sentuh, abaikan event mouse (mouse click akan tembus ke onClick di elemen kartu)
         el.addEventListener('touchstart', handleStart, { passive: true });
         el.addEventListener('touchmove', handleMove, { passive: true });
         el.addEventListener('touchend', handleEnd);
     });
 }
 
-// Global Event Handlers
 document.addEventListener('DOMContentLoaded', () => {
     initSwipeToDelete();
 

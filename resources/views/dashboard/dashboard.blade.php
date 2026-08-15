@@ -162,7 +162,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <script>
-        // Mendaftarkan data PHP ke Object Global Window agar bisa dibaca di dashboard.js
         window.chartDataRaw = @json($chartData);
         window.markedDates = @json($jadwalReservasi);
     </script>

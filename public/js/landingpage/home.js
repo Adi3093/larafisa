@@ -1,7 +1,4 @@
-// MODULE 1: GLOBAL STATE VARIABLES
 let kelasIdAktif = null;
-
-// MODULE 2: MODAL WINDOW CONTROL
 function bukaDetailKelas(id, namaKelas, harga, fasilitas, thumb, f1, f2, f3, jumlahTersedia) {
     kelasIdAktif = id;
 
@@ -24,7 +21,6 @@ function bukaDetailKelas(id, namaKelas, harga, fasilitas, thumb, f1, f2, f3, jum
         btnPesan.innerText = "Saat Ini Tidak Tersedia";
     }
 
-    // 🚀 FIX: Menggunakan "Set" untuk secara otomatis membuang URL gambar yang terduplikat
     let galeriHTML = '';
     let arrayFoto = [...new Set([thumb, f1, f2, f3])].filter(foto => foto !== '');
     
@@ -52,7 +48,6 @@ function tutupDetailKelas() {
     document.getElementById('modalDetail').classList.add('hidden');
 }
 
-// MODULE 3: REDIRECTION & FILTERING
 function lanjutReservasi() {
     let checkin = document.getElementById('filter_checkin').value;
     let checkout = document.getElementById('filter_checkout').value;
@@ -65,7 +60,7 @@ function resetFilter() {
 }
 
 
-// MODULE 4: KONTROL UI TANGGAL DAN PENGINAP
+// kontrol UI datetime dan jumlah penginap
 function adjustDateHome(inputId, daysToAdd) {
     let input = document.getElementById(inputId);
     if (!input || !input.value) return;
@@ -94,7 +89,7 @@ function syncMinCheckoutHome() {
     if (outDate <= inDate) {
         let newOut = new Date(inDate);
         newOut.setDate(newOut.getDate() + 1);
-        newOut.setHours(11, 0, 0, 0); // Kunci batasan ke jam 11 Siang
+        newOut.setHours(11, 0, 0, 0);
         
         let year = newOut.getFullYear();
         let month = String(newOut.getMonth() + 1).padStart(2, "0");
@@ -111,16 +106,12 @@ function adjustPenginap(change) {
     let displayInput = document.getElementById('display_penginap');
     let currentVal = parseInt(hiddenInput.value) || 1;
     let newVal = currentVal + change;
-    
-    // Batas Minimal 1 Orang, Maksimal 4 Orang
     if (newVal >= 1 && newVal <= 4) {
         hiddenInput.value = newVal;
         displayInput.value = newVal + " Orang";
     }
 }
 
-
-// MODULE 5: EXPORT TO GLOBAL WINDOW
 window.bukaDetailKelas = bukaDetailKelas;
 window.tutupDetailKelas = tutupDetailKelas;
 window.lanjutReservasi = lanjutReservasi;

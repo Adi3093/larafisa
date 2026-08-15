@@ -26,7 +26,6 @@
 
             <form action="{{ route('profil.tamu.update') }}" method="POST" enctype="multipart/form-data">
                 @csrf @method('PUT')
-
                 <div class="flex flex-col items-center mb-8 border-b border-amber-100 pb-8">
                     <div class="relative group cursor-pointer">
                         @if ($user->avatar)
@@ -55,7 +54,7 @@
                     </div>
                 </div>
 
-                <!-- BARIS 1: NAMA & USERNAME -->
+                <!-- Username dan nama -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
                         <label class="block text-sm font-bold text-amber-950 mb-2">Nama</label>
@@ -69,7 +68,7 @@
                     </div>
                 </div>
 
-                <!-- BARIS 2: EMAIL & NO.HP -->
+                <!-- Email / No.HP -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
                         <label class="block text-sm font-bold text-amber-950 mb-2">Email</label>
@@ -85,7 +84,7 @@
                     </div>
                 </div>
 
-                <!-- BARIS 3: NIK -->
+                <!-- NIK -->
                 <div class="mb-8">
                     <label class="block text-sm font-bold text-amber-950 mb-2">No.KTP</label>
                     <input type="text" name="no_ktp" value="{{ old('no_ktp', $user->no_ktp) }}" maxlength="16"

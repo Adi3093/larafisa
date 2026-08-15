@@ -11,15 +11,11 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // 1. Statistik Card Atas (Kamar)
+        // Statistika Kamar
         $kamarTersedia = Kamar::where('status', 'Tersedia')->count();
         $kamarTerpakai = Kamar::whereIn('status', ['Terpakai', 'Dibooking'])->count();
         $kamarPerbaikan = Kamar::where('status', 'Maintenance')->count();
-
-        // 2. Data Tamu & Pendapatan (Untuk Card Tengah & Grafik)
         $now = Carbon::now();
-
-        // Ambil reservasi selesai untuk menghitung pendapatan asli
         $resSelesai = Reservasi::with('kamar.kelasKamar')->where('status_reservasi', 'Selesai')->get();
 
         $pendapatanBulan = 0;
@@ -27,10 +23,8 @@ class DashboardController extends Controller
         $pendapatanMinggu = 0;
         $tamuMinggu = 0;
 
-        // Wadah Array untuk Chart.js
         $chartBulanTamu = array_fill(1, 12, 0);
         $chartBulanUang = array_fill(1, 12, 0);
-
         $chartMingguTamu = array_fill(1, 7, 0);
         $chartMingguUang = array_fill(1, 7, 0);
 
@@ -39,7 +33,6 @@ class DashboardController extends Controller
 
         foreach ($resSelesai as $res) {
             $outDate = Carbon::parse($res->check_out);
-
             $in = Carbon::parse($res->check_in);
             $diffDays = max(1, $in->diffInDays($outDate));
             $hargaKamar = $res->kamar->kelasKamar->harga ?? 0;
@@ -47,8 +40,6 @@ class DashboardController extends Controller
             $bed = ($ekstra['Extra Bed'] ?? 0) * 100000;
             $selimut = ($ekstra['Extra Selimut'] ?? 0) * 25000;
             $uang = ($hargaKamar * $diffDays) + $bed + $selimut;
-
-            // Masukkan ke array Bulanan (Jika tahun ini)
             if ($outDate->year === $now->year) {
                 $m = $outDate->month;
                 $chartBulanTamu[$m] += 1;
@@ -60,7 +51,6 @@ class DashboardController extends Controller
                 }
             }
 
-            // Masukkan ke array Mingguan (Jika masuk rentang minggu ini)
             if ($outDate->between($startOfWeek, $endOfWeek)) {
                 $dayIndex = $outDate->dayOfWeekIso; // 1 = Senin, 7 = Minggu
                 $chartMingguTamu[$dayIndex] += 1;
@@ -71,7 +61,6 @@ class DashboardController extends Controller
             }
         }
 
-        // Format Data Akhir untuk Chart.js
         $chartData = [
             'labels_bulan' => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
             'data_tamu_bulan' => array_values($chartBulanTamu),
@@ -82,7 +71,7 @@ class DashboardController extends Controller
             'data_uang_minggu' => array_values($chartMingguUang),
         ];
 
-        // 3. Kalender & Jadwal Mendatang
+        // Kalender dan Jadwal Mendatang
         $jadwalReservasi = Reservasi::whereIn('status_reservasi', ['Terkonfirmasi', 'Menunggu Konfirmasi'])
             ->select('check_in', 'id')
             ->get()

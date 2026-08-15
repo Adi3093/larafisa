@@ -32,7 +32,7 @@ class PengingatPembayaran extends Notification
         return [
             'type' => 'warning',
             'title' => 'Segera Selesaikan Pembayaran!',
-            'no_reservasi' => $this->noReservasi, // Disimpan sebagai key pencarian
+            'no_reservasi' => $this->noReservasi,
             'message' => "Batas waktu pembayaran untuk reservasi kamar " . $this->namaKelas . " dengan nomor tiket #" . $this->noReservasi . " tersisa kurang dari 30 menit lagi.\n\nHarap segera selesaikan pembayaran Anda agar pesanan tidak dibatalkan otomatis oleh sistem.",
         ];
     }

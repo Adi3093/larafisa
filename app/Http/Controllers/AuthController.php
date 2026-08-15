@@ -45,7 +45,7 @@ class AuthController extends Controller
         ])->onlyInput('login');
     }
 
-    //Resgistrasi Tamu
+    //Resgistrasi dilakukan oleh tamu eak
     public function register()
     {
         return view('auth.register');
@@ -55,7 +55,7 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:45',
             'email' => 'required|string|email|max:45|unique:users',
-            'password' => 'required|string|min:8|confirmed', // <-- Tambahkan |confirmed di sini
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
         $baseUsername = Str::before($request->email, "@");
@@ -71,7 +71,7 @@ class AuthController extends Controller
             'name' => $request->name,
             'username' => $username,
             'email' => $request->email,
-            'password' => $request->password, // (Optional) Bisa pakai $request->password saja karena di User model sudah ada 'hashed'
+            'password' => $request->password,
             'role' => 'tamu',
         ]);
 

@@ -25,7 +25,6 @@
                 </div>
             @endif
 
-            <!-- MENGARAH KE RUTE YANG BARU DIBUAT DI WEB.PHP -->
             <form action="{{ route('profil.tamu.update_password') }}" method="POST">
                 @csrf @method('PUT')
 

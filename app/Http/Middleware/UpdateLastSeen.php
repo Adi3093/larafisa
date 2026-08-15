@@ -17,8 +17,6 @@ class UpdateLastSeen
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // dd('sensor disentuh sistem');
-
         if (Auth::check()) {
             DB::table('users')
                 ->where('id', Auth::id())

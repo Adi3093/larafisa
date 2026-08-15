@@ -19,20 +19,18 @@
     pointer-events: none;
 }
 
-/* Flare Kiri (Lengkungan Keluar di Sudut Kiri Bawah Tab) */
 .chrome-tab-active::before {
     left: -16px;
     border-bottom-right-radius: 16px;
-    border-right: 1px solid #fde68a; /* Warna hex dari border-amber-200 */
+    border-right: 1px solid #fde68a; /* hex  amber-200 */
     border-bottom: 1px solid #fde68a;
-    box-shadow: 6px 6px 0 6px #ffffff; /* Mengisi ruang kosong dengan putih (bg-white) */
+    box-shadow: 6px 6px 0 6px #ffffff;
 }
 
-/* Flare Kanan (Lengkungan Keluar di Sudut Kanan Bawah Tab) */
 .chrome-tab-active::after {
     right: -16px;
     border-bottom-left-radius: 16px;
-    border-left: 1px solid #fde68a; /* Warna hex dari border-amber-200 */
+    border-left: 1px solid #fde68a; 
     border-bottom: 1px solid #fde68a;
-    box-shadow: -6px 6px 0 6px #ffffff; /* Mengisi ruang kosong dengan putih (bg-white) */
+    box-shadow: -6px 6px 0 6px #ffffff; 
 }

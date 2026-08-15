@@ -18,7 +18,6 @@
                 </p>
             </div>
 
-            <!-- FIX: KOTAK FASILITAS DIPERKECIL DI MOBILE (w-[105px]) AGAR TIDAK KRAM -->
             <div class="mt-10 lg:mt-16 w-full">
                 <div
                     class="flex overflow-x-auto gap-3 sm:gap-6 pb-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -90,7 +89,6 @@
         </div>
     </section>
 
-    <!-- FIX: PENAMBAHAN MIN-W-0 PADA INPUT AGAR TIDAK MELUBER & MERUSAK GRID DESKTOP -->
     <div
         class="relative z-40 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 lg:-mt-24 mb-10 lg:mb-16 transition-all duration-300">
         <div
@@ -281,7 +279,7 @@
         </div>
     </div>
 
-    <!-- GALERI BENTO GRID -->
+    <!-- Galeri -->
     <section class="bg-white py-10 lg:py-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-10">
@@ -290,7 +288,6 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6">
-                <!-- Baris 1: Kiri Kecil (5/12), Kanan Lebar (7/12) -->
                 <div
                     class="md:col-span-5 h-[220px] sm:h-[300px] rounded-3xl overflow-hidden shadow-sm border border-amber-200 group relative">
                     <img src="{{ asset('storage/landingpage/koridor.png') }}" alt="Galeri Fisa"
@@ -308,7 +305,6 @@
                     </div>
                 </div>
 
-                <!-- Baris 2: Kiri Lebar (7/12), Kanan Kecil (5/12) -->
                 <div
                     class="md:col-span-7 h-[220px] sm:h-[300px] rounded-3xl overflow-hidden shadow-sm border border-amber-200 group relative">
                     <img src="{{ asset('storage/landingpage/backhotel.jpg') }}" alt="Galeri Fisa"

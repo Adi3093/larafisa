@@ -29,7 +29,7 @@ class PembayaranKadaluarsa extends Notification
         return [
             'type' => 'warning',
             'title' => 'Reservasi Anda Dibatalkan (Kadaluarsa)',
-            'no_reservasi' => $this->noReservasi, // Disimpan sebagai key pencarian
+            'no_reservasi' => $this->noReservasi,
             'message' => "Batas waktu pembayaran untuk tiket #" . $this->noReservasi . " telah habis. Sesuai dengan kebijakan Fisa Hotel, sistem telah membatalkan reservasi Anda secara otomatis.\n\nSilakan lakukan proses reservasi ulang jika Anda masih ingin memesan kamar.",
         ];
     }

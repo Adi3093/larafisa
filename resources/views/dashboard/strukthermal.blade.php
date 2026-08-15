@@ -73,7 +73,6 @@
     </style>
 </head>
 
-<!-- PERUBAHAN: Mengubah window.location.href menjadi window.close() -->
 <body onload="window.print(); setTimeout(function(){ window.close(); }, 500);">
 
     <div class="text-center mb-2">

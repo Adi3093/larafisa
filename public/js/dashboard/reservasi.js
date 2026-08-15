@@ -1,8 +1,4 @@
-// ==========================================
-// MODULE 1: MANAJEMEN MODAL WALK-IN (RESERVASI BARU / VIEW)
-// ==========================================
-
-// FUNGSI HELPER UNTUK MENGATUR TOMBOL (Aktif / Disabled Hover X)
+// Walk-in
 function setButtonState(btn, isVisible, isEnabled, text, onClickFunc, isPrimary = false) {
     if (!btn) return;
     if (isVisible) {
@@ -37,7 +33,6 @@ function openWalkInModal() {
     document.getElementById("walkInForm").reset();
     document.getElementById("edit_reservasi_id").value = "";
     document.getElementById("modalWalkinTitle").innerText = "Reservasi Baru";
-
     let form = document.getElementById('walkInForm');
     let inputs = form.querySelectorAll('input:not([type="hidden"]), select, textarea');
     inputs.forEach(el => {
@@ -48,8 +43,6 @@ function openWalkInModal() {
 
     let btnSaja = document.getElementById("btnSimpanSaja");
     let btnCheckin = document.getElementById("btnSimpanCheckin");
-
-    // Kembalikan ke fungsi Simpan biasa (Walk-in baru)
     setButtonState(btnSaja, true, true, 'Simpan', () => showMyConfirm('Simpan Reservasi?', 'Simpan data reservasi baru ini?', 'amber', 'Ya, Simpan', 'walkInForm', 'simpan'), false);
     setButtonState(btnCheckin, true, true, 'Simpan dan Check-in', () => showMyConfirm('Simpan & Check-in?', 'Simpan data dan proses Check-in tamu?', 'emerald', 'Ya, Check-in', 'walkInForm', 'simpan_checkin'), true);
     
@@ -63,8 +56,7 @@ function openWalkInModal() {
     }
 
     document.getElementById("metode_pembayaran").value = "Tunai";
-    toggleSimpanBtn(); // Mengatur ulang visibilitas tombol berdasarkan metode
-
+    toggleSimpanBtn();
     document.getElementById("wi_img_main").classList.add("hidden");
     document.getElementById("wi_placeholder_txt").classList.remove("hidden");
 
@@ -92,7 +84,6 @@ function closeWalkInModal() {
 function bukaWalkInEdit(dataRes) {
     document.getElementById('walkInModal').classList.remove('hidden');
     document.getElementById('walkInModal').classList.remove('pointer-events-none');
-
     let form = document.getElementById('walkInForm');
     form.action = `/reservasi/${dataRes.id}`;
     
@@ -150,8 +141,8 @@ function bukaWalkInEdit(dataRes) {
         el.classList.remove('bg-gray-100');
     });
 
+    // Jika Reservasi Online???
     if (isOnline) {
-        // --- SKENARIO 1: ONLINE ---
         document.getElementById('modalWalkinTitle').innerText = 'Tinjau Reservasi Online';
 
         inputs.forEach(el => {
@@ -162,11 +153,11 @@ function bukaWalkInEdit(dataRes) {
         
         if (isQRIS) {
             if (isLunas) {
-                // QRIS LUNAS: Bisa Konfirmasi & Checkin
+                // QRIS LUNAS
                 setButtonState(btnSimpan, true, true, 'Konfirmasi', () => showMyConfirm('Konfirmasi Reservasi?', 'Setujui pesanan ini?', 'emerald', 'Ya, Konfirmasi', 'walkInForm', 'simpan'), false);
                 setButtonState(btnSimpanCheckin, true, true, 'Konfirmasi & Check-in', () => showMyConfirm('Konfirmasi & Check-in?', 'Setujui dan langsung proses Check-in?', 'emerald', 'Ya, Check-in', 'walkInForm', 'simpan_checkin'), true);
             } else {
-                // QRIS PENDING: Dua-duanya Tidak Bisa Ditekan (Hover X / Disabled)
+                // QRIS PENDING
                 setButtonState(btnSimpan, true, false, 'Konfirmasi', null, false);
                 setButtonState(btnSimpanCheckin, true, false, 'Konfirmasi & Check-in', null, true);
             }
@@ -175,7 +166,7 @@ function bukaWalkInEdit(dataRes) {
                 setButtonState(btnSimpan, true, true, 'Konfirmasi', () => showMyConfirm('Konfirmasi Reservasi?', 'Setujui pesanan ini?', 'emerald', 'Ya, Konfirmasi', 'walkInForm', 'simpan'), false);
                 setButtonState(btnSimpanCheckin, true, true, 'Konfirmasi & Check-in', () => showMyConfirm('Konfirmasi & Check-in?', 'Setujui dan langsung proses Check-in?', 'emerald', 'Ya, Check-in', 'walkInForm', 'simpan_checkin'), true);
             } else {
-                // TUNAI PENDING: Hanya bisa konfirmasi, Check-in dilarang (Hover X)
+                // TUNAI PENDING
                 setButtonState(btnSimpan, true, true, 'Konfirmasi', () => showMyConfirm('Konfirmasi Reservasi?', 'Setujui pesanan ini?', 'emerald', 'Ya, Konfirmasi', 'walkInForm', 'simpan'), false);
                 setButtonState(btnSimpanCheckin, true, false, 'Konfirmasi & Check-in', null, true);
             }
@@ -196,11 +187,10 @@ function bukaWalkInEdit(dataRes) {
         }
 
     } else {
-        // --- SKENARIO 2: WALK-IN / OFFLINE ---
+        // Jika Offline (Walk-in)
         document.getElementById('modalWalkinTitle').innerText = 'Detail & Edit Reservasi';
 
         if (isLunas) {
-            // Jika sudah bayar, matikan form
             inputs.forEach(el => {
                 el.readOnly = true;
                 if(el.tagName === 'SELECT') el.disabled = true;
@@ -223,7 +213,6 @@ function bukaWalkInEdit(dataRes) {
                 }
             }
         } else {
-            // Gunakan fungsi toggle untuk mengatur tombol reguler walk-in
             toggleSimpanBtn(); 
             if (btnBukaQR) {
                 btnBukaQR.innerText = "Buka Pembayaran";
@@ -237,7 +226,6 @@ function bukaWalkInEdit(dataRes) {
 }
 
 function toggleSimpanBtn() {
-    // Abaikan fungsi ini jika sedang membuka reservasi online (karena online sudah diatur khusus oleh bukaWalkInEdit)
     let title = document.getElementById('modalWalkinTitle').innerText;
     if (title.includes('Online')) return;
 
@@ -257,7 +245,7 @@ function toggleSimpanBtn() {
     setButtonState(btnCheckin, true, true, 'Simpan dan Check-in', () => showMyConfirm('Simpan & Check-in?', 'Simpan data dan proses Check-in?', 'emerald', 'Ya, Check-in', 'walkInForm', 'simpan_checkin'), true);
 
     if (metode === "QRIS") {
-        setButtonState(btnCheckin, false, false, '', null, true); // Sembunyikan jika pilih QRIS walk-in
+        setButtonState(btnCheckin, false, false, '', null, true);
         if (isEdit) {
             setButtonState(btnSaja, false, false, '', null, false);
             if(btnBukaQR) btnBukaQR.classList.remove("hidden");
@@ -269,7 +257,6 @@ function toggleSimpanBtn() {
         if(btnBukaQR) btnBukaQR.classList.add("hidden");
     }
 
-    // Disable input fields when editing Walk-in
     if(document.getElementById("nama_tamu")) document.getElementById("nama_tamu").readOnly = isEdit;
     if(document.getElementById("no_hp")) document.getElementById("no_hp").readOnly = isEdit;
     if(document.getElementById("no_ktp")) document.getElementById("no_ktp").readOnly = isEdit;
@@ -278,8 +265,6 @@ function toggleSimpanBtn() {
     if(document.getElementById("check_in")) document.getElementById("check_in").readOnly = isEdit;
     if(document.getElementById("check_out")) document.getElementById("check_out").readOnly = isEdit;
     if(document.getElementById("metode_pembayaran")) document.getElementById("metode_pembayaran").disabled = isEdit;
-    
-    // Beri gaya warna abu jika disabled
     ['nama_tamu', 'no_hp', 'no_ktp', 'check_in', 'check_out'].forEach(id => {
         let el = document.getElementById(id);
         if (el) isEdit ? el.classList.add('bg-gray-100') : el.classList.remove('bg-gray-100');
@@ -290,9 +275,7 @@ function toggleSimpanBtn() {
     });
 }
 
-// ==========================================
-// MODULE 2: DATE & TIME MANAGEMENT
-// ==========================================
+// Datetime Management
 function formatDateTimeLocal(dateObj) {
     let year = dateObj.getFullYear();
     let month = String(dateObj.getMonth() + 1).padStart(2, "0");
@@ -331,9 +314,7 @@ function syncMinCheckout() {
     }
 }
 
-// ==========================================
-// MODULE 3: ENGINE KALKULATOR HARGA & PREVIEW
-// ==========================================
+// Penghitung Total
 function adjustQty(inputId, change) {
     let inputField = document.getElementById(inputId);
     if (!inputField || inputField.readOnly) return;
@@ -440,9 +421,7 @@ async function filterKamarDanHitung() {
     }
 }
 
-// ==========================================
-// MODULE 4: PAYMENT PANEL QRIS (AJAX & TIMER)
-// ==========================================
+// Paymet Panel (QRIS)
 let qrisTimerInterval;
 let paymentCheckerInterval;
 
@@ -692,16 +671,13 @@ async function downloadQrImage(url, invoice) {
     }
 }
 
-// ==========================================
-// MODULE 5: LOGIKA MODAL KONFIRMASI LOKAL
-// ==========================================
+// Konfirmasi
 let formToSubmitLocal = null;
 let actionValLocal = null;
 
 function showMyConfirm(title, message, theme, btnText, formId, actionVal = null) {
     formToSubmitLocal = formId ? document.getElementById(formId) : null;
     actionValLocal = actionVal;
-
     if (formToSubmitLocal && typeof formToSubmitLocal.checkValidity === 'function') {
         if (!formToSubmitLocal.checkValidity()) {
             formToSubmitLocal.reportValidity();
@@ -711,7 +687,6 @@ function showMyConfirm(title, message, theme, btnText, formId, actionVal = null)
 
     document.getElementById('localConfirmTitle').innerText = title;
     document.getElementById('localConfirmMessage').innerText = message;
-
     let btn = document.getElementById('localConfirmBtn');
     btn.innerText = btnText;
     btn.disabled = false;
@@ -789,7 +764,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Bind ke window
 window.openWalkInModal = openWalkInModal;
 window.closeWalkInModal = closeWalkInModal;
 window.bukaWalkInEdit = bukaWalkInEdit;

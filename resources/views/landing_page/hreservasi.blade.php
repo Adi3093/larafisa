@@ -1,11 +1,8 @@
 <x-lplayout>
-    <!-- PEMANGGILAN CSS EKSTERNAL -->
     <link rel="stylesheet" href="{{ asset('css/landingpage/hreservasi.css') }}?v={{ time() }}">
 
     <div class="absolute top-0 left-0 w-full h-80 bg-amber-600 z-0"></div>
-
     <div class="relative z-10 min-h-screen pt-24 lg:pt-32 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-
         <div class="mb-8">
             <h1 class="text-white text-3xl font-extrabold tracking-tight">Formulir Reservasi Online</h1>
             <p class="text-amber-100 mt-1">Lengkapi data di bawah ini untuk mengamankan pesanan kamar Anda.</p>
@@ -22,7 +19,6 @@
         @endif
 
         <div class="flex flex-col lg:flex-row gap-8 items-start">
-            {{-- Side Content --}}
             <div class="flex-1 w-full bg-white rounded-3xl shadow-xl border border-amber-100 p-6 sm:p-8">
                 @if (!$isLoggedIn)
                     <div class="text-center py-16">
@@ -53,10 +49,8 @@
                                 <div>
                                     <label class="flex items-center gap-1.5 text-xs font-bold text-gray-700 mb-2 relative group w-max z-20">
                                         Jumlah Penginap
-                                        <!-- PERUBAHAN: Ikon (!) class 'hidden' dihapus dan diganti 'flex' agar selalu muncul -->
-                                        <button type="button" id="kapasitas_warning" onclick="toggleWarningTooltip(event)" class="flex w-4 h-4 bg-amber-500 text-white rounded-full items-center justify-center text-[10px] font-black shadow-sm focus:outline-none transition-transform hover:scale-110 cursor-pointer">!</button>
+                                        <button type="button" id="kapasitas_warning" onclick="toggleWarningTooltip(event)" class="flex w-4 h-4 bg-amber-100 border border-amber-300 text-amber-600 rounded-full items-center justify-center text-[10px] font-black shadow-sm focus:outline-none transition-transform hover:scale-110 cursor-pointer">!</button>
                                         
-                                        <!-- Tooltip Gelembung Komik -->
                                         <div id="kapasitas_tooltip" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2.5 bg-white border border-amber-300 text-amber-900 text-[10px] font-bold text-center rounded-xl shadow-xl transition-all opacity-0 invisible pointer-events-none group-hover:opacity-100 group-hover:visible">
                                             Jumlah penginap lebih dari 2 orang disarankan untuk menambahkan layanan ekstra bed atau memesan dua kamar.
                                             <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-amber-300"></div>
@@ -112,7 +106,7 @@
                             <div class="mb-5">
                                 <label class="flex items-center gap-1.5 text-xs font-bold text-gray-700 mb-2 relative group w-max cursor-help z-10">
                                     Layanan Ekstra
-                                    <button type="button" id="info_btn" onclick="toggleInfoTooltip(event)" class="flex w-4 h-4 bg-amber-100 border border-amber-300 text-amber-600 rounded-full items-center justify-center text-[10px] font-black shadow-sm focus:outline-none transition-transform hover:scale-110 cursor-pointer">i</button>
+                                    <button type="button" id="info_btn" onclick="toggleInfoTooltip(event)" class="flex w-4 h-4 bg-amber-100 border border-amber-300 text-amber-600 rounded-full items-center justify-center text-[10px] font-black shadow-sm focus:outline-none transition-transform hover:scale-110 cursor-pointer">!</button>
                                     
                                     <div id="info_tooltip" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2.5 bg-white border border-amber-300 text-amber-900 text-[10px] font-bold text-center rounded-xl shadow-xl transition-all opacity-0 invisible pointer-events-none group-hover:opacity-100 group-hover:visible">
                                         Layanan ekstra bed sudah termasuk bantal dan selimut.
@@ -301,6 +295,5 @@
         </div>
     </div>
 
-    <!-- PEMANGGILAN SCRIPT EKSTERNAL JS -->
     <script src="{{ asset('js/landingpage/hreservasi.js') }}?v={{ time() }}"></script>
 </x-lplayout>

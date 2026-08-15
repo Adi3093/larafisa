@@ -1,5 +1,4 @@
 <x-dblayout>
-    <!-- PEMANGGILAN CSS CHROME TAB (MENGGUNAKAN kamar.css) -->
     <link rel="stylesheet" href="{{ asset('css/kamar.css') }}?v={{ time() }}">
 
     <div class="mb-6">
@@ -7,7 +6,7 @@
         <p class="text-sm text-amber-900/70 mt-1">Mengelola hak akses, pembaruan kata sandi, dan data pengguna.</p>
     </div>
 
-    <!-- MODULE: Flash Messages -->
+    <!-- Flash Messages -->
     @if (session('success'))
         <div class="mb-6 flex items-center gap-3 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl shadow-sm">
             <svg class="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -30,7 +29,7 @@
         </div>
     @endif
 
-    <!-- MODULE: Folder Tabs Navigation (EFEK CHROME) -->
+    <!-- navigasi tab -->
     <div class="flex items-end ml-[30px] flex-wrap relative z-10">
         <a href="{{ route('akun', ['tab' => 'admin']) }}"
             class="transition {{ $tab === 'admin' ? 'chrome-tab-active px-5 sm:px-6 py-3 bg-white border border-amber-200 border-b-white rounded-t-xl font-bold text-amber-700 text-xs sm:text-sm relative -mb-[1px]' : 'px-4 sm:px-5 py-1.5 bg-amber-50/70 border border-amber-200/70 rounded-xl font-bold text-amber-800/50 hover:text-amber-700 hover:bg-amber-100 text-xs sm:text-sm relative z-0 ml-1 mb-[4px] shadow-inner' }}">
@@ -42,9 +41,7 @@
         </a>
     </div>
 
-    <!-- MODULE: Folder Body Content -->
     <div class="bg-white border border-amber-200 rounded-2xl shadow-sm p-5 lg:p-6 mb-6 relative z-0 -mt-[1px]">
-
         <!-- Search & Filters -->
         <form method="GET" action="{{ route('akun') }}" id="formSearch"
             class="flex flex-col lg:flex-row items-end gap-4 w-full border-b border-amber-100 pb-6 mb-6">
@@ -78,11 +75,9 @@
             </div>
         </form>
 
-        <!-- Header Tabel & Aksi Tambah -->
+        <!-- Header Tabel dan Aksi Tambah -->
         <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 bg-white">
             <h3 class="font-bold text-amber-950 text-lg">Daftar {{ $tab === 'tamu' ? 'Akun Tamu' : 'Akun Staf & Owner' }}</h3>
-
-            <!-- HANYA TAMPILKAN TOMBOL TAMBAH JIKA TAB BUKAN TAMU -->
             @if($tab !== 'tamu')
             <button onclick="openAddModal()" class="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition shadow-sm flex items-center justify-center gap-2 whitespace-nowrap w-full sm:w-auto shadow-amber-600/20">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -186,7 +181,7 @@
             </div>
         </div>
 
-        <!-- Modul Pagination Bawah: Auto-Submit & Sejajar dengan Link Hal -->
+        <!-- pagination -->
         <div class="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4 bg-amber-50 p-4 rounded-2xl border border-amber-200 shadow-sm">
             <div class="flex items-center gap-2">
                 <span class="text-xs font-bold text-amber-800 uppercase tracking-wider">Tampilkan:</span>
@@ -207,7 +202,7 @@
         </div>
     </div>
 
-    <!-- MODULE: Modal Tambah Akun -->
+    <!-- Tambah Akun -->
     <div id="addModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-sm" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
             <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 w-full max-w-lg border border-amber-100">
@@ -237,7 +232,6 @@
                         </div>
                         <div class="mb-4">
                             <label class="block text-xs font-bold text-amber-950 mb-1">Role / Hak Akses</label>
-                            <!-- Hanya admin, resepsionis, owner (tamu diblokir dari pilihan) -->
                             <select name="role" required class="w-full border border-amber-200 rounded-lg shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-2.5 text-sm bg-white transition">
                                 <option value="admin">Administrator</option>
                                 <option value="resepsionis">Staf Resepsionis</option>
@@ -259,7 +253,7 @@
         </div>
     </div>
 
-    <!-- MODULE: Modal Edit Akun -->
+    <!-- Edit Akun -->
     <div id="editModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-sm" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
             <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 w-full max-w-lg border border-amber-100">
@@ -298,6 +292,5 @@
         </div>
     </div>
 
-    <!-- MODULE: Pemanggilan File Eksternal JS -->
     <script src="{{ asset('js/dashboard/akun.js') }}?v={{ time() }}"></script>
 </x-dblayout>

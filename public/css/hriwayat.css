@@ -26,7 +26,6 @@
     border-radius: 10px;
 }
 
-/* CSS KHUSUS WIZARD MOBILE ANTI-GAGAL */
 @media (max-width: 767px) {
     .mobile-hide {
         display: none !important;

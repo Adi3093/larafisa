@@ -516,19 +516,17 @@
         </div>
     </div>
 
-    <!-- PERUBAHAN: Script Trigger Print Pop-up -->
     @if(session('print_struk_id'))
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Membuka tab kecil khusus struk print
-            window.open("{{ route('checkinout.print', session('print_struk_id')) }}", "_blank", "width=400,height=600,toolbar=no,scrollbars=no,resizable=no");
-        });
     </script>
     @endif
-
+    
     <script>
         window.kelasDataWalkin = @json($kelasKamars);
         window.LaravelCSRFToken = '{{ csrf_token() }}';
-    </script>
+        document.addEventListener('DOMContentLoaded', function() {
+            window.open("{{ route('checkinout.print', session('print_struk_id')) }}", "_blank", "width=400,height=600,toolbar=no,scrollbars=no,resizable=no");
+        });
+        </script>
     <script src="{{ asset('js/dashboard/checkinout.js') }}?v={{ time() }}"></script>
 </x-dblayout>

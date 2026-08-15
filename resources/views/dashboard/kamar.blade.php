@@ -1,10 +1,7 @@
 <x-dblayout>
-    <!-- PEMANGGILAN CSS CHROME TAB -->
     <link rel="stylesheet" href="{{ asset('css/kamar.css') }}?v={{ time() }}">
 
     <div class="max-w-7xl mx-auto" x-data="{ tab: '{{ $activeTab }}' }">
-
-        <!-- MODULE: Header & Alerts -->
         <div class="mb-6">
             <h1 class="text-2xl font-bold text-amber-950 tracking-tight">Manajemen Kamar & Ruangan</h1>
             <p class="text-sm text-amber-900/70 mt-1">Kelola katalog kelas dan fisik ruangan kamar.</p>
@@ -38,17 +35,16 @@
             </div>
         @endif
 
-        <!-- MODULE: Tab Navigation (EFEK CHROME) -->
+        <!-- Tab Navigasi -->
         <div class="flex items-end ml-[30px] flex-wrap relative z-10">
-            <!-- TAB 1: KELAS KAMAR -->
+            <!-- Kelas Kamar -->
             <button @click="tab = 'kelas'"
                 :class="tab === 'kelas' ?
                     'chrome-tab-active px-5 sm:px-6 py-3 bg-white border border-amber-200 border-b-white rounded-t-xl font-bold text-amber-700 text-xs sm:text-sm relative -mb-[1px] transition' :
                     'px-4 sm:px-5 py-1.5 bg-amber-50/70 border border-amber-200/70 rounded-xl font-bold text-amber-800/50 hover:text-amber-700 hover:bg-amber-100 text-xs sm:text-sm transition relative z-0 ml-1 mb-[4px] shadow-inner'">
                 Kelas Kamar
             </button>
-            
-            <!-- TAB 2: DAFTAR KAMAR -->
+            <!-- Daftar Kamar -->
             <button @click="tab = 'ruangan'"
                 :class="tab === 'ruangan' ?
                     'chrome-tab-active px-5 sm:px-6 py-3 bg-white border border-amber-200 border-b-white rounded-t-xl font-bold text-amber-700 text-xs sm:text-sm relative -mb-[1px] transition ml-1' :
@@ -59,7 +55,7 @@
 
         <div class="bg-white border border-amber-200 rounded-2xl shadow-sm p-5 lg:p-6 mb-6 relative z-0 -mt-[1px]">
 
-            <!-- MODULE: KELAS KAMAR TAB -->
+            <!-- Kelas Kamar -->
             <div x-show="tab === 'kelas'" x-cloak>
                 <div class="mb-6 flex flex-col lg:flex-row justify-between gap-4 border-b border-amber-100 pb-5">
                     <form method="GET" action="{{ route('kamar') }}" class="flex flex-wrap gap-2 w-full lg:w-auto">
@@ -178,7 +174,7 @@
                 </div>
             </div>
 
-            <!-- MODULE: RUANGAN FISIK TAB -->
+            <!-- Daftar Kamar -->
             <div x-show="tab === 'ruangan'" x-cloak>
                 <div class="mb-6 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 border-b border-amber-100 pb-5">
                     <form method="GET" action="{{ route('kamar') }}"
@@ -230,7 +226,7 @@
                     @endif
                 </div>
 
-                <!-- Table Ruangan -->
+                <!-- Table Kamar -->
                 <div class="bg-white shadow-sm rounded-xl border border-amber-100 overflow-hidden mb-4">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y-2 divide-amber-50 bg-white text-sm text-left">
@@ -316,7 +312,6 @@
         </div>
     </div>
 
-    <!-- MODULE: MODAL (HANYA DI-RENDER JIKA ADMIN) -->
     @if(auth()->user()->role === 'admin')
         <div id="modalKelas" class="fixed inset-0 z-50 hidden bg-gray-900/60 backdrop-blur-sm overflow-y-auto">
             <div class="flex min-h-screen items-center justify-center p-4">

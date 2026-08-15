@@ -1,5 +1,4 @@
 <x-dblayout>
-    <!-- PEMANGGILAN CSS CHROME TAB -->
     <link rel="stylesheet" href="{{ asset('css/reservasi.css') }}?v={{ time() }}">
     
     <style>
@@ -14,7 +13,6 @@
         <p class="text-sm text-amber-900/70 mt-1">Kelola data reservasi walk-in, persetujuan online, dan pelacakan riwayat.</p>
     </div>
 
-    <!-- MODULE: STATISTIK CARD -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 relative z-10">
         <div class="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm flex items-center gap-4">
             <div class="bg-emerald-100 p-3 rounded-xl text-emerald-600">
@@ -45,7 +43,6 @@
         </div>
     </div>
 
-    <!-- MODULE: ALERTS -->
     @if (session('success'))
         <div class="mb-6 flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl shadow-sm">
             <svg class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -59,27 +56,20 @@
         </div>
     @endif
 
-    <!-- MODULE: NAVIGASI TAB (WARNA AMBER) -->
+    <!-- Navigasi Tab -->
     <div class="relative z-10 flex flex-wrap gap-y-2 ml-[30px] mb-[0]">
         @if(in_array($role, ['admin', 'resepsionis']))
             <a href="{{ route('reservasi', ['tab' => 'aktif']) }}" 
-               class="transition {{ $tab === 'aktif' ? 'chrome-tab-active px-5 sm:px-6 py-3 bg-white border border-amber-200 border-b-white rounded-t-xl font-bold text-amber-700 text-xs sm:text-sm relative -mb-[1px]' : 'px-4 sm:px-5 py-1.5 bg-amber-50/70 border border-amber-200/70 rounded-xl font-bold text-amber-800/50 hover:text-amber-700 hover:bg-amber-100 text-xs sm:text-sm relative z-0 ml-1 mb-[4px] shadow-inner' }}">
-               Reservasi Aktif
-            </a>
+            class="transition {{ $tab === 'aktif' ? 'chrome-tab-active px-5 sm:px-6 py-3 bg-white border border-amber-200 border-b-white rounded-t-xl font-bold text-amber-700 text-xs sm:text-sm relative -mb-[1px]' : 'px-4 sm:px-5 py-1.5 bg-amber-50/70 border border-amber-200/70 rounded-xl font-bold text-amber-800/50 hover:text-amber-700 hover:bg-amber-100 text-xs sm:text-sm relative z-0 ml-1 mb-[4px] shadow-inner' }}">Reservasi Aktif</a>
         @endif
         
         @if(in_array($role, ['admin', 'owner']))
             <a href="{{ route('reservasi', ['tab' => 'riwayat']) }}" 
-               class="transition {{ $tab === 'riwayat' ? 'chrome-tab-active px-5 sm:px-6 py-3 bg-white border border-amber-200 border-b-white rounded-t-xl font-bold text-amber-700 text-xs sm:text-sm relative -mb-[1px]' : 'px-4 sm:px-5 py-1.5 bg-amber-50/70 border border-amber-200/70 rounded-xl font-bold text-amber-800/50 hover:text-amber-700 hover:bg-amber-100 text-xs sm:text-sm relative z-0 ml-1 mb-[4px] shadow-inner' }}">
-               Riwayat Reservasi
-            </a>
+            class="transition {{ $tab === 'riwayat' ? 'chrome-tab-active px-5 sm:px-6 py-3 bg-white border border-amber-200 border-b-white rounded-t-xl font-bold text-amber-700 text-xs sm:text-sm relative -mb-[1px]' : 'px-4 sm:px-5 py-1.5 bg-amber-50/70 border border-amber-200/70 rounded-xl font-bold text-amber-800/50 hover:text-amber-700 hover:bg-amber-100 text-xs sm:text-sm relative z-0 ml-1 mb-[4px] shadow-inner' }}">Riwayat Reservasi</a>
         @endif
     </div>
 
-    <!-- MODULE: KONTEN UTAMA TABLE -->
     <div class="relative z-0 bg-white p-5 lg:p-6 rounded-2xl border border-amber-200 shadow-sm mb-6 -mt-[1px]">
-        
-        <!-- HEADER AKSI -->
         <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-amber-100 pb-5">
             @if ($tab === 'aktif' && in_array($role, ['admin', 'resepsionis']))
                 <button type="button" onclick="openWalkInModal()" class="cursor-pointer relative z-50 w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white px-5 py-3 rounded-xl text-sm font-bold transition shadow-sm flex items-center justify-center gap-2">
@@ -94,7 +84,7 @@
             @endif
         </div>
 
-        <!-- FORM PENCARIAN (Tema Amber) -->
+        <!-- search -->
         <form method="GET" action="{{ route('reservasi') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end w-full mb-6 pb-6 border-b border-amber-100">
             <input type="hidden" name="tab" value="{{ $tab }}">
             <div class="col-span-1 sm:col-span-2 lg:col-span-1">
@@ -107,6 +97,7 @@
                 </div>
             </div>
 
+            {{-- filter --}}
             <div>
                 <label class="block text-[10px] font-bold text-amber-800/70 uppercase tracking-wider mb-2">Filter Kelas</label>
                 <select name="filter_kelas" class="w-full border border-amber-200 rounded-xl shadow-sm focus:border-amber-500 py-2.5 text-sm bg-white transition text-amber-950">
@@ -142,7 +133,7 @@
             </div>
         </form>
 
-        <!-- TABLE HASIL PENCARIAN -->
+        <!-- hasi search -->
         <div class="border border-amber-200 rounded-xl overflow-hidden mb-6 shadow-sm">
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left">
@@ -218,7 +209,6 @@
                                                     <button type="button" onclick="showMyConfirm('Setujui Reservasi?', 'Status pesanan tamu ini akan diubah menjadi Terkonfirmasi dan diteruskan ke panel Check-In.', 'emerald', 'Ya, Konfirmasi', 'formKonf-{{ $res->id }}')" class="cursor-pointer bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm">Konfirmasi</button>
                                                 </form>
                                             @elseif(empty($qrImage))
-                                                <!-- TOMBOL CEPAT HAPUS (Khusus Jika QRIS belum digenerate / Metode Tunai) -->
                                                 <form id="formBatal-{{ $res->id }}" action="{{ route('reservasi.batal', $res->id) }}" method="POST" class="inline">
                                                     @csrf
                                                     <button type="button" onclick="showMyConfirm('Batalkan Reservasi?', 'Data pesanan ini akan dibatalkan dan dipindahkan ke riwayat arsip.', 'danger', 'Ya, Hapus', 'formBatal-{{ $res->id }}')" class="cursor-pointer bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm">Hapus</button>
@@ -242,7 +232,7 @@
             </div>
         </div>
         
-        <!-- MODULE: PAGINATION (TEMA AMBER) -->
+        <!-- Paginatiin -->
         <div class="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4 bg-amber-50 p-4 rounded-2xl border border-amber-200 shadow-sm">
             <div class="flex items-center gap-2">
                 <span class="text-xs font-bold text-amber-800 uppercase tracking-wider">Navigasi:</span>
@@ -253,7 +243,7 @@
         </div>
     </div>
 
-    <!-- MODULE: MODAL 1: PANEL RESERVASI BARU (HANYA UNTUK ADMIN/RESEPSIONIS) -->
+    <!-- Panel Reservasi Baru -->
     @if(in_array($role, ['admin', 'resepsionis']))
     <div id="walkInModal" class="fixed inset-0 z-[60] hidden pointer-events-none flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
         <div class="bg-amber-50/50 rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col overflow-hidden max-h-[95vh] pointer-events-auto border border-amber-200">
@@ -265,15 +255,11 @@
             <div class="p-6 overflow-y-auto flex-grow bg-white">
                 <form id="walkInForm" method="POST" action="{{ route('reservasi.store') }}" class="h-full">
                     @csrf
-                    <!-- TAMBAHKAN INPUT HIDDEN INI AGAR FUNGSI SHOWMYCONFIRM BISA MENYISIPKAN ACTION_TYPE -->
                     <input type="hidden" id="co_action_type" name="action_type" value="simpan">
                     <input type="hidden" id="edit_reservasi_id"> 
 
                     <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6 items-stretch h-full">
-                        
-                        <!-- BAGIAN KIRI: FORM -->
                         <div class="flex flex-col gap-4">
-                            <!-- Box Pilih Kamar -->
                             <div class="bg-white rounded-xl border border-amber-200 p-4 shadow-sm flex flex-col">
                                 <h4 class="font-bold text-amber-950 mb-3">Pilih Kamar</h4>
                                 <div class="grid grid-cols-2 gap-3 mb-3">
@@ -326,7 +312,7 @@
                                     </div>
                                 </div>
 
-                                <!-- DIVIDER & TOTAL BIAYA -->
+                                <!-- Devider dan total biaya -->
                                 <div class="border-t border-dashed border-amber-200 mt-4 pt-3 flex justify-between items-end">
                                     <div>
                                         <p class="text-[10px] font-bold text-amber-800/70 uppercase tracking-wider mb-0.5">Total Biaya</p>
@@ -369,7 +355,7 @@
                             </div>
                         </div>
 
-                        <!-- BAGIAN KANAN: PREVIEW KAMAR -->
+                        <!-- Preview Kamar -->
                         <div class="flex flex-col h-full gap-4">
                             <div class="bg-white rounded-xl border border-amber-200 p-4 shadow-sm flex flex-col flex-grow">
                                 <div id="wi_img_container" class="w-full h-[180px] border border-amber-200 rounded-xl mb-3 flex items-center justify-center bg-amber-50 overflow-hidden">
@@ -394,7 +380,6 @@
                                 </ul>
                             </div>
 
-                            <!-- Tombol Aksi Bawah -->
                             <div class="flex flex-col gap-2 shrink-0">
                                 <button type="button" id="btnSimpanSaja" class="w-full cursor-pointer border border-amber-300 bg-white hover:bg-amber-50 text-amber-900 font-bold shadow-sm py-2.5 rounded-lg text-sm transition">Simpan</button>
                                 <button type="button" id="btnSimpanCheckin" class="w-full cursor-pointer border border-amber-600 bg-white text-amber-600 hover:bg-amber-600 hover:text-white font-bold shadow-sm py-2.5 rounded-lg text-sm transition">Simpan dan Check-in</button>
@@ -406,7 +391,7 @@
         </div>
     </div>
 
-    <!-- MODULE: MODAL 2: PANEL PEMBAYARAN QRIS -->
+    <!-- Panel Pembayaran QRIS -->
     <div id="paymentModal" class="fixed inset-0 z-[70] hidden pointer-events-none flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
         <div class="bg-[#fefce8] rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col overflow-hidden pointer-events-auto border border-amber-200">
             <div class="bg-amber-600 px-6 py-4 flex justify-between items-center border-b border-amber-200">
@@ -446,7 +431,6 @@
                                 <div class="bg-white border border-red-300 text-red-600 text-lg font-black px-4 py-1 rounded-xl shadow-sm tracking-widest animate-pulse" id="pay_timer">Menghitung...</div>
                             </div>
                             <div id="pay_qris_box" class="w-full h-full min-h-[250px] flex flex-col items-center justify-center mt-6">
-                                <!-- QR Image Injected Here -->
                             </div>
                         </div>
                         <button type="button" id="btnDownloadQr" class="w-full cursor-pointer bg-amber-600 hover:bg-amber-700 text-white shadow-sm py-3 rounded-xl text-xs font-bold transition">Download Kode QRIS</button>
@@ -457,7 +441,7 @@
     </div>
     @endif
 
-    <!-- MODULE: MODAL KONFIRMASI LOKAL -->
+    <!-- modal konfirmasi -->
     <div id="localConfirmModal" class="fixed inset-0 z-[999999] hidden pointer-events-none items-center justify-center bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0">
         <div id="localConfirmContent" class="relative p-4 w-full max-w-md transform scale-95 transition-transform duration-300 pointer-events-auto">
             <div class="relative bg-white border border-amber-200 rounded-3xl shadow-2xl p-6 md:p-8 text-center overflow-hidden">

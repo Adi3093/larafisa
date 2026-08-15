@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('name', 100);
             $table->string('username', 20)->unique();
             $table->string('email', 100)->unique();
-            // PENAMBAHAN: Memasukkan 'owner' ke dalam daftar Role
             $table->enum('role', ['admin', 'resepsionis', 'owner', 'tamu'])->default('tamu');
             $table->string('avatar')->nullable();
             $table->string('no_ktp', 16)->unique()->nullable();

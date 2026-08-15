@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('pembayaran_id')->constrained('pembayarans')->cascadeOnDelete();
             $table->string('status');
-            $table->string('keterangan'); // Contoh: 'Dibuat oleh tamu', 'Dikonfirmasi sistem'
+            $table->string('keterangan');
             $table->timestamps();
         });
     }

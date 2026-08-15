@@ -18,6 +18,17 @@
 </head>
 
 <body class="bg-amber-50/50 antialiased pb-20 lg:pb-0 relative">
+    {{-- Loading Transition --}}
+    <div id="global-loader" class="fixed inset-0 z-[9999999] flex items-center justify-center bg-white transition-opacity duration-300">
+        <div class="text-amber-600 flex flex-col items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-24 h-24 sm:w-32 sm:h-32" viewBox="0 0 24 24">
+                <circle cx="18" cy="12" r="0" fill="currentColor"><animate attributeName="r" begin=".67" calcMode="spline" dur="1.5s" keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" repeatCount="indefinite" values="0;2;0;0"/></circle>
+                <circle cx="12" cy="12" r="0" fill="currentColor"><animate attributeName="r" begin=".33" calcMode="spline" dur="1.5s" keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" repeatCount="indefinite" values="0;2;0;0"/></circle>
+                <circle cx="6" cy="12" r="0" fill="currentColor"><animate attributeName="r" begin="0" calcMode="spline" dur="1.5s" keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" repeatCount="indefinite" values="0;2;0;0"/></circle>
+            </svg>
+            <span class="font-bold text-amber-800/50 text-[10px] tracking-widest uppercase mt-1 animate-pulse">Memuat...</span>
+        </div>
+    </div>
 
     @php
         $isProfile = request()->is('*profil*');
@@ -240,6 +251,45 @@
                         theme: form.getAttribute('data-theme') || 'amber'
                     }
                 }));
+            }
+        });
+        
+        // Fadeout trasition
+        window.addEventListener('load', function() {
+            const loader = document.getElementById('global-loader');
+            if (loader) {
+                loader.classList.add('opacity-0');
+                setTimeout(() => {
+                    loader.classList.add('hidden');
+                }, 300); 
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const links = document.querySelectorAll('a');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    const target = this.getAttribute('target');
+                    const hasDownload = this.hasAttribute('download');
+                    if (href && !href.startsWith('#') && !href.startsWith('javascript') && target !== '_blank' && !hasDownload) {
+                        const loader = document.getElementById('global-loader');
+                        if (loader) {
+                            loader.classList.remove('hidden');
+                            setTimeout(() => loader.classList.remove('opacity-0'), 10);
+                        }
+                    }
+                });
+            });
+        });
+
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                const loader = document.getElementById('global-loader');
+                if (loader) {
+                    loader.classList.add('opacity-0');
+                    setTimeout(() => loader.classList.add('hidden'), 300);
+                }
             }
         });
     </script>

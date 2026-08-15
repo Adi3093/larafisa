@@ -30,7 +30,6 @@ class ReservasiBerhasil extends Notification
      */
     public function via(object $notifiable): array
     {
-        // Kita hanya akan menyimpannya ke dalam Database, tidak perlu kirim ke Email (Mail)
         return ['database'];
     }
 

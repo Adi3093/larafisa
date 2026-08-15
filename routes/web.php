@@ -87,9 +87,7 @@ Route::middleware('auth')->group(function () {
     })->name('api.notifikasi.terbaru');
 });
 
-// =========================================================================
-// ZONA 1: AKSES UMUM DASHBOARD (ADMIN, RESEPSIONIS, OWNER)
-// =========================================================================
+// Akses dashboard universal (ADMIN, RESEPSIONIS, OWNER)
 Route::middleware(['auth', 'role:admin,resepsionis,owner', UpdateLastSeen::class])->group(function () {
     // Dashboard Utama & API Harian
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
@@ -109,19 +107,15 @@ Route::middleware(['auth', 'role:admin,resepsionis,owner', UpdateLastSeen::class
     Route::get('/api/cek-notifikasi', [ReservasiController::class, 'cekNotifikasi']);
 });
 
-// =========================================================================
-// ZONA 2: AKSES LAPORAN KEUANGAN (HANYA ADMIN & OWNER)
-// =========================================================================
+// Laporan Keuangan (HANYA ADMIN & OWNER)
 Route::middleware(['auth', 'role:admin,owner', UpdateLastSeen::class])->group(function () {
     Route::get('/pendapatan', [App\Http\Controllers\PendapatanController::class, 'index'])->name('pendapatan');
     Route::get('/pendapatan/export/{format}', [App\Http\Controllers\PendapatanController::class, 'export'])->name('pendapatan.export');
 });
 
-// =========================================================================
-// ZONA 3: AKSES OPERASIONAL TAMU (HANYA ADMIN & RESEPSIONIS)
-// =========================================================================
+// Tamu ( ADMIN & RESEPSIONIS)
 Route::middleware(['auth', 'role:admin,resepsionis', UpdateLastSeen::class])->group(function () {
-    // Kelola Kamar (Resepsionis HANYA bisa GET/Melihat index kamar)
+    // Kelola Kamar
     Route::get('/kamar', [KamarController::class, 'index'])->name('kamar');
 
     // Aksi Reservasi (Tambah, Konfirmasi, Batal)
@@ -138,14 +132,12 @@ Route::middleware(['auth', 'role:admin,resepsionis', UpdateLastSeen::class])->gr
     Route::get('/checkinout/{id}/print', [App\Http\Controllers\CheckInOutController::class, 'printStruk'])->name('checkinout.print');
     Route::put('/checkinout/{id}/extend', [App\Http\Controllers\CheckInOutController::class, 'extend'])->name('checkinout.extend');
     Route::post('/checkinout/{id}/qris-tambahan', [App\Http\Controllers\CheckInOutController::class, 'generateQrisTambahan'])->name('checkinout.qris.tambahan');
-    Route::post('/checkinout/{id}/generate-qris-tambahan', [App\Http\Controllers\CheckInOutController::class, 'generateQrisTambahan'])->name('checkinout.qris.tambahan'); // Duplicate yang anda buat saya biarkan aman
+    Route::post('/checkinout/{id}/generate-qris-tambahan', [App\Http\Controllers\CheckInOutController::class, 'generateQrisTambahan'])->name('checkinout.qris.tambahan');
 });
 
-// =========================================================================
-// ZONA 4: AKSES SAKTI TERTINGGI (HANYA ADMIN)
-// =========================================================================
+// Akses Admin only
 Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function () {
-    // Aksi Manajemen Struktur Kamar (Tambah, Edit, Hapus)
+    // kelola Kamar (Tambah, Edit, Hapus)
     Route::post('/kelas-kamar', [KamarController::class, 'storeKelas'])->name('kelas.store');
     Route::put('/kelas-kamar/{id}', [KamarController::class, 'updateKelas'])->name('kelas.update');
     Route::delete('/kelas-kamar/{id}', [KamarController::class, 'destroyKelas'])->name('kelas.destroy');
@@ -153,7 +145,7 @@ Route::middleware(['auth', 'role:admin', UpdateLastSeen::class])->group(function
     Route::put('/kamar/{id}', [KamarController::class, 'updateKamar'])->name('kamar.update');
     Route::delete('/kamar/{id}', [KamarController::class, 'destroyKamar'])->name('kamar.destroy');
 
-    // Manajemen Akun Pegawai & Tamu
+    // kelola Akun Pegawai & Tamu
     Route::get('/akun', [AccountController::class, 'index'])->name('akun');
     Route::post('/akun', [AccountController::class, 'store'])->name('akun.store');
     Route::put('/akun/{id}', [AccountController::class, 'update'])->name('akun.update');

@@ -1,6 +1,4 @@
-// ==========================================
-// MODULE 1: GLOBAL STATE & CACHE VARIABLES
-// ==========================================
+// Global State Cache
 let cacheResId = 0;
 let cacheHargaKamar = 0;
 let cacheCheckIn = '';
@@ -13,9 +11,7 @@ let cacheQrAdd = '';
 let cacheStatusAdd = '';
 let cacheTotalAdd = 0;
 
-// ==========================================
-// MODULE 2: INJECTION DATA KE DALAM MODAL 
-// ==========================================
+// Ijek data ke modal
 function bukaModalCheckout(id, no_res, nama, hp, kelas, ruangan, qtyBed, checkIn, checkOut, hargaKamar, totalSudahDibayar, invoiceAwal, pesanTamu, invAdd, qrAdd, statusAdd, totalAdd) {
 
     cacheResId = id;
@@ -31,7 +27,6 @@ function bukaModalCheckout(id, no_res, nama, hp, kelas, ruangan, qtyBed, checkIn
     document.getElementById('co_nama').innerText = nama;
     document.getElementById('co_kontak').innerText = 'No. HP: ' + hp;
     document.getElementById('co_kelas_kamar').innerText = ruangan + ' (' + kelas + ')';
-
     document.getElementById('co_bed_qty').value = qtyBed;
 
     let dateIn = new Date(checkIn);
@@ -63,9 +58,7 @@ function bukaModalCheckout(id, no_res, nama, hp, kelas, ruangan, qtyBed, checkIn
 }
 
 
-// ==========================================
-// MODULE 3: KALKULATOR HARGA TAMBAHAN
-// ==========================================
+// Penghitung Total
 function adjustQtyCheckout(inputId, change) {
     let field = document.getElementById(inputId);
     if (!field) return;
@@ -157,9 +150,7 @@ function hitungTotalCheckoutLive() {
 }
 
 
-// ==========================================
-// MODULE 4: GENERATOR & CHECKER QRIS TAMBAHAN
-// ==========================================
+// QRIS Checker dan GEnerator
 function toggleQrisTambahan() {
     let metode = document.getElementById('co_metode_tambahan').value;
     if (metode === 'QRIS') {
@@ -252,9 +243,7 @@ function cekStatusTambahan(invoice) {
     }, 5000);
 }
 
-// ==========================================
-// MODULE 5: LOGIKA MODAL KONFIRMASI LOKAL
-// ==========================================
+// Konfirmasi Lokal
 let formToSubmitLocal = null;
 let actionValLocal = null;
 
@@ -344,9 +333,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// ==========================================
-// MODULE 6: EXPORT KE GLOBAL WINDOW
-// ==========================================
 window.bukaModalCheckout = bukaModalCheckout;
 window.adjustQtyCheckout = adjustQtyCheckout;
 window.toggleQrisTambahan = toggleQrisTambahan;

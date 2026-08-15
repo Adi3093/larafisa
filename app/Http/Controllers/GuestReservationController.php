@@ -377,7 +377,6 @@ class GuestReservationController extends Controller
         return redirect()->route('riwayat.tamu')->with('success', 'Reservasi berhasil dihapus dari sistem.');
     }
 
-    // FUNGSI BARU: Untuk cek status terkini via AJAX (Auto-Tab & Auto-Refresh)
     public function checkUpdates()
     {
         if (!Auth::check()) return response()->json(['reservasi' => []]);

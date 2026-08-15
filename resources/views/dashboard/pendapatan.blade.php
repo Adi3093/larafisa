@@ -82,8 +82,7 @@
                         class="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white border border-emerald-700 rounded-xl font-bold text-sm hover:bg-emerald-700 transition shadow-sm">
                         Export CSV
                     </a>
-                    
-                    <!-- PERUBAHAN: Tombol Print dibungkus form dan dikaitkan dengan Modal Global -->
+
                     <form id="formPrintLaporan" action="{{ route('pendapatan.export', array_merge(['format' => 'print'], request()->query())) }}" method="GET" target="_blank" class="inline">
                         <button type="button" onclick="openCustomConfirm('Cetak Laporan?', 'Apakah Anda ingin mencetak dokumen laporan pendapatan ini sekarang?', 'amber', 'Ya, Cetak', 'formPrintLaporan')"
                             class="flex items-center gap-2 px-6 py-2.5 bg-gray-800 text-white rounded-xl font-bold text-sm hover:bg-gray-900 transition shadow-md cursor-pointer">
@@ -185,36 +184,27 @@
                             $tglSelesai = \Carbon\Carbon::parse($res->updated_at);
                         @endphp
                         <tr class="hover:bg-amber-50/30 transition">
-                            <!-- Kolom 1: Reservasi (ID & Tanggal) -->
                             <td class="px-5 py-4">
                                 <div class="font-bold text-amber-600">#{{ $res->no_reservasi }}</div>
                                 <div class="text-xs font-semibold text-gray-500 mt-0.5">
                                     {{ $tglSelesai->translatedFormat('d M Y') }}</div>
                             </td>
-
-                            <!-- Kolom 2: Data Tamu (Nama & NIK dipisah) -->
                             <td class="px-5 py-4">
                                 <div class="font-bold text-gray-900">{{ $res->nama_tamu }}</div>
                                 <div class="text-[11px] font-medium text-gray-500 mt-0.5">NIK:
                                     {{ $res->no_ktp ?? '-' }}</div>
                             </td>
-
-                            <!-- Kolom 3: Tipe Kamar & Durasi -->
                             <td class="px-5 py-4">
                                 <div class="font-bold text-gray-800 text-xs">
                                     {{ $res->kamar->kelasKamar->nama_kelas ?? 'Kamar Dihapus' }}</div>
                                 <div class="text-[11px] text-gray-500 mt-0.5">{{ $diffDays }} Malam</div>
                             </td>
-
-                            <!-- Kolom 4: Biaya Kamar -->
                             <td class="px-5 py-4 text-right align-top">
                                 <div class="font-bold text-gray-800 text-sm">Rp
                                     {{ number_format($kamarTotal, 0, ',', '.') }}</div>
                                 <div class="text-[9px] font-bold text-emerald-600 uppercase tracking-wider mt-1">
                                     {{ $metodeKamar }}</div>
                             </td>
-
-                            <!-- Kolom 5: Biaya Tambahan -->
                             <td class="px-5 py-4 text-right align-top">
                                 @if ($ekstraTotal > 0)
                                     <div class="font-bold text-gray-800 text-sm">Rp
@@ -225,8 +215,6 @@
                                     <div class="font-bold text-gray-300">-</div>
                                 @endif
                             </td>
-
-                            <!-- Kolom 6: Total Keseluruhan Biaya -->
                             <td class="px-5 py-4 text-right align-top bg-amber-50/30">
                                 <div class="font-black text-blue-700 text-base">Rp
                                     {{ number_format($totalBaris, 0, ',', '.') }}</div>

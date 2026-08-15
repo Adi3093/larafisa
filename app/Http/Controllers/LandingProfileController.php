@@ -21,7 +21,6 @@ class LandingProfileController extends Controller
         return view('landing_page.hedit', compact('user'));
     }
 
-    // 1. FUNGSI UPDATE PROFIL (Tanpa Password)
     public function update(Request $request)
     {
         $user = User::findOrFail(Auth::id());
@@ -36,8 +35,6 @@ class LandingProfileController extends Controller
         ]);
 
         $data = $request->except(['avatar', 'no_hp']);
-
-        // Rapikan format No HP (Otomatis ubah 08.. jadi 628..)
         if ($request->filled('no_hp')) {
             $noHp = $request->no_hp;
             if (substr($noHp, 0, 1) === '0') {
@@ -57,13 +54,11 @@ class LandingProfileController extends Controller
         return redirect()->route('profil.tamu')->with('success', 'Data profil berhasil diperbarui!');
     }
 
-    // 2. FUNGSI TAMPILKAN HALAMAN UBAH PASSWORD
     public function password()
     {
         return view('landing_page.hpassword');
     }
 
-    // 3. FUNGSI UPDATE PASSWORD
     public function updatePassword(Request $request)
     {
         $user = User::findOrFail(Auth::id());
