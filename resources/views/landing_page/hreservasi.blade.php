@@ -1,5 +1,5 @@
 <x-lplayout>
-    <link rel="stylesheet" href="{{ asset('css/landingpage/hreservasi.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/hreservasi.css') }}?v={{ time() }}">
 
     <div class="absolute top-0 left-0 w-full h-80 bg-amber-600 z-0"></div>
     <div class="relative z-10 min-h-screen pt-24 lg:pt-32 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">

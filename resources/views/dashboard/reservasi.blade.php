@@ -1,12 +1,5 @@
 <x-dblayout>
     <link rel="stylesheet" href="{{ asset('css/reservasi.css') }}?v={{ time() }}">
-    
-    <style>
-        input[type=number]::-webkit-inner-spin-button,
-        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type="datetime-local"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; transition: 0.2s; }
-        input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
-    </style>
 
     <div class="mb-6 relative z-10">
         <h1 class="text-2xl font-bold text-amber-950 tracking-tight">Data Reservasi</h1>

@@ -1,5 +1,5 @@
 <x-dblayout>
-    <link rel="stylesheet" href="{{ asset('css/kamar.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/tab.css') }}?v={{ time() }}">
 
     <div class="max-w-7xl mx-auto" x-data="{ tab: '{{ $activeTab }}' }">
         <div class="mb-6">

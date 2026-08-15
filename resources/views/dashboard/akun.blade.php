@@ -1,5 +1,5 @@
 <x-dblayout>
-    <link rel="stylesheet" href="{{ asset('css/kamar.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/tab.css') }}?v={{ time() }}">
 
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-amber-950 tracking-tight">Kelola Akun Sistem</h1>

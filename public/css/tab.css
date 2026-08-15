@@ -1,14 +1,8 @@
-/* =========================================================
-    EFEK TAB GOOGLE CHROME (LENGKUNGAN KELUAR / INVERSE RADIUS)
-   ========================================================= */
-
-/* Tinggikan Z-index agar flare (lengkungan) menimpa garis bawah kotak utama */
 .chrome-tab-active {
     position: relative;
     z-index: 20 !important;
 }
 
-/* Kotak dasar untuk memahat lengkungan */
 .chrome-tab-active::before,
 .chrome-tab-active::after {
     content: '';

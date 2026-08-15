@@ -1,31 +1,13 @@
 <x-dblayout>
-    <!-- MENGHILANGKAN PANAH BAWAAN BROWSER & STYLING DATETIME -->
-    <style>
-        input[type=number]::-webkit-inner-spin-button,
-        input[type=number]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
-        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-            cursor: pointer;
-            opacity: 0.6;
-            transition: 0.2s;
-        }
-
-        input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
-            opacity: 1;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/checkinout.css') }}?v={{ time() }}">
 
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Check-in / Check-Out</h1>
         <p class="text-sm text-gray-500 mt-1">Kelola kedatangan tamu dan proses pembayaran akhir.</p>
     </div>
 
-    <!-- STATISTIK CARD -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm flex items-center gap-4">
             <div class="bg-emerald-100 p-3 rounded-xl text-emerald-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -36,7 +18,7 @@
                 <h3 class="text-2xl font-black text-gray-900">{{ $kamarTersedia }}</h3>
             </div>
         </div>
-        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm flex items-center gap-4">
             <div class="bg-blue-100 p-3 rounded-xl text-blue-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -49,7 +31,7 @@
                 <h3 class="text-2xl font-black text-gray-900">{{ $kamarTerpakai }}</h3>
             </div>
         </div>
-        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm flex items-center gap-4">
             <div class="bg-rose-100 p-3 rounded-xl text-rose-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -87,8 +69,8 @@
         </div>
     @endif
 
-    <!-- FILTER PENCARIAN -->
-    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm mb-6">
+    <!-- Filter dan Search -->
+    <div class="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm mb-6">
         <form method="GET" action="{{ route('checkinout') }}" id="filterForm" class="flex flex-col md:flex-row gap-4">
             <div class="flex-1 relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -99,12 +81,12 @@
                 </div>
                 <input type="text" name="search" value="{{ request('search') }}"
                     placeholder="Cari Nama / No. Reservasi..."
-                    class="pl-9 w-full border border-gray-300 rounded-xl shadow-sm focus:border-[#E97609] focus:ring-1 focus:ring-[#E97609] py-2.5 text-sm text-gray-900 transition font-medium">
+                    class="pl-9 w-full border border-amber-200 rounded-xl shadow-sm focus:border-[#E97609] focus:ring-1 focus:ring-[#E97609] py-2.5 text-sm text-gray-900 transition font-medium">
             </div>
             <div class="w-full md:w-48">
                 <select name="filter_kelas"
-                    class="w-full border border-gray-300 rounded-xl shadow-sm focus:border-[#E97609] focus:ring-1 focus:ring-[#E97609] py-2.5 text-sm bg-white text-gray-900 transition font-medium">
-                    <option value="">-- Kelas Kamar --</option>
+                    class="w-full border border-amber-200 rounded-xl shadow-sm focus:border-[#E97609] focus:ring-1 focus:ring-[#E97609] py-2.5 text-sm bg-white text-gray-900 transition font-medium">
+                    <option value=""> Kelas Kamar </option>
                     @foreach ($kelasKamars as $kelas)
                         <option value="{{ $kelas->id }}"
                             {{ request('filter_kelas') == $kelas->id ? 'selected' : '' }}>{{ $kelas->nama_kelas }}
@@ -114,8 +96,8 @@
             </div>
             <div class="w-full md:w-48">
                 <select name="filter_kamar"
-                    class="w-full border border-gray-300 rounded-xl shadow-sm focus:border-[#E97609] focus:ring-1 focus:ring-[#E97609] py-2.5 text-sm bg-white text-gray-900 transition font-medium">
-                    <option value="">-- No. Ruangan --</option>
+                    class="w-full border border-amber-200 rounded-xl shadow-sm focus:border-[#E97609] focus:ring-1 focus:ring-[#E97609] py-2.5 text-sm bg-white text-gray-900 transition font-medium">
+                    <option value=""> No. kamar </option>
                     @foreach ($kamars as $kmr)
                         <option value="{{ $kmr->id }}"
                             {{ request('filter_kamar') == $kmr->id ? 'selected' : '' }}>Kamar
@@ -128,12 +110,12 @@
                 <button type="submit"
                     class="bg-[#E97609] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-[#c96307] transition shadow-sm">Cari</button>
                 <a href="{{ route('checkinout') }}"
-                    class="bg-white text-gray-700 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-50 transition border border-gray-300 shadow-sm flex items-center justify-center">Reset</a>
+                    class="bg-white text-gray-700 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-50 transition border border-amber-200 shadow-sm flex items-center justify-center">Reset</a>
             </div>
         </form>
     </div>
 
-    <!-- DAFTAR KARTU CHECKIN/OUT -->
+    <!-- check-in/out card -->
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
         @forelse($reservasis as $res)
             @php
@@ -302,9 +284,7 @@
         </div>
     @endif
 
-    <!-- ========================================================================= -->
-    <!-- MODAL CHECKOUT -->
-    <!-- ========================================================================= -->
+    <!-- check-out -->
     <div id="modalCheckout"
         class="fixed inset-0 z-[999] hidden flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
         <div class="bg-[#f0f4f8] rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col overflow-hidden max-h-[95vh]">
@@ -321,8 +301,7 @@
                     <input type="hidden" id="co_action_type" name="action_type" value="">
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch h-full">
-
-                        <!-- PANEL KIRI: DETAIL PESANAN -->
+                        <!-- Detail PEsanan -->
                         <div class="bg-white rounded-xl border border-gray-300 p-5 shadow-sm flex flex-col h-full">
                             <div class="flex justify-between items-end border-b border-gray-200 pb-2 mb-3">
                                 <h4 class="text-lg font-bold text-gray-900">Detail Tamu</h4>
@@ -338,7 +317,6 @@
                             </div>
                             <p class="text-sm font-bold text-[#E97609] mb-4" id="co_kelas_kamar"></p>
 
-                            <!-- PEROMBAKAN UI EKSTRA BED -->
                             <div class="mb-4">
                                 <div
                                     class="flex items-center justify-between border border-gray-300 rounded-lg bg-white overflow-hidden shadow-sm">
@@ -396,7 +374,7 @@
                             </div>
                         </div>
 
-                        <!-- PANEL KANAN: PEMBAYARAN TAMBAHAN -->
+                        <!-- pembayaran tambahan -->
                         <div class="bg-white rounded-xl border border-gray-300 p-5 shadow-sm flex flex-col h-full">
                             <div class="border-b border-gray-200 pb-2 flex justify-between items-end mb-4">
                                 <h4 class="text-lg font-bold text-gray-900">Detail Pembayaran Tambahan</h4>
@@ -453,7 +431,6 @@
                         </div>
                     </div>
 
-                    <!-- FOOTER AKSI -->
                     <div
                         class="bg-gray-50 px-6 py-4 flex flex-col sm:flex-row justify-between items-center border-t border-gray-200 gap-4 mt-6 rounded-b-2xl">
                         <div class="flex items-center gap-2 w-full sm:w-auto">
@@ -479,7 +456,7 @@
         </div>
     </div>
 
-    <!-- MODAL KONFIRMASI LOKAL -->
+    <!-- Konfirmasi -->
     <div id="localConfirmModal"
         class="fixed inset-0 z-[999999] hidden pointer-events-none items-center justify-center bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0">
         <div id="localConfirmContent"
@@ -518,15 +495,15 @@
 
     @if(session('print_struk_id'))
     <script>
-    </script>
-    @endif
-    
-    <script>
-        window.kelasDataWalkin = @json($kelasKamars);
-        window.LaravelCSRFToken = '{{ csrf_token() }}';
         document.addEventListener('DOMContentLoaded', function() {
             window.open("{{ route('checkinout.print', session('print_struk_id')) }}", "_blank", "width=400,height=600,toolbar=no,scrollbars=no,resizable=no");
         });
-        </script>
+    </script>
+    @endif
+
+    <script>
+        window.kelasDataWalkin = @json($kelasKamars);
+        window.LaravelCSRFToken = '{{ csrf_token() }}';
+    </script>
     <script src="{{ asset('js/dashboard/checkinout.js') }}?v={{ time() }}"></script>
 </x-dblayout>
