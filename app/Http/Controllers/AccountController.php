@@ -18,7 +18,6 @@ class AccountController extends Controller
         if ($tab === 'tamu') {
             $query->where('role', 'tamu');
         } else {
-            // PERBAIKAN: Menampilkan Admin, Resepsionis, dan Owner di Tab Staf
             $query->whereIn('role', ['admin', 'resepsionis', 'owner']);
         }
 
@@ -35,15 +34,15 @@ class AccountController extends Controller
         return view('dashboard.akun', compact('users', 'perPage', 'search', 'tab'));
     }
 
-    // Tambah Akun Baru
+    // Tambah Akun Baru (Aman dari pembuatan akun Tamu palsu)
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users',
             'email' => 'required|email|max:255|unique:users',
-            // PERBAIKAN: Memasukkan 'owner' ke dalam validasi Role
-            'role' => 'required|in:admin,resepsionis,owner',
+            // VALIDASI KEAMANAN: Memaksa input Role hanya dari 3 list ini.
+            'role' => 'required|in:admin,resepsionis,owner', 
             'password' => 'required|min:8',
         ]);
         
@@ -54,13 +53,20 @@ class AccountController extends Controller
             'role' => $request->role,
             'password' => Hash::make($request->password),
         ]);
+        
         return back()->with('success', 'Akun ' . $request->name . ' berhasil ditambahkan!');
     }
 
-    // Edit data
+    // Edit data (Aman dari pembobolan akun Tamu)
     public function update(Request $request, $id)
     {
         $targetUser = User::findOrFail($id);
+
+        // VALIDASI KEAMANAN PRIVASI: Cegah siapapun (termasuk admin) mengedit data Tamu melalui Panel ini.
+        if ($targetUser->role === 'tamu') {
+            return back()->withErrors(['Akses Ditolak: Anda tidak diizinkan untuk mengubah data privasi milik Tamu.']);
+        }
+
         $request->validate([
             'username' => 'required|string|max:255|unique:users,username,' . $id,
             'password' => 'nullable|min:8',
@@ -70,6 +76,7 @@ class AccountController extends Controller
         if ($request->filled('password')) {
             $targetUser->password = Hash::make($request->password);
         }
+        
         $targetUser->save();
         return back()->with('success', 'Akun ' . $targetUser->name . ' berhasil diperbarui!');
     }

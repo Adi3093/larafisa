@@ -1,3 +1,4 @@
+
 // MODULE 1: MANAJEMEN MODAL TAMBAH AKUN
 /**
  * Membuka modal tambah pengguna
@@ -40,22 +41,7 @@ function closeEditModal() {
 }
 
 
-// MODULE 3: EVENT LISTENER DOM
-document.addEventListener('DOMContentLoaded', () => {
-    
-    // Auto-Submit Dropdown 'Tampilkan Baris'
-    const perPageSelect = document.getElementById('perPageSelect');
-    const formSearch = document.getElementById('formSearch');
-    
-    if (perPageSelect && formSearch) {
-        perPageSelect.addEventListener('change', () => {
-            formSearch.submit();
-        });
-    }
-
-});
-
-// MODULE 4: EXPORT FUNCTIONS TO GLOBAL WINDOW
+// MODULE 3: EXPORT FUNCTIONS TO GLOBAL WINDOW
 window.openAddModal = openAddModal;
 window.closeAddModal = closeAddModal;
 window.openEditModal = openEditModal;

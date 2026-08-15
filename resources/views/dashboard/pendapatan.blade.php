@@ -75,19 +75,19 @@
                 </div>
                 <div class="md:col-span-3 flex flex-wrap gap-3 justify-start md:justify-end">
                     <a href="{{ route('pendapatan.export', array_merge(['format' => 'pdf'], request()->query())) }}"
-                        class="flex items-center gap-2 px-5 py-2.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl font-bold text-sm hover:bg-rose-100 transition shadow-sm">
-                        📄 PDF
+                        class="flex items-center gap-2 px-5 py-2.5 bg-rose-600 text-white border border-rose-700 rounded-xl font-bold text-sm hover:bg-rose-700 transition shadow-sm">
+                        Export PDF
                     </a>
                     <a href="{{ route('pendapatan.export', array_merge(['format' => 'csv'], request()->query())) }}"
-                        class="flex items-center gap-2 px-5 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl font-bold text-sm hover:bg-emerald-100 transition shadow-sm">
-                        📊 CSV
+                        class="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white border border-emerald-700 rounded-xl font-bold text-sm hover:bg-emerald-700 transition shadow-sm">
+                        Export CSV
                     </a>
                     
                     <!-- PERUBAHAN: Tombol Print dibungkus form dan dikaitkan dengan Modal Global -->
                     <form id="formPrintLaporan" action="{{ route('pendapatan.export', array_merge(['format' => 'print'], request()->query())) }}" method="GET" target="_blank" class="inline">
                         <button type="button" onclick="openCustomConfirm('Cetak Laporan?', 'Apakah Anda ingin mencetak dokumen laporan pendapatan ini sekarang?', 'amber', 'Ya, Cetak', 'formPrintLaporan')"
                             class="flex items-center gap-2 px-6 py-2.5 bg-gray-800 text-white rounded-xl font-bold text-sm hover:bg-gray-900 transition shadow-md cursor-pointer">
-                            🖨️ Print Laporan
+                            Print Laporan
                         </button>
                     </form>
                 </div>

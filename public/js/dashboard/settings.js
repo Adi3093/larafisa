@@ -126,12 +126,15 @@ function switchTab(tabName) {
     if (secUmum) secUmum.classList.add('hidden');
     if (secJadwal) secJadwal.classList.add('hidden');
 
-    const inactiveStyle = "px-5 sm:px-6 py-2.5 bg-amber-50 border border-amber-200 rounded-t-xl font-bold text-amber-800/60 hover:text-amber-700 hover:bg-amber-100 text-xs sm:text-sm transition relative z-0 ml-1";
+    // PERUBAHAN: Kelas style untuk Tab yang TIDAK AKTIF (Memipih dengan padding y 1.5)
+    const inactiveStyle = "px-4 sm:px-5 py-1.5 bg-amber-50/70 border border-amber-200/70 rounded-xl font-bold text-amber-800/50 hover:text-amber-700 hover:bg-amber-100 text-xs sm:text-sm transition relative z-0 ml-1 mb-[4px] shadow-inner";
+    
     if (btnProfil) btnProfil.className = inactiveStyle;
     if (btnUmum) btnUmum.className = inactiveStyle;
     if (btnJadwal) btnJadwal.className = inactiveStyle;
 
-    const activeStyle = "px-5 sm:px-6 py-3 bg-white border border-amber-200 border-b-white rounded-t-xl font-bold text-amber-700 text-xs sm:text-sm relative z-10 -mb-[1px] shadow-sm shadow-white transition";
+    // PERUBAHAN: Kelas style untuk Tab yang AKTIF (Ada class chrome-tab-active)
+    const activeStyle = "chrome-tab-active px-5 sm:px-6 py-3 bg-white border border-amber-200 border-b-white rounded-t-xl font-bold text-amber-700 text-xs sm:text-sm relative z-10 -mb-[1px] shadow-sm shadow-white transition";
 
     // Tampilkan section yang dipilih
     if (tabName === 'profil' && secProfil) {
@@ -147,7 +150,6 @@ function switchTab(tabName) {
         btnJadwal.className = activeStyle;
         showTooltip('jadwal_intro');
         
-        // Load kalender (beri delay sedikit agar DOM div-nya tampil sempurna dulu)
         const toggleJadwal = document.getElementById('toggle_jadwal_maintenance');
         if (toggleJadwal && toggleJadwal.checked) {
             setTimeout(() => initCalendar(), 100);

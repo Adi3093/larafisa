@@ -1,4 +1,7 @@
 <x-dblayout>
+    <!-- PEMANGGILAN CSS CHROME TAB (MENGGUNAKAN kamar.css KARENA WARNA AMBER NYA SAMA) -->
+    <link rel="stylesheet" href="{{ asset('css/kamar.css') }}?v={{ time() }}">
+
     <!-- ========================================================================= -->
     <!-- MODULE 1: HEADER & ALERTS -->
     <!-- ========================================================================= -->
@@ -33,28 +36,33 @@
     @endif
 
     <!-- ========================================================================= -->
-    <!-- MODULE 2: TAB NAVIGATION BARS -->
+    <!-- MODULE 2: TAB NAVIGATION BARS (EFEK CHROME) -->
     <!-- ========================================================================= -->
-    <div class="flex items-end pl-0 sm:pl-2 flex-wrap gap-y-2">
+    <div class="flex items-end ml-[30px] flex-wrap relative z-10">
+        <!-- TAB 1: PROFIL SAYA -->
         <button type="button" onclick="switchTab('profil')" id="tab-btn-profil"
-            class="px-5 sm:px-6 py-3 bg-white border border-amber-200 border-b-white rounded-t-xl font-bold text-amber-700 text-xs sm:text-sm relative z-10 -mb-[1px] shadow-sm shadow-white transition">
+            class="chrome-tab-active px-5 sm:px-6 py-3 bg-white border border-amber-200 border-b-white rounded-t-xl font-bold text-amber-700 text-xs sm:text-sm relative z-10 -mb-[1px] shadow-sm shadow-white transition">
             Profil Saya
         </button>
+        
+        <!-- TAB 2: PENGATURAN UMUM -->
         <button type="button" onclick="switchTab('umum')" id="tab-btn-umum"
-            class="px-5 sm:px-6 py-2.5 bg-amber-50 border border-amber-200 rounded-t-xl font-bold text-amber-800/60 hover:text-amber-700 hover:bg-amber-100 text-xs sm:text-sm transition relative z-0 ml-1">
+            class="px-4 sm:px-5 py-1.5 bg-amber-50/70 border border-amber-200/70 rounded-xl font-bold text-amber-800/50 hover:text-amber-700 hover:bg-amber-100 text-xs sm:text-sm transition relative z-0 ml-1 mb-[4px] shadow-inner">
             Pengaturan Umum
         </button>
         
         <!-- HANYA ADMIN YANG BISA MELIHAT TAB PENJADWALAN -->
         @if(auth()->user()->role === 'admin')
+        <!-- TAB 3: PENJADWALAN -->
         <button type="button" onclick="switchTab('jadwal')" id="tab-btn-jadwal"
-            class="px-5 sm:px-6 py-2.5 bg-amber-50 border border-amber-200 rounded-t-xl font-bold text-amber-800/60 hover:text-amber-700 hover:bg-amber-100 text-xs sm:text-sm transition relative z-0 ml-1">
+            class="px-4 sm:px-5 py-1.5 bg-amber-50/70 border border-amber-200/70 rounded-xl font-bold text-amber-800/50 hover:text-amber-700 hover:bg-amber-100 text-xs sm:text-sm transition relative z-0 ml-1 mb-[4px] shadow-inner">
             Penjadwalan
         </button>
         @endif
     </div>
 
-    <div class="bg-white border border-amber-200 rounded-b-2xl rounded-tr-2xl rounded-tl-none shadow-sm p-6 lg:p-8 mb-6 relative z-0">
+    <!-- PERUBAHAN: Menghapus rounded-tl-none menjadi rounded-2xl -->
+    <div class="bg-white border border-amber-200 rounded-2xl shadow-sm p-6 lg:p-8 mb-6 relative z-0 -mt-[1px]">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
 
             <!-- ========================================================================= -->
@@ -330,6 +338,7 @@
         </div>
     </div>
 
+    <!-- Jangan lupa pastikan baris CSS ini terhubung ke file .css yang sama atau yang baru -->
     <link rel="stylesheet" href="{{ asset('css/settings.css') }}?v={{ time() }}">
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
     <script>

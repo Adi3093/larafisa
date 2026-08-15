@@ -60,7 +60,7 @@
                 <div class="flex items-center justify-start rtl:justify-end">
                     <button data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar"
                         aria-controls="logo-sidebar" type="button"
-                        class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-200">
+                        class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg xl:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-200">
                         <span class="sr-only">Open sidebar</span>
                         <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
                             xmlns="http://www.w3.org/2000/svg">
@@ -133,7 +133,7 @@
     </nav>
 
     <aside id="logo-sidebar"
-        class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white border-r border-amber-200 sm:translate-x-0"
+        class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white border-r border-amber-200 xl:translate-x-0"
         aria-label="Sidebar">
         <div class="h-full px-3 pb-4 overflow-y-auto bg-white">
             <ul class="space-y-2 font-medium">
@@ -167,11 +167,10 @@
                     </a>
                 </li>
 
-                {{-- AKSES KHUSUS ADMIN & RESEPSIONIS --}}
                 @if(in_array(Auth::user()->role, ['admin', 'resepsionis']))
                 <li><a href="{{ route('checkinout') }}"
                         class="flex items-center p-2 rounded-lg group transition {{ request()->is('checkinout') ? 'bg-amber-50 text-amber-700 font-bold border border-amber-200' : 'text-gray-600 hover:bg-amber-50 hover:text-amber-700' }}"><svg
-                            class="w-5 h-5 transition duration-75 {{ request()->is('dtamu') ? 'text-amber-700' : 'text-gray-400 group-hover:text-amber-600' }}"
+                            class="w-5 h-5 transition duration-75 {{ request()->is('checkinout*') ? 'text-amber-700' : 'text-gray-400 group-hover:text-amber-600' }}"
                             aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
                             viewBox="0 0 20 18">
                             <path
@@ -187,7 +186,6 @@
                         </svg><span class="flex-1 ms-3 whitespace-nowrap">Kelola Kamar</span></a></li>
                 @endif
 
-                {{-- AKSES KHUSUS ADMIN & OWNER --}}
                 @if(in_array(Auth::user()->role, ['admin', 'owner']))
                 <li><a href="/pendapatan"
                         class="flex items-center p-2 rounded-lg group transition {{ request()->is('pendapatan') ? 'bg-amber-50 text-amber-700 font-bold border border-amber-200' : 'text-gray-600 hover:bg-amber-50 hover:text-amber-700' }}"><svg
@@ -202,7 +200,6 @@
             </ul>
 
             <ul class="pt-4 mt-4 space-y-2 font-medium border-t border-amber-100">
-                {{-- MENU DROPDOWN PENGATURAN HANYA UNTUK ADMIN --}}
                 @if(Auth::user()->role === 'admin')
                 <li>
                     <button type="button"
@@ -251,7 +248,7 @@
         </div>
     </aside>
 
-    <div class="p-4 sm:ml-64 mt-14">
+    <div class="p-4 xl:ml-64 mt-14">
         <div class="p-4 sm:p-6 lg:p-8">
             {{ $slot }}
         </div>
@@ -340,18 +337,15 @@
     </style>
 
     <script>
-        // Logika Toast Data Baru
         function showGlobalToast(type, customName = '') {
             const container = document.getElementById('toast-container');
             if (!container) return;
-
             const toast = document.createElement('div');
             let icon = '',
                 title = '',
                 desc = '',
                 borderClass = '',
                 textClass = '';
-
             if (type === 'reservasi') {
                 icon = '🛎️';
                 title = 'Reservasi Baru!';
@@ -372,24 +366,18 @@
                 borderClass = 'border-l-4 border-rose-500';
                 textClass = 'text-rose-700';
             }
-
-            // PERBAIKAN PENTING: Gunakan bg-white standar tanpa background tailwind arbitrer untuk mencegah di-purge compiler
             toast.className =
                 `flex items-start gap-3 p-4 w-72 md:w-80 bg-white rounded-xl shadow-2xl pointer-events-auto toast-slide-in ${borderClass}`;
             toast.innerHTML =
                 `<div class="text-2xl">${icon}</div><div class="flex-1"><h4 class="text-sm font-black ${textClass}">${title}</h4><p class="text-xs text-gray-600 mt-1 leading-relaxed">${desc}</p></div>`;
-
             container.appendChild(toast);
-
             setTimeout(() => {
                 toast.classList.replace('toast-slide-in', 'toast-fade-out');
                 setTimeout(() => toast.remove(), 400);
             }, 4000);
         }
-
-        // ENGINE DETEKSI RESERVASI REAL-TIME & AUTO BADGE COUNTER (SUPER AMAN)
-        let previousPendingCount = null; // Menyimpan status jumlah sebelumnya
-
+        // detektor reservasi
+        let previousPendingCount = null;
         setInterval(async () => {
             try {
                 let response = await fetch('/api/cek-notifikasi', {
@@ -400,10 +388,8 @@
                 });
                 if (response.status === 401 || response.status === 419) return;
                 let data = await response.json();
-
-                let shouldReload = false; // Penanda apakah perlu auto-refresh
-
-                // 1. UPDATE ANGKA BADGE DI SIDEBAR SECARA REAL-TIME DARI DATABASE
+                let shouldReload = false;
+                // bedge sidebar Data Reservasi
                 const badge = document.getElementById('sidebar-badge-count');
                 if (badge) {
                     if (data.total_pending > 0) {
@@ -414,29 +400,24 @@
                         badge.classList.add('hidden');
                     }
                 }
-
-                // 2. DETEKSI PERUBAHAN JUMLAH (Entah Nambah atau Berkurang/Dihapus Tamu)
+                // deteksi perubahan jumkah
                 if (previousPendingCount !== null && previousPendingCount !== data.total_pending) {
                     shouldReload = true;
                 }
                 previousPendingCount = data.total_pending;
-
-                // 3. PROSES MEMUNCULKAN NOTIFIKASI TOAST MELAYANG UNTUK PESANAN BARU
+                // notifikasi toast
                 let isNotifActive = localStorage.getItem('notif_reservasi');
                 if (isNotifActive === null || isNotifActive === 'true') {
                     if (data.latest_id > 0) {
                         let lastSavedId = localStorage.getItem('last_notified_res_id') || "0";
-
-                        // Hanya panggil toast jika ada ID data yang lebih baru
                         if (parseInt(data.latest_id) > parseInt(lastSavedId)) {
-                            showGlobalToast('reservasi', data.nama_tamu); // Munculkan Toast kustom
+                            showGlobalToast('reservasi', data.nama_tamu);
                             localStorage.setItem('last_notified_res_id', data
-                                .latest_id); // Kunci ID agar tidak spam
+                                .latest_id);
                             shouldReload = true;
                         }
                     }
                 } else {
-                    // Walau toggle notifikasi mati, tetap simpan ID agar sinkron
                     if (data.latest_id > 0) {
                         let lastSavedId = localStorage.getItem('last_notified_res_id') || "0";
                         if (parseInt(data.latest_id) > parseInt(lastSavedId)) {
@@ -445,37 +426,28 @@
                         }
                     }
                 }
-
-                // 4. AUTO REFRESH HALAMAN JIKA ADA PERUBAHAN & SEDANG BUKA MENU RESERVASI
+                // auto refresh
                 if (shouldReload && window.location.pathname.includes('/reservasi')) {
-                    // Beri jeda 3 detik agar animasi Toast sempat muncul dan terbaca oleh Admin!
                     setTimeout(() => {
                         window.location.reload();
-                    }, 3000);
+                    }, 4000); // 1000 = 1 detik
                 }
-
             } catch (error) {
                 console.error("Gagal mendeteksi update real-time:", error);
             }
-        }, 4000); // Polling setiap 4 detik
+        }, 4000); // 1000 = 1 detik
 
-
-        // LOGIKA MODAL CONFIRM NATIVE JS (ANTI ERROR)
         let formToSubmit = null;
-
         function openCustomConfirm(title, message, theme, btnText, formId, hiddenInputName = null, hiddenInputValue =
             null) {
             formToSubmit = document.getElementById(formId);
-
-            // Validasi Input HTML Bawaan Browser
             if (formToSubmit && typeof formToSubmit.checkValidity === 'function') {
                 if (!formToSubmit.checkValidity()) {
                     formToSubmit.reportValidity();
-                    return; // Batal muncul modal jika input form ada yang kosong
+                    return;
                 }
             }
 
-            // Menyisipkan nilai khusus jika tombol simpan/checkin ditekan
             if (hiddenInputName && hiddenInputValue && formToSubmit) {
                 let hiddenInput = formToSubmit.querySelector(`input[name="${hiddenInputName}"]`);
                 if (!hiddenInput) {
@@ -489,14 +461,10 @@
 
             document.getElementById('customConfirmTitle').innerText = title;
             document.getElementById('customConfirmMessage').innerText = message;
-
             let btnYes = document.getElementById('btnYesCustom');
             btnYes.innerText = btnText;
-
             let iconWarn = document.getElementById('iconWarningCustom');
             let svgWarn = document.getElementById('svgWarningCustom');
-
-            // Atur Tema Warna
             iconWarn.className =
                 'w-16 h-16 rounded-full flex items-center justify-center border-4 border-white shadow-sm ring-2';
             btnYes.className = 'text-white font-bold rounded-xl text-sm px-5 py-2.5 transition';
@@ -521,7 +489,6 @@
             iconSucc.classList.add('hidden');
             iconSucc.classList.remove('scale-100');
             iconSucc.classList.add('scale-0');
-
             btnYes.disabled = false;
             document.getElementById('btnCancelCustom').disabled = false;
             document.getElementById('btnXCustom').disabled = false;
@@ -529,10 +496,8 @@
             // Tampilkan Animasi Buka Modal
             let modal = document.getElementById('customConfirmModal');
             let content = document.getElementById('customConfirmContent');
-
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
                 modal.classList.add('opacity-100');
@@ -544,12 +509,10 @@
         function closeCustomConfirm() {
             let modal = document.getElementById('customConfirmModal');
             let content = document.getElementById('customConfirmContent');
-
             modal.classList.remove('opacity-100');
             modal.classList.add('opacity-0');
             content.classList.remove('scale-100');
             content.classList.add('scale-95');
-
             setTimeout(() => {
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
@@ -560,18 +523,13 @@
             this.disabled = true;
             document.getElementById('btnCancelCustom').disabled = true;
             document.getElementById('btnXCustom').disabled = true;
-
-            // Animasi transisi logo ke Centang Hijau
             document.getElementById('iconWarningCustom').classList.add('hidden');
             let successIcon = document.getElementById('iconSuccessCustom');
             successIcon.classList.remove('hidden');
-
             setTimeout(() => {
                 successIcon.classList.remove('scale-0');
                 successIcon.classList.add('scale-100');
             }, 50);
-
-            // Jeda 800ms sebelum data dikirim ke Server (agar tamu melihat centang hijau)
             setTimeout(() => {
                 if (formToSubmit) formToSubmit.submit();
                 closeCustomConfirm();
